@@ -8,30 +8,95 @@
   flex-direction: column;
 }
 
+/* ---------- Container override ---------- */
+.topics-container {
+  padding-top: var(--sp-6);
+  padding-bottom: var(--sp-7);
+}
+
+/* ---------- Header ---------- */
 .topics-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--sp-4);
   margin-bottom: var(--sp-6);
   flex-wrap: wrap;
+}
+
+.topics-header-left {
+  display: flex;
+  align-items: center;
   gap: var(--sp-3);
+  flex-shrink: 0;
 }
 
-.topics-header h2 {
+.topics-title {
   font-size: var(--fs-xl);
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.02em;
+  line-height: 1;
 }
 
-.topic-count {
-  font-size: var(--fs-sm);
+.topics-count-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 22px;
+  padding: 0 7px;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
   color: var(--color-text-light);
-  font-weight: 400;
-  margin-left: var(--sp-2);
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  line-height: 1;
+  transition: opacity var(--t-fast);
+}
+
+.topics-count-chip:empty {
+  display: none;
+}
+
+.topics-header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-shrink: 0;
+}
+
+/* ---------- Search Bar ---------- */
+.topics-search {
+  position: relative;
+  width: 220px;
+}
+
+.topics-search .form-input {
+  padding-left: 36px;
+  height: 36px;
+  font-size: var(--fs-sm);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+}
+
+.topics-search svg {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  color: var(--color-text-light);
+  pointer-events: none;
 }
 
 /* ---------- Topic Grid ---------- */
 .topics-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: var(--sp-5);
 }
 
@@ -42,6 +107,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--sp-3);
+  cursor: pointer;
   transition: box-shadow var(--t-normal), transform var(--t-normal);
 }
 
@@ -64,6 +130,7 @@
   word-break: break-word;
   cursor: pointer;
   flex: 1;
+  line-height: 1.4;
 }
 
 .topic-card-title:hover {
@@ -74,56 +141,42 @@
   display: flex;
   gap: var(--sp-1);
   flex-shrink: 0;
+  opacity: 0.5;
+  transition: opacity var(--t-fast);
+}
+
+.topic-card:hover .topic-card-actions {
+  opacity: 1;
 }
 
 .topic-card-meta {
   font-size: var(--fs-xs);
   color: var(--color-text-light);
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--sp-3);
+  gap: var(--sp-4);
 }
 
-.topic-card-meta svg {
+.topic-card-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+.topic-card-meta-item svg {
   width: 14px;
   height: 14px;
-  display: inline;
-  vertical-align: middle;
-}
-
-.topic-card-footer {
-  margin-top: auto;
-  padding-top: var(--sp-3);
-  border-top: 1px solid var(--color-border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-/* ---------- Search Bar ---------- */
-.topics-search {
-  position: relative;
-  max-width: 320px;
-  width: 100%;
-}
-
-.topics-search .form-input {
-  padding-left: 38px;
-}
-
-.topics-search svg {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 16px;
-  height: 16px;
-  color: var(--color-text-light);
-  pointer-events: none;
+  flex-shrink: 0;
 }
 
 /* ---------- Responsive ---------- */
-@media (max-width: 768px) {
+@media (max-width: 640px) {
+  .topics-container {
+    padding-top: var(--sp-5);
+    padding-bottom: var(--sp-5);
+  }
+
   .topics-grid {
     grid-template-columns: 1fr;
   }
@@ -131,5 +184,19 @@
   .topics-header {
     flex-direction: column;
     align-items: flex-start;
+    gap: var(--sp-3);
+  }
+
+  .topics-header-right {
+    width: 100%;
+  }
+
+  .topics-search {
+    flex: 1;
+    width: auto;
+  }
+
+  .topic-card-actions {
+    opacity: 1;
   }
 }

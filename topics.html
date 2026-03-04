@@ -19,32 +19,59 @@
 
   <!-- ===== Navbar ===== -->
   <nav class="navbar">
-    <div class="navbar-brand">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-           stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-      </svg>
-      WordCraft
-    </div>
-    <div class="navbar-actions">
-      <span id="nav-username" class="navbar-user"></span>
-      <button id="btn-logout" class="btn btn-ghost btn-sm">Sign Out</button>
+    <div class="navbar-inner">
+      <a class="navbar-brand" href="topics.html">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+        </svg>
+        WordCraft
+      </a>
+      <div class="navbar-spacer"></div>
+      <div class="navbar-right">
+        <div class="navbar-user-info">
+          <span class="navbar-avatar" id="nav-avatar"></span>
+          <span class="navbar-username" id="nav-username"></span>
+        </div>
+        <div class="navbar-vdivider"></div>
+        <button id="btn-logout" class="btn-signout">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          Sign out
+        </button>
+      </div>
     </div>
   </nav>
 
   <!-- ===== Main Content ===== -->
-  <main class="container">
+  <main class="container topics-container">
     <!-- Header -->
     <div class="topics-header">
-      <h2>My Topics <span id="topic-count" class="topic-count"></span></h2>
-      <button id="btn-new-topic" class="btn btn-primary">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-        </svg>
-        New Topic
-      </button>
+      <div class="topics-header-left">
+        <h2 class="topics-title">My Topics</h2>
+        <span id="topic-count" class="topics-count-chip"></span>
+      </div>
+      <div class="topics-header-right">
+        <div class="topics-search hidden" id="topics-search-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input class="form-input" type="text" id="input-search-topics" placeholder="Search topics…" />
+        </div>
+        <button id="btn-new-topic" class="btn btn-primary btn-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          New Topic
+        </button>
+      </div>
     </div>
 
     <!-- Loading -->
@@ -112,6 +139,7 @@
     initFirebase(session.firebase);
 
     document.getElementById('nav-username').textContent = session.username;
+    document.getElementById('nav-avatar').textContent = session.username.charAt(0).toUpperCase();
     document.getElementById('btn-logout').addEventListener('click', logout);
 
     // ---- DOM refs ----
@@ -147,11 +175,17 @@
           return;
         }
 
-        countEl.textContent = `(${topics.length})`;
-        gridEl.innerHTML = topics.map((t) => `
-          <div class="card topic-card" data-id="${t.id}">
+        countEl.textContent = topics.length;
+
+        // Show search bar when topics exist
+        document.getElementById('topics-search-wrap').classList.remove('hidden');
+
+        gridEl.innerHTML = topics.map((t) => {
+          const wc = t.wordCount || 0;
+          return `
+          <div class="card topic-card card-clickable" data-action="open" data-id="${t.id}">
             <div class="topic-card-header">
-              <span class="topic-card-title" data-action="open" data-id="${t.id}">
+              <span class="topic-card-title">
                 ${escapeHtml(t.name)}
               </span>
               <div class="topic-card-actions">
@@ -174,11 +208,27 @@
               </div>
             </div>
             <div class="topic-card-meta">
-              <span>${t.wordCount || 0} word${(t.wordCount || 0) !== 1 ? 's' : ''}</span>
-              <span>${t.createdAt ? formatDate(t.createdAt) : ''}</span>
+              <span class="topic-card-meta-item">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 7V4a2 2 0 0 1 2-2h8.5L20 7.5V20a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                ${wc} word${wc !== 1 ? 's' : ''}
+              </span>
+              <span class="topic-card-meta-item">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                ${t.createdAt ? formatDate(t.createdAt) : ''}
+              </span>
             </div>
           </div>
-        `).join('');
+        `}).join('');
 
         gridEl.classList.remove('hidden');
 
@@ -191,12 +241,15 @@
 
     // ---- Event delegation on grid ----
     gridEl.addEventListener('click', async (e) => {
+      // Find the closest element with a data-action, but stop at the card boundary
       const btn = e.target.closest('[data-action]');
       if (!btn) return;
 
       const action = btn.dataset.action;
-      const id     = btn.dataset.id;
-      const name   = btn.dataset.name;
+      // For rename/delete: the button itself carries the id/name.
+      // For open (card click): walk up to the card to get id.
+      const id   = btn.dataset.id;
+      const name = btn.dataset.name;
 
       if (action === 'open') {
         navigateTo('topic-detail.html', { topicId: id });
@@ -264,6 +317,17 @@
       } finally {
         btnSave.disabled = false;
       }
+    });
+
+    // ---- Search / filter topics ----
+    const searchInput = document.getElementById('input-search-topics');
+    searchInput.addEventListener('input', () => {
+      const q = searchInput.value.toLowerCase().trim();
+      const cards = gridEl.querySelectorAll('.topic-card');
+      cards.forEach((card) => {
+        const title = card.querySelector('.topic-card-title').textContent.toLowerCase();
+        card.style.display = title.includes(q) ? '' : 'none';
+      });
     });
 
     // ---- Initial load ----
