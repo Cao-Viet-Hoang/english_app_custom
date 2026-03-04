@@ -124,19 +124,22 @@ export async function generateWordInfo(englishWord) {
   const systemPrompt = `You are an English-Vietnamese dictionary assistant.
 Given an English word or phrase, return a JSON object with these fields:
 - "vietnamese": the most common Vietnamese translation (short, 1-5 words)
-- "ipa": the IPA pronunciation string (e.g. /əˈkɑːm.plɪʃ/), use standard IPA notation
+- "ipaUS": the IPA pronunciation for American English (e.g. /əˈkɑːm.plɪʃ/)
+- "ipaUK": the IPA pronunciation for British English (e.g. /əˈkʌm.plɪʃ/)
 - "wordType": one of exactly: noun, verb, adj, adv, phrase, other
 - "description": a brief Vietnamese description or usage note (1-2 short sentences)
 
 IMPORTANT:
-- Return ONLY valid JSON, no markdown code blocks, no extra text.`;
+- Return ONLY valid JSON, no markdown code blocks, no extra text.
+- Use standard IPA notation with slashes for both US and UK pronunciations.`;
 
   const userPrompt = `Word: "${englishWord}"
 
 Return JSON:
 {
   "vietnamese": "...",
-  "ipa": "...",
+  "ipaUS": "...",
+  "ipaUK": "...",
   "wordType": "...",
   "description": "..."
 }`;
@@ -186,7 +189,8 @@ Return JSON:
 
   return {
     vietnamese:  parsed.vietnamese  || '',
-    ipa:         parsed.ipa         || '',
+    ipaUS:       parsed.ipaUS       || '',
+    ipaUK:       parsed.ipaUK       || '',
     wordType,
     description: parsed.description || '',
   };

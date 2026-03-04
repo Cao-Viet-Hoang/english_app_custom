@@ -29,16 +29,20 @@ function wordsRef(topicId) {
  */
 export async function loadWords(topicId) {
   const snapshot = await wordsRef(topicId).orderBy('english').get();
-  return snapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-  }));
+  return snapshot.docs.map((doc) => {
+    const d = doc.data();
+    // Backward compat: migrate old single `ipa` field → ipaUS
+    if (d.ipa && !d.ipaUS) {
+      d.ipaUS = d.ipa;
+    }
+    return { id: doc.id, ...d };
+  });
 }
 
 /**
  * Add a new word to a topic.
  * @param {string} topicId
- * @param {Object} data  { english, vietnamese, description, wordType, ipa }
+ * @param {Object} data  { english, vietnamese, description, wordType, ipaUS, ipaUK }
  * @returns {Promise<string>}  The new word ID
  */
 export async function addWord(topicId, data) {
@@ -47,7 +51,8 @@ export async function addWord(topicId, data) {
     vietnamese:  (data.vietnamese  || '').trim(),
     description: (data.description || '').trim(),
     wordType:    (data.wordType    || 'other').trim().toLowerCase(),
-    ipa:         (data.ipa         || '').trim(),
+    ipaUS:       (data.ipaUS       || '').trim(),
+    ipaUK:       (data.ipaUK       || '').trim(),
     createdAt:   firebase.firestore.FieldValue.serverTimestamp(),
   });
 
@@ -68,7 +73,8 @@ export async function updateWord(topicId, wordId, data) {
   if (data.vietnamese  !== undefined) update.vietnamese  = data.vietnamese.trim();
   if (data.description !== undefined) update.description = data.description.trim();
   if (data.wordType    !== undefined) update.wordType    = data.wordType.trim().toLowerCase();
-  if (data.ipa         !== undefined) update.ipa         = data.ipa.trim();
+  if (data.ipaUS       !== undefined) update.ipaUS       = data.ipaUS.trim();
+  if (data.ipaUK       !== undefined) update.ipaUK       = data.ipaUK.trim();
   update.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
 
   await wordsRef(topicId).doc(wordId).update(update);

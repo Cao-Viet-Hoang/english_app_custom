@@ -129,7 +129,7 @@
         <table class="vocab-table">
           <colgroup>
             <col style="width:160px" />
-            <col style="width:130px" />
+            <col style="width:180px" />
             <col style="width:160px" />
             <col /><!-- description gets remaining space -->
             <col style="width:90px" />
@@ -231,9 +231,15 @@
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label" for="input-ipa">IPA Pronunciation</label>
-              <input class="form-input" type="text" id="input-ipa" placeholder="e.g. /əˈkɑːm.plɪʃ/" />
+              <label class="form-label" for="input-ipa-us">IPA (US)</label>
+              <input class="form-input" type="text" id="input-ipa-us" placeholder="e.g. /əˈkɑːm.plɪʃ/" />
             </div>
+            <div class="form-group">
+              <label class="form-label" for="input-ipa-uk">IPA (UK)</label>
+              <input class="form-input" type="text" id="input-ipa-uk" placeholder="e.g. /əˈkʌm.plɪʃ/" />
+            </div>
+          </div>
+          <div class="form-row">
             <div class="form-group">
               <label class="form-label" for="input-word-type">Word Type</label>
               <select class="form-select" id="input-word-type">
@@ -320,7 +326,8 @@
     const formWord         = document.getElementById('form-word');
     const inputEnglish     = document.getElementById('input-english');
     const inputVietnamese  = document.getElementById('input-vietnamese');
-    const inputIpa         = document.getElementById('input-ipa');
+    const inputIpaUS      = document.getElementById('input-ipa-us');
+    const inputIpaUK      = document.getElementById('input-ipa-uk');
     const inputWordType    = document.getElementById('input-word-type');
     const inputDescription = document.getElementById('input-description');
     const btnWordSave      = document.getElementById('btn-word-save');
@@ -348,7 +355,8 @@
       try {
         const info = await generateWordInfo(word);
         inputVietnamese.value  = info.vietnamese;
-        inputIpa.value         = info.ipa;
+        inputIpaUS.value       = info.ipaUS;
+        inputIpaUK.value       = info.ipaUK;
         inputWordType.value    = info.wordType;
         inputDescription.value = info.description;
         showToast('Fields filled by AI!', 'success');
@@ -464,10 +472,27 @@
       vocabEmpty.classList.add('hidden');
       vocabWrapper.classList.remove('hidden');
 
-      vocabTbody.innerHTML = filtered.map((w) => `
+      vocabTbody.innerHTML = filtered.map((w) => {
+        const ipaUS = w.ipaUS || w.ipa || '';
+        const ipaUK = w.ipaUK || '';
+        const ipaHtml = (ipaUS || ipaUK)
+          ? `<span class="ipa-us" title="US">${escapeHtml(ipaUS)}</span>`
+            + (ipaUK ? `<span class="ipa-uk" title="UK">${escapeHtml(ipaUK)}</span>` : '')
+          : '<span class="vocab-missing">—</span>';
+        return `
         <tr data-id="${w.id}">
-          <td class="vocab-english">${escapeHtml(w.english)}</td>
-          <td class="vocab-ipa">${w.ipa ? escapeHtml(w.ipa) : '<span class="vocab-missing">—</span>'}</td>
+          <td class="vocab-english">
+            <span class="vocab-english-word">${escapeHtml(w.english)}</span>
+            <button class="btn-speak" data-word="${escapeHtml(w.english)}" title="Listen (US)" type="button">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+              </svg>
+            </button>
+          </td>
+          <td class="vocab-ipa">${ipaHtml}</td>
           <td class="vocab-vietnamese">${escapeHtml(w.vietnamese)}</td>
           <td class="vocab-desc" title="${escapeHtml(w.description || '')}">${w.description ? escapeHtml(w.description) : '<span class="vocab-missing">—</span>'}</td>
           <td><span class="${badgeClass(w.wordType)}">${WORD_TYPE_LABELS[w.wordType] || w.wordType}</span></td>
@@ -490,11 +515,33 @@
             </button>
           </td>
         </tr>
-      `).join('');
+      `;
+      }).join('');
     }
 
     // Search
     vocabSearch.addEventListener('input', renderFilteredWords);
+
+    // ---- TTS (Text-to-Speech) ----
+    function speakWord(word) {
+      if (!('speechSynthesis' in window)) {
+        showToast('Text-to-speech is not supported in this browser.', 'warning');
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(word);
+      utterance.lang = 'en-US';
+      utterance.rate = 0.9;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    // Speak button delegation
+    vocabTbody.addEventListener('click', (e) => {
+      const btn = e.target.closest('.btn-speak');
+      if (!btn) return;
+      e.stopPropagation();
+      speakWord(btn.dataset.word);
+    });
 
     // Table event delegation
     vocabTbody.addEventListener('click', async (e) => {
@@ -512,7 +559,8 @@
         btnWordSave.textContent = 'Save';
         inputEnglish.value     = word.english;
         inputVietnamese.value  = word.vietnamese;
-        inputIpa.value         = word.ipa || '';
+        inputIpaUS.value       = word.ipaUS || word.ipa || '';
+        inputIpaUK.value       = word.ipaUK || '';
         inputWordType.value    = word.wordType || 'other';
         inputDescription.value = word.description || '';
         showModal(modalWordOverlay);
@@ -551,7 +599,8 @@
       const data = {
         english:     inputEnglish.value.trim(),
         vietnamese:  inputVietnamese.value.trim(),
-        ipa:         inputIpa.value.trim(),
+        ipaUS:       inputIpaUS.value.trim(),
+        ipaUK:       inputIpaUK.value.trim(),
         wordType:    inputWordType.value,
         description: inputDescription.value.trim(),
       };
