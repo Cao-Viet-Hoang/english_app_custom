@@ -630,6 +630,57 @@
     });
 
     // ============================================================
+    // PARAGRAPH HELPERS
+    // ============================================================
+
+    /** Split text into sentences (by . ! ?) */
+    function splitSentences(text) {
+      const result = text.match(/[^.!?]*[.!?]+[\s]*/g);
+      if (!result) return [text];
+      const joined = result.join('');
+      if (joined.length < text.length) {
+        const remaining = text.slice(joined.length).trim();
+        if (remaining) result.push(remaining);
+      }
+      return result.map(s => s.trim()).filter(s => s.length > 0);
+    }
+
+    /** Highlight vocabulary words in raw text, returning safe HTML. */
+    function highlightVocabWords(text, words) {
+      if (!words || words.length === 0) return escapeHtml(text);
+      const sorted = [...words].sort((a, b) => b.length - a.length);
+      const escaped = sorted.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+      const pattern = new RegExp(`\\b(${escaped.join('|')})\\b`, 'gi');
+      let result = '';
+      let lastIndex = 0;
+      let match;
+      while ((match = pattern.exec(text)) !== null) {
+        result += escapeHtml(text.slice(lastIndex, match.index));
+        result += `<strong class="vocab-highlight">${escapeHtml(match[0])}</strong>`;
+        lastIndex = pattern.lastIndex;
+      }
+      result += escapeHtml(text.slice(lastIndex));
+      return result;
+    }
+
+    /** Build sentence-wrapped HTML for English text with vocab highlights. */
+    function buildEnglishHtml(text) {
+      const vocabWords = allWords.map(w => w.english);
+      const sentences = splitSentences(text);
+      return sentences.map((s, i) =>
+        `<span class="para-sentence" data-sentence="${i}">${highlightVocabWords(s, vocabWords)}</span>`
+      ).join(' ');
+    }
+
+    /** Build sentence-wrapped HTML for Vietnamese text. */
+    function buildVietnameseHtml(text) {
+      const sentences = splitSentences(text);
+      return sentences.map((s, i) =>
+        `<span class="para-sentence-vi" data-sentence="${i}">${escapeHtml(s)}</span>`
+      ).join(' ');
+    }
+
+    // ============================================================
     // PARAGRAPHS
     // ============================================================
     let parasLoaded = false;
@@ -670,11 +721,11 @@
             <div class="para-card-body">
               <div class="para-section">
                 <div class="para-section-label">English</div>
-                <p class="para-english">${escapeHtml(p.englishText)}</p>
+                <p class="para-english">${buildEnglishHtml(p.englishText)}</p>
               </div>
               <div class="para-section">
                 <div class="para-section-label">Vietnamese</div>
-                <p class="para-vietnamese">${escapeHtml(p.vietnameseText)}</p>
+                <p class="para-vietnamese">${buildVietnameseHtml(p.vietnameseText)}</p>
               </div>
             </div>
           </div>
@@ -708,6 +759,28 @@
       } catch (err) {
         console.error(err);
         showToast('Failed to delete paragraph.', 'error');
+      }
+    });
+
+    // Sentence click → highlight corresponding Vietnamese sentence
+    paraList.addEventListener('click', (e) => {
+      const sentenceEl = e.target.closest('.para-sentence');
+      if (!sentenceEl) return;
+
+      const card = sentenceEl.closest('.para-card');
+      const idx = sentenceEl.dataset.sentence;
+
+      // Toggle: if already active, deactivate
+      const wasActive = sentenceEl.classList.contains('en-active');
+
+      // Clear all active states in this card
+      card.querySelectorAll('.para-sentence').forEach(el => el.classList.remove('en-active'));
+      card.querySelectorAll('.para-sentence-vi').forEach(el => el.classList.remove('vi-active'));
+
+      if (!wasActive) {
+        sentenceEl.classList.add('en-active');
+        const viEl = card.querySelector(`.para-sentence-vi[data-sentence="${idx}"]`);
+        if (viEl) viEl.classList.add('vi-active');
       }
     });
 

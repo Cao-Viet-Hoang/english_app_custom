@@ -427,6 +427,39 @@
   }
 }
 
+/* ---------- Vocabulary Highlights in Paragraphs ---------- */
+.vocab-highlight {
+  font-weight: 700;
+  font-style: normal;
+}
+
+/* ---------- Sentence Interaction ---------- */
+.para-sentence {
+  cursor: pointer;
+  padding: 2px 1px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.para-sentence:hover {
+  background: rgba(124, 158, 217, 0.08);
+}
+
+.para-sentence.en-active {
+  background: rgba(124, 158, 217, 0.15);
+}
+
+.para-sentence-vi {
+  padding: 2px 1px;
+  border-radius: 4px;
+  transition: background 0.3s;
+}
+
+.para-sentence-vi.vi-active {
+  background: rgba(255, 235, 59, 0.4);
+  border-bottom: 2px solid rgba(255, 193, 7, 0.6);
+}
+
 /* ---------- AI Generation ---------- */
 .ai-generating {
   display: flex;
