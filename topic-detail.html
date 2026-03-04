@@ -212,10 +212,17 @@
       </div>
       <form id="form-word" class="vocab-form">
         <div class="modal-body">
-          <div class="form-row">
+          <div class="form-row vocab-form-row-main">
             <div class="form-group">
               <label class="form-label" for="input-english">English</label>
               <input class="form-input" type="text" id="input-english" placeholder="e.g. accomplish" required />
+              <button type="button" id="btn-ai-fill" class="btn btn-accent btn-sm word-ai-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                </svg>
+                Generate with AI
+              </button>
             </div>
             <div class="form-group">
               <label class="form-label" for="input-vietnamese">Vietnamese</label>
@@ -264,7 +271,7 @@
     import { getTopic } from './js/topics.js';
     import { loadWords, addWord, updateWord, deleteWord } from './js/vocabulary.js';
     import { loadParagraphs, saveParagraph, deleteParagraph } from './js/paragraphs.js';
-    import { generateParagraph } from './js/ai.js';
+    import { generateParagraph, generateWordInfo } from './js/ai.js';
     import {
       showModal, closeModal, setupModalClose,
       showToast, confirmDialog, formatDate, escapeHtml
@@ -317,8 +324,48 @@
     const inputWordType    = document.getElementById('input-word-type');
     const inputDescription = document.getElementById('input-description');
     const btnWordSave      = document.getElementById('btn-word-save');
+    const btnAiFill        = document.getElementById('btn-ai-fill');
 
     setupModalClose('#modal-word');
+
+    // ---- AI Auto-fill word fields ----
+    btnAiFill.addEventListener('click', async () => {
+      const word = inputEnglish.value.trim();
+      if (!word) {
+        showToast('Please enter an English word first.', 'warning');
+        inputEnglish.focus();
+        return;
+      }
+      btnAiFill.disabled = true;
+      btnAiFill.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             class="spin">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+        </svg>
+        Generating…
+      `;
+      try {
+        const info = await generateWordInfo(word);
+        inputVietnamese.value  = info.vietnamese;
+        inputIpa.value         = info.ipa;
+        inputWordType.value    = info.wordType;
+        inputDescription.value = info.description;
+        showToast('Fields filled by AI!', 'success');
+      } catch (err) {
+        console.error(err);
+        showToast('AI generation failed. ' + (err.message || ''), 'error');
+      } finally {
+        btnAiFill.disabled = false;
+        btnAiFill.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          </svg>
+          Generate with AI
+        `;
+      }
+    });
 
     // CTA button in para-empty state mirrors the main generate button
     document.getElementById('btn-generate-ai-cta').addEventListener('click', () => {
