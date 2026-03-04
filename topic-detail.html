@@ -60,23 +60,24 @@
 
     <!-- Header -->
     <div class="detail-header">
-      <h2 id="detail-title" class="detail-title">…</h2>
+      <h2 id="detail-title" class="detail-title">
+        <span id="detail-title-text">…</span>
+        <span class="detail-word-badge hidden" id="detail-word-badge"></span>
+      </h2>
     </div>
 
     <!-- Tabs -->
     <div class="tabs">
       <button class="tab-btn active" data-tab="vocab">
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-             style="display:inline; vertical-align: middle; margin-right: 4px;">
+             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
         </svg>
         Vocabulary
       </button>
       <button class="tab-btn" data-tab="paragraphs">
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-             style="display:inline; vertical-align: middle; margin-right: 4px;">
+             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
           <polyline points="14 2 14 8 20 8"/>
           <line x1="16" y1="13" x2="8" y2="13"/>
@@ -126,6 +127,14 @@
       <!-- Table -->
       <div id="vocab-table-wrapper" class="vocab-table-wrapper hidden">
         <table class="vocab-table">
+          <colgroup>
+            <col style="width:160px" />
+            <col style="width:130px" />
+            <col style="width:160px" />
+            <col /><!-- description gets remaining space -->
+            <col style="width:90px" />
+            <col style="width:88px" />
+          </colgroup>
           <thead>
             <tr>
               <th>English</th>
@@ -133,7 +142,7 @@
               <th>Vietnamese</th>
               <th>Description</th>
               <th>Type</th>
-              <th style="width:80px">Actions</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody id="vocab-tbody"></tbody>
@@ -174,7 +183,14 @@
           <polyline points="14 2 14 8 20 8"/>
         </svg>
         <h3>No Paragraphs Yet</h3>
-        <p>Click "Generate with AI" to create a paragraph from your vocabulary.</p>
+        <p>Use your vocabulary to generate a contextual English paragraph with AI.</p>
+        <button id="btn-generate-ai-cta" class="btn btn-accent">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          </svg>
+          Generate with AI
+        </button>
       </div>
 
       <!-- Paragraph list -->
@@ -272,7 +288,8 @@
     // ---- DOM Refs ----
     // Header
     const breadcrumbTopic = document.getElementById('breadcrumb-topic');
-    const detailTitle     = document.getElementById('detail-title');
+    const detailTitle     = document.getElementById('detail-title-text');
+    const detailWordBadge = document.getElementById('detail-word-badge');
 
     // Vocab
     const vocabLoading   = document.getElementById('vocab-loading');
@@ -302,6 +319,11 @@
     const btnWordSave      = document.getElementById('btn-word-save');
 
     setupModalClose('#modal-word');
+
+    // CTA button in para-empty state mirrors the main generate button
+    document.getElementById('btn-generate-ai-cta').addEventListener('click', () => {
+      btnGenerateAI.click();
+    });
 
     // ---- State ----
     let allWords = [];
@@ -364,6 +386,11 @@
       try {
         allWords = await loadWords(topicId);
         vocabLoading.classList.add('hidden');
+
+        // Update word count badge in header
+        detailWordBadge.textContent = `${allWords.length} word${allWords.length !== 1 ? 's' : ''}`;
+        detailWordBadge.classList.remove('hidden');
+
         renderFilteredWords();
       } catch (err) {
         console.error(err);
@@ -393,20 +420,20 @@
       vocabTbody.innerHTML = filtered.map((w) => `
         <tr data-id="${w.id}">
           <td class="vocab-english">${escapeHtml(w.english)}</td>
-          <td class="vocab-ipa">${escapeHtml(w.ipa || '—')}</td>
-          <td>${escapeHtml(w.vietnamese)}</td>
-          <td class="vocab-desc">${escapeHtml(w.description || '—')}</td>
+          <td class="vocab-ipa">${w.ipa ? escapeHtml(w.ipa) : '<span class="vocab-missing">—</span>'}</td>
+          <td class="vocab-vietnamese">${escapeHtml(w.vietnamese)}</td>
+          <td class="vocab-desc" title="${escapeHtml(w.description || '')}">${w.description ? escapeHtml(w.description) : '<span class="vocab-missing">—</span>'}</td>
           <td><span class="${badgeClass(w.wordType)}">${WORD_TYPE_LABELS[w.wordType] || w.wordType}</span></td>
           <td class="vocab-actions">
             <button class="btn-icon" data-action="edit" data-id="${w.id}" title="Edit">
-              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
               </svg>
             </button>
             <button class="btn-icon" data-action="delete-word" data-id="${w.id}" data-name="${escapeHtml(w.english)}" title="Delete">
-              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="3 6 5 6 21 6"/>
                 <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>

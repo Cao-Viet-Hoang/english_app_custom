@@ -45,6 +45,19 @@
   display: flex;
   align-items: center;
   gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+
+.detail-word-badge {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  padding: 2px var(--sp-3);
+  background: var(--color-surface-alt);
+  color: var(--color-text-light);
+  border: 1px solid var(--color-border);
+  border-radius: 100px;
+  line-height: 1.8;
+  letter-spacing: 0;
 }
 
 .detail-actions {
@@ -56,6 +69,13 @@
 /* ============================================================
    VOCABULARY TAB
    ============================================================ */
+
+/* ---------- Tab Icons ---------- */
+.tab-btn svg {
+  display: inline;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
 
 .vocab-toolbar {
   display: flex;
@@ -100,6 +120,7 @@
   width: 100%;
   border-collapse: collapse;
   font-size: var(--fs-sm);
+  table-layout: fixed;
 }
 
 .vocab-table th,
@@ -107,7 +128,7 @@
   padding: var(--sp-3) var(--sp-4);
   text-align: left;
   border-bottom: 1px solid var(--color-border);
-  vertical-align: top;
+  vertical-align: middle;
 }
 
 .vocab-table th {
@@ -134,24 +155,51 @@
 .vocab-english {
   font-weight: 600;
   color: var(--color-primary-dark);
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .vocab-ipa {
   font-family: var(--font-mono);
   font-size: var(--fs-xs);
   color: var(--color-text-light);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vocab-vietnamese {
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .vocab-desc {
   font-size: var(--fs-xs);
   color: var(--color-text-light);
-  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vocab-missing {
+  color: var(--color-border);
+  font-style: normal;
+  font-weight: 400;
 }
 
 .vocab-actions {
   display: flex;
+  align-items: center;
   gap: var(--sp-1);
   white-space: nowrap;
+  opacity: 1;
+  visibility: visible;
+}
+
+.vocab-actions .btn-icon {
+  color: var(--color-text-light);
+  opacity: 1;
+  visibility: visible;
 }
 
 /* ---------- Vocab Form Modal ---------- */
@@ -159,11 +207,35 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--sp-4);
+  align-items: start;
+}
+
+/* Reset the base adjacent-sibling margin that breaks side-by-side columns */
+.modal-body .form-row .form-group + .form-group {
+  margin-top: 0;
+}
+
+/* Spacing between consecutive rows/groups in modal body */
+.modal-body .form-row + .form-row,
+.modal-body .form-row + .form-group,
+.modal-body .form-group + .form-row {
+  margin-top: var(--sp-4);
 }
 
 @media (max-width: 540px) {
   .vocab-form .form-row {
     grid-template-columns: 1fr;
+  }
+  .vocab-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .vocab-search {
+    max-width: 100%;
+  }
+  .vocab-toolbar .btn {
+    width: 100%;
+    justify-content: center;
   }
 }
 
@@ -196,11 +268,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--sp-3) var(--sp-5);
+  padding: var(--sp-2) var(--sp-4) var(--sp-2) var(--sp-5);
   background: var(--color-surface-alt);
   border-bottom: 1px solid var(--color-border);
   font-size: var(--fs-xs);
   color: var(--color-text-light);
+  gap: var(--sp-3);
 }
 
 .para-card-body {
@@ -224,6 +297,9 @@
   letter-spacing: 0.04em;
   color: var(--color-text-light);
   margin-bottom: var(--sp-3);
+  padding-left: var(--sp-2);
+  border-left: 3px solid var(--color-primary-light);
+  line-height: 1.4;
 }
 
 .para-section p {
@@ -252,15 +328,28 @@
   }
 }
 
+/* ---------- Para toolbar mobile ---------- */
+@media (max-width: 540px) {
+  .para-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .para-toolbar .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 /* ---------- AI Generation ---------- */
 .ai-generating {
   display: flex;
   align-items: center;
   gap: var(--sp-3);
-  padding: var(--sp-5);
-  background: rgba(124, 158, 217, .08);
-  border: 1px dashed var(--color-primary-light);
+  padding: var(--sp-4) var(--sp-5);
+  background: rgba(124, 158, 217, .07);
+  border: 1.5px dashed var(--color-primary-light);
   border-radius: var(--radius-md);
   color: var(--color-primary-dark);
   font-size: var(--fs-sm);
+  margin-bottom: var(--sp-4);
 }
