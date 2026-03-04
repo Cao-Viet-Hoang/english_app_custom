@@ -1,0 +1,266 @@
+/* ============================================================
+   TOPIC DETAIL PAGE STYLES
+   Vocabulary table + Paragraph cards
+   ============================================================ */
+
+.detail-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- Breadcrumb ---------- */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-sm);
+  color: var(--color-text-light);
+  margin-bottom: var(--sp-5);
+}
+
+.breadcrumb a {
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.breadcrumb a:hover { text-decoration: underline; }
+
+.breadcrumb-separator {
+  color: var(--color-border);
+}
+
+/* ---------- Detail Header ---------- */
+.detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: var(--sp-5);
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+}
+
+.detail-title {
+  font-size: var(--fs-xl);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.detail-actions {
+  display: flex;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+
+/* ============================================================
+   VOCABULARY TAB
+   ============================================================ */
+
+.vocab-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--sp-4);
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+
+.vocab-search {
+  position: relative;
+  max-width: 280px;
+  width: 100%;
+}
+
+.vocab-search .form-input {
+  padding-left: 36px;
+  font-size: var(--fs-sm);
+}
+
+.vocab-search svg {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 15px;
+  height: 15px;
+  color: var(--color-text-light);
+  pointer-events: none;
+}
+
+/* ---------- Vocabulary Table ---------- */
+.vocab-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.vocab-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+}
+
+.vocab-table th,
+.vocab-table td {
+  padding: var(--sp-3) var(--sp-4);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: top;
+}
+
+.vocab-table th {
+  background: var(--color-surface-alt);
+  font-weight: 600;
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-light);
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.vocab-table tbody tr:hover {
+  background: rgba(124, 158, 217, .05);
+}
+
+.vocab-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.vocab-english {
+  font-weight: 600;
+  color: var(--color-primary-dark);
+}
+
+.vocab-ipa {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--color-text-light);
+}
+
+.vocab-desc {
+  font-size: var(--fs-xs);
+  color: var(--color-text-light);
+  max-width: 200px;
+}
+
+.vocab-actions {
+  display: flex;
+  gap: var(--sp-1);
+  white-space: nowrap;
+}
+
+/* ---------- Vocab Form Modal ---------- */
+.vocab-form .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-4);
+}
+
+@media (max-width: 540px) {
+  .vocab-form .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================
+   PARAGRAPHS TAB
+   ============================================================ */
+
+.para-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--sp-5);
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+
+.para-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+/* ---------- Paragraph Card ---------- */
+.para-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.para-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-3) var(--sp-5);
+  background: var(--color-surface-alt);
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--fs-xs);
+  color: var(--color-text-light);
+}
+
+.para-card-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+
+.para-section {
+  padding: var(--sp-5);
+}
+
+.para-section:first-child {
+  border-right: 1px solid var(--color-border);
+}
+
+.para-section-label {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-light);
+  margin-bottom: var(--sp-3);
+}
+
+.para-section p {
+  font-size: var(--fs-sm);
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.para-english {
+  color: var(--color-text);
+}
+
+.para-vietnamese {
+  color: var(--color-text-light);
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .para-card-body {
+    grid-template-columns: 1fr;
+  }
+
+  .para-section:first-child {
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+  }
+}
+
+/* ---------- AI Generation ---------- */
+.ai-generating {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-5);
+  background: rgba(124, 158, 217, .08);
+  border: 1px dashed var(--color-primary-light);
+  border-radius: var(--radius-md);
+  color: var(--color-primary-dark);
+  font-size: var(--fs-sm);
+}

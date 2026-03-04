@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WordCraft — Topic Detail</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/topic-detail.css" />
+</head>
+<body class="detail-page">
+
+  <!-- ===== Navbar ===== -->
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+      </svg>
+      WordCraft
+    </div>
+    <div class="navbar-actions">
+      <span id="nav-username" class="navbar-user"></span>
+      <button id="btn-logout" class="btn btn-ghost btn-sm">Sign Out</button>
+    </div>
+  </nav>
+
+  <!-- ===== Main Content ===== -->
+  <main class="container">
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+      <a href="topics.html">My Topics</a>
+      <span class="breadcrumb-separator">›</span>
+      <span id="breadcrumb-topic">Loading…</span>
+    </div>
+
+    <!-- Header -->
+    <div class="detail-header">
+      <h2 id="detail-title" class="detail-title">…</h2>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="vocab">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             style="display:inline; vertical-align: middle; margin-right: 4px;">
+          <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+        </svg>
+        Vocabulary
+      </button>
+      <button class="tab-btn" data-tab="paragraphs">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             style="display:inline; vertical-align: middle; margin-right: 4px;">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+        Paragraphs
+      </button>
+    </div>
+
+    <!-- ============ VOCABULARY TAB ============ -->
+    <div id="panel-vocab" class="tab-panel active">
+
+      <div class="vocab-toolbar">
+        <div class="vocab-search">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input class="form-input" type="text" id="vocab-search-input" placeholder="Search words…" />
+        </div>
+        <button id="btn-add-word" class="btn btn-primary btn-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Add Word
+        </button>
+      </div>
+
+      <!-- Loading -->
+      <div id="vocab-loading" class="text-center" style="padding:var(--sp-7)">
+        <div class="spinner spinner-lg"></div>
+      </div>
+
+      <!-- Empty -->
+      <div id="vocab-empty" class="empty-state hidden">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+        </svg>
+        <h3>No Words Yet</h3>
+        <p>Add your first vocabulary word to this topic.</p>
+      </div>
+
+      <!-- Table -->
+      <div id="vocab-table-wrapper" class="vocab-table-wrapper hidden">
+        <table class="vocab-table">
+          <thead>
+            <tr>
+              <th>English</th>
+              <th>IPA</th>
+              <th>Vietnamese</th>
+              <th>Description</th>
+              <th>Type</th>
+              <th style="width:80px">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="vocab-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ============ PARAGRAPHS TAB ============ -->
+    <div id="panel-paragraphs" class="tab-panel">
+
+      <div class="para-toolbar">
+        <p class="text-sm text-light" id="para-count"></p>
+        <button id="btn-generate-ai" class="btn btn-accent btn-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          </svg>
+          Generate with AI
+        </button>
+      </div>
+
+      <!-- AI generating indicator -->
+      <div id="ai-generating" class="ai-generating hidden">
+        <div class="spinner"></div>
+        <span>AI is generating a paragraph from your vocabulary… This may take a few seconds.</span>
+      </div>
+
+      <!-- Loading -->
+      <div id="para-loading" class="text-center hidden" style="padding:var(--sp-7)">
+        <div class="spinner spinner-lg"></div>
+      </div>
+
+      <!-- Empty -->
+      <div id="para-empty" class="empty-state hidden">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
+        <h3>No Paragraphs Yet</h3>
+        <p>Click "Generate with AI" to create a paragraph from your vocabulary.</p>
+      </div>
+
+      <!-- Paragraph list -->
+      <div id="para-list" class="para-list hidden"></div>
+    </div>
+  </main>
+
+  <!-- ===== Add / Edit Word Modal ===== -->
+  <div id="modal-word" class="modal-overlay">
+    <div class="modal" style="max-width:560px">
+      <div class="modal-header">
+        <h3 id="modal-word-title">Add Word</h3>
+        <button class="btn-icon" data-close-modal aria-label="Close">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <form id="form-word" class="vocab-form">
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="input-english">English</label>
+              <input class="form-input" type="text" id="input-english" placeholder="e.g. accomplish" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="input-vietnamese">Vietnamese</label>
+              <input class="form-input" type="text" id="input-vietnamese" placeholder="e.g. hoàn thành" required />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="input-ipa">IPA Pronunciation</label>
+              <input class="form-input" type="text" id="input-ipa" placeholder="e.g. /əˈkɑːm.plɪʃ/" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="input-word-type">Word Type</label>
+              <select class="form-select" id="input-word-type">
+                <option value="noun">Noun</option>
+                <option value="verb">Verb</option>
+                <option value="adj">Adjective</option>
+                <option value="adv">Adverb</option>
+                <option value="phrase">Phrase</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="input-description">Description (Vietnamese)</label>
+            <textarea class="form-textarea" id="input-description" rows="2"
+                      placeholder="e.g. Đạt được mục tiêu hoặc hoàn thành nhiệm vụ"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" data-close-modal>Cancel</button>
+          <button type="submit" id="btn-word-save" class="btn btn-primary">Add</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== Firebase SDK ===== -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+  <!-- ===== App Script ===== -->
+  <script type="module">
+    import { guardAuth, logout, getQueryParam, navigateTo } from './js/router.js';
+    import { initFirebase } from './js/firebase.js';
+    import { getTopic } from './js/topics.js';
+    import { loadWords, addWord, updateWord, deleteWord } from './js/vocabulary.js';
+    import { loadParagraphs, saveParagraph, deleteParagraph } from './js/paragraphs.js';
+    import { generateParagraph } from './js/ai.js';
+    import {
+      showModal, closeModal, setupModalClose,
+      showToast, confirmDialog, formatDate, escapeHtml
+    } from './js/ui.js';
+
+    // ---- Auth & Firebase ----
+    const session = guardAuth();
+    initFirebase(session.firebase);
+
+    document.getElementById('nav-username').textContent = session.username;
+    document.getElementById('btn-logout').addEventListener('click', logout);
+
+    // ---- Topic ID from URL ----
+    const topicId = getQueryParam('topicId');
+    if (!topicId) {
+      navigateTo('topics.html');
+      throw new Error('No topicId');
+    }
+
+    // ---- DOM Refs ----
+    // Header
+    const breadcrumbTopic = document.getElementById('breadcrumb-topic');
+    const detailTitle     = document.getElementById('detail-title');
+
+    // Vocab
+    const vocabLoading   = document.getElementById('vocab-loading');
+    const vocabEmpty     = document.getElementById('vocab-empty');
+    const vocabWrapper   = document.getElementById('vocab-table-wrapper');
+    const vocabTbody     = document.getElementById('vocab-tbody');
+    const vocabSearch    = document.getElementById('vocab-search-input');
+    const btnAddWord     = document.getElementById('btn-add-word');
+
+    // Paragraphs
+    const paraLoading    = document.getElementById('para-loading');
+    const paraEmpty      = document.getElementById('para-empty');
+    const paraList       = document.getElementById('para-list');
+    const paraCount      = document.getElementById('para-count');
+    const btnGenerateAI  = document.getElementById('btn-generate-ai');
+    const aiGeneratingEl = document.getElementById('ai-generating');
+
+    // Word modal
+    const modalWordOverlay = document.getElementById('modal-word');
+    const modalWordTitle   = document.getElementById('modal-word-title');
+    const formWord         = document.getElementById('form-word');
+    const inputEnglish     = document.getElementById('input-english');
+    const inputVietnamese  = document.getElementById('input-vietnamese');
+    const inputIpa         = document.getElementById('input-ipa');
+    const inputWordType    = document.getElementById('input-word-type');
+    const inputDescription = document.getElementById('input-description');
+    const btnWordSave      = document.getElementById('btn-word-save');
+
+    setupModalClose('#modal-word');
+
+    // ---- State ----
+    let allWords = [];
+    let editingWordId = null;
+
+    // ============================================================
+    // TABS
+    // ============================================================
+    document.querySelectorAll('.tab-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach((p) => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(`panel-${btn.dataset.tab}`).classList.add('active');
+
+        // Lazy-load paragraphs the first time
+        if (btn.dataset.tab === 'paragraphs' && !parasLoaded) {
+          renderParagraphs();
+        }
+      });
+    });
+
+    // ============================================================
+    // LOAD TOPIC INFO
+    // ============================================================
+    async function loadTopicInfo() {
+      try {
+        const topic = await getTopic(topicId);
+        if (!topic) {
+          showToast('Topic not found.', 'error');
+          navigateTo('topics.html');
+          return;
+        }
+        breadcrumbTopic.textContent = topic.name;
+        detailTitle.textContent = topic.name;
+        document.title = `WordCraft — ${topic.name}`;
+      } catch (err) {
+        console.error(err);
+        showToast('Failed to load topic info.', 'error');
+      }
+    }
+
+    // ============================================================
+    // VOCABULARY
+    // ============================================================
+    const WORD_TYPE_LABELS = {
+      noun: 'Noun', verb: 'Verb', adj: 'Adjective',
+      adv: 'Adverb', phrase: 'Phrase', other: 'Other',
+    };
+
+    function badgeClass(type) {
+      return `badge badge-${type || 'other'}`;
+    }
+
+    async function renderVocabulary() {
+      vocabLoading.classList.remove('hidden');
+      vocabEmpty.classList.add('hidden');
+      vocabWrapper.classList.add('hidden');
+
+      try {
+        allWords = await loadWords(topicId);
+        vocabLoading.classList.add('hidden');
+        renderFilteredWords();
+      } catch (err) {
+        console.error(err);
+        vocabLoading.classList.add('hidden');
+        showToast('Failed to load vocabulary.', 'error');
+      }
+    }
+
+    function renderFilteredWords() {
+      const query = vocabSearch.value.trim().toLowerCase();
+      const filtered = query
+        ? allWords.filter((w) =>
+            w.english.toLowerCase().includes(query) ||
+            w.vietnamese.toLowerCase().includes(query)
+          )
+        : allWords;
+
+      if (filtered.length === 0) {
+        vocabEmpty.classList.remove('hidden');
+        vocabWrapper.classList.add('hidden');
+        return;
+      }
+
+      vocabEmpty.classList.add('hidden');
+      vocabWrapper.classList.remove('hidden');
+
+      vocabTbody.innerHTML = filtered.map((w) => `
+        <tr data-id="${w.id}">
+          <td class="vocab-english">${escapeHtml(w.english)}</td>
+          <td class="vocab-ipa">${escapeHtml(w.ipa || '—')}</td>
+          <td>${escapeHtml(w.vietnamese)}</td>
+          <td class="vocab-desc">${escapeHtml(w.description || '—')}</td>
+          <td><span class="${badgeClass(w.wordType)}">${WORD_TYPE_LABELS[w.wordType] || w.wordType}</span></td>
+          <td class="vocab-actions">
+            <button class="btn-icon" data-action="edit" data-id="${w.id}" title="Edit">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+            </button>
+            <button class="btn-icon" data-action="delete-word" data-id="${w.id}" data-name="${escapeHtml(w.english)}" title="Delete">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                <path d="M10 11v6"/><path d="M14 11v6"/>
+                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+              </svg>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // Search
+    vocabSearch.addEventListener('input', renderFilteredWords);
+
+    // Table event delegation
+    vocabTbody.addEventListener('click', async (e) => {
+      const btn = e.target.closest('[data-action]');
+      if (!btn) return;
+
+      const action = btn.dataset.action;
+      const id = btn.dataset.id;
+
+      if (action === 'edit') {
+        const word = allWords.find((w) => w.id === id);
+        if (!word) return;
+        editingWordId = id;
+        modalWordTitle.textContent = 'Edit Word';
+        btnWordSave.textContent = 'Save';
+        inputEnglish.value     = word.english;
+        inputVietnamese.value  = word.vietnamese;
+        inputIpa.value         = word.ipa || '';
+        inputWordType.value    = word.wordType || 'other';
+        inputDescription.value = word.description || '';
+        showModal(modalWordOverlay);
+      }
+
+      if (action === 'delete-word') {
+        const name = btn.dataset.name;
+        const ok = await confirmDialog(
+          `Delete the word "${name}"?`,
+          { title: 'Delete Word', confirmText: 'Delete' }
+        );
+        if (!ok) return;
+        try {
+          await deleteWord(topicId, id);
+          showToast('Word deleted.', 'success');
+          renderVocabulary();
+        } catch (err) {
+          console.error(err);
+          showToast('Failed to delete word.', 'error');
+        }
+      }
+    });
+
+    // Add word button
+    btnAddWord.addEventListener('click', () => {
+      editingWordId = null;
+      modalWordTitle.textContent = 'Add Word';
+      btnWordSave.textContent = 'Add';
+      formWord.reset();
+      showModal(modalWordOverlay);
+    });
+
+    // Word form submit
+    formWord.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data = {
+        english:     inputEnglish.value.trim(),
+        vietnamese:  inputVietnamese.value.trim(),
+        ipa:         inputIpa.value.trim(),
+        wordType:    inputWordType.value,
+        description: inputDescription.value.trim(),
+      };
+
+      if (!data.english || !data.vietnamese) {
+        showToast('English and Vietnamese fields are required.', 'warning');
+        return;
+      }
+
+      btnWordSave.disabled = true;
+      try {
+        if (editingWordId) {
+          await updateWord(topicId, editingWordId, data);
+          showToast('Word updated.', 'success');
+        } else {
+          await addWord(topicId, data);
+          showToast('Word added!', 'success');
+        }
+        closeModal(modalWordOverlay);
+        renderVocabulary();
+      } catch (err) {
+        console.error(err);
+        showToast('Operation failed.', 'error');
+      } finally {
+        btnWordSave.disabled = false;
+      }
+    });
+
+    // ============================================================
+    // PARAGRAPHS
+    // ============================================================
+    let parasLoaded = false;
+
+    async function renderParagraphs() {
+      paraLoading.classList.remove('hidden');
+      paraEmpty.classList.add('hidden');
+      paraList.classList.add('hidden');
+
+      try {
+        const paragraphs = await loadParagraphs(topicId);
+        parasLoaded = true;
+        paraLoading.classList.add('hidden');
+
+        paraCount.textContent = paragraphs.length
+          ? `${paragraphs.length} paragraph${paragraphs.length !== 1 ? 's' : ''}`
+          : '';
+
+        if (paragraphs.length === 0) {
+          paraEmpty.classList.remove('hidden');
+          return;
+        }
+
+        paraList.innerHTML = paragraphs.map((p) => `
+          <div class="card para-card" data-id="${p.id}">
+            <div class="para-card-header">
+              <span>${p.createdAt ? formatDate(p.createdAt) : 'Just now'}</span>
+              <button class="btn-icon" data-action="delete-para" data-id="${p.id}" title="Delete paragraph">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                  <path d="M10 11v6"/><path d="M14 11v6"/>
+                  <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                </svg>
+              </button>
+            </div>
+            <div class="para-card-body">
+              <div class="para-section">
+                <div class="para-section-label">English</div>
+                <p class="para-english">${escapeHtml(p.englishText)}</p>
+              </div>
+              <div class="para-section">
+                <div class="para-section-label">Vietnamese</div>
+                <p class="para-vietnamese">${escapeHtml(p.vietnameseText)}</p>
+              </div>
+            </div>
+          </div>
+        `).join('');
+
+        paraList.classList.remove('hidden');
+
+      } catch (err) {
+        console.error(err);
+        paraLoading.classList.add('hidden');
+        showToast('Failed to load paragraphs.', 'error');
+      }
+    }
+
+    // Paragraph delegation
+    paraList.addEventListener('click', async (e) => {
+      const btn = e.target.closest('[data-action="delete-para"]');
+      if (!btn) return;
+
+      const id = btn.dataset.id;
+      const ok = await confirmDialog(
+        'Delete this paragraph?',
+        { title: 'Delete Paragraph', confirmText: 'Delete' }
+      );
+      if (!ok) return;
+
+      try {
+        await deleteParagraph(topicId, id);
+        showToast('Paragraph deleted.', 'success');
+        renderParagraphs();
+      } catch (err) {
+        console.error(err);
+        showToast('Failed to delete paragraph.', 'error');
+      }
+    });
+
+    // Generate with AI
+    btnGenerateAI.addEventListener('click', async () => {
+      // Need words first
+      if (allWords.length === 0) {
+        showToast('Add some vocabulary words first before generating a paragraph.', 'warning');
+        return;
+      }
+
+      const englishWords = allWords.map((w) => w.english);
+
+      btnGenerateAI.disabled = true;
+      aiGeneratingEl.classList.remove('hidden');
+
+      try {
+        const result = await generateParagraph(englishWords);
+
+        // Save to Firestore
+        await saveParagraph(topicId, {
+          englishText:    result.english,
+          vietnameseText: result.vietnamese,
+        });
+
+        showToast('Paragraph generated and saved!', 'success');
+        renderParagraphs();
+
+      } catch (err) {
+        console.error(err);
+        showToast(err.message || 'Failed to generate paragraph.', 'error');
+      } finally {
+        btnGenerateAI.disabled = false;
+        aiGeneratingEl.classList.add('hidden');
+      }
+    });
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    loadTopicInfo();
+    renderVocabulary();
+  </script>
+</body>
+</html>

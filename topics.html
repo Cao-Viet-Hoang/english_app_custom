@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WordCraft — My Topics</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/topics.css" />
+</head>
+<body class="topics-page">
+
+  <!-- ===== Navbar ===== -->
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+      </svg>
+      WordCraft
+    </div>
+    <div class="navbar-actions">
+      <span id="nav-username" class="navbar-user"></span>
+      <button id="btn-logout" class="btn btn-ghost btn-sm">Sign Out</button>
+    </div>
+  </nav>
+
+  <!-- ===== Main Content ===== -->
+  <main class="container">
+    <!-- Header -->
+    <div class="topics-header">
+      <h2>My Topics <span id="topic-count" class="topic-count"></span></h2>
+      <button id="btn-new-topic" class="btn btn-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        New Topic
+      </button>
+    </div>
+
+    <!-- Loading -->
+    <div id="topics-loading" class="text-center" style="padding:var(--sp-8)">
+      <div class="spinner spinner-lg"></div>
+    </div>
+
+    <!-- Empty state -->
+    <div id="topics-empty" class="empty-state hidden">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+      </svg>
+      <h3>No Topics Yet</h3>
+      <p>Create your first vocabulary topic to get started!</p>
+      <button id="btn-new-topic-empty" class="btn btn-primary">Create a Topic</button>
+    </div>
+
+    <!-- Topic Grid -->
+    <div id="topics-grid" class="topics-grid hidden"></div>
+  </main>
+
+  <!-- ===== New / Rename Topic Modal ===== -->
+  <div id="modal-topic" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modal-topic-title">New Topic</h3>
+        <button class="btn-icon" data-close-modal aria-label="Close">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <form id="form-topic">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="input-topic-name">Topic Name</label>
+            <input class="form-input" type="text" id="input-topic-name"
+                   placeholder="e.g. Business English" maxlength="80" required />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" data-close-modal>Cancel</button>
+          <button type="submit" id="btn-topic-save" class="btn btn-primary">Create</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== Firebase SDK ===== -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+  <!-- ===== App Script ===== -->
+  <script type="module">
+    import { guardAuth, logout, navigateTo, getSession } from './js/router.js';
+    import { initFirebase } from './js/firebase.js';
+    import { loadTopics, createTopic, renameTopic, deleteTopic } from './js/topics.js';
+    import { showModal, closeModal, setupModalClose, showToast, confirmDialog, formatDate, escapeHtml } from './js/ui.js';
+
+    // ---- Guard & Init ----
+    const session = guardAuth();
+    initFirebase(session.firebase);
+
+    document.getElementById('nav-username').textContent = session.username;
+    document.getElementById('btn-logout').addEventListener('click', logout);
+
+    // ---- DOM refs ----
+    const loadingEl    = document.getElementById('topics-loading');
+    const emptyEl      = document.getElementById('topics-empty');
+    const gridEl       = document.getElementById('topics-grid');
+    const countEl      = document.getElementById('topic-count');
+    const modalOverlay = document.getElementById('modal-topic');
+    const modalTitle   = document.getElementById('modal-topic-title');
+    const form         = document.getElementById('form-topic');
+    const inputName    = document.getElementById('input-topic-name');
+    const btnSave      = document.getElementById('btn-topic-save');
+
+    setupModalClose('#modal-topic');
+
+    // ---- State ----
+    let editingTopicId = null;
+
+    // ---- Render ----
+    async function render() {
+      loadingEl.classList.remove('hidden');
+      emptyEl.classList.add('hidden');
+      gridEl.classList.add('hidden');
+
+      try {
+        const topics = await loadTopics();
+
+        loadingEl.classList.add('hidden');
+
+        if (topics.length === 0) {
+          emptyEl.classList.remove('hidden');
+          countEl.textContent = '';
+          return;
+        }
+
+        countEl.textContent = `(${topics.length})`;
+        gridEl.innerHTML = topics.map((t) => `
+          <div class="card topic-card" data-id="${t.id}">
+            <div class="topic-card-header">
+              <span class="topic-card-title" data-action="open" data-id="${t.id}">
+                ${escapeHtml(t.name)}
+              </span>
+              <div class="topic-card-actions">
+                <button class="btn-icon" data-action="rename" data-id="${t.id}" data-name="${escapeHtml(t.name)}" title="Rename">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                       fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+                <button class="btn-icon" data-action="delete" data-id="${t.id}" data-name="${escapeHtml(t.name)}" title="Delete">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                       fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                    <path d="M10 11v6"/><path d="M14 11v6"/>
+                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="topic-card-meta">
+              <span>${t.wordCount || 0} word${(t.wordCount || 0) !== 1 ? 's' : ''}</span>
+              <span>${t.createdAt ? formatDate(t.createdAt) : ''}</span>
+            </div>
+          </div>
+        `).join('');
+
+        gridEl.classList.remove('hidden');
+
+      } catch (err) {
+        console.error('Failed to load topics:', err);
+        loadingEl.classList.add('hidden');
+        showToast('Failed to load topics. Please try again.', 'error');
+      }
+    }
+
+    // ---- Event delegation on grid ----
+    gridEl.addEventListener('click', async (e) => {
+      const btn = e.target.closest('[data-action]');
+      if (!btn) return;
+
+      const action = btn.dataset.action;
+      const id     = btn.dataset.id;
+      const name   = btn.dataset.name;
+
+      if (action === 'open') {
+        navigateTo('topic-detail.html', { topicId: id });
+      }
+
+      if (action === 'rename') {
+        editingTopicId = id;
+        modalTitle.textContent = 'Rename Topic';
+        btnSave.textContent = 'Save';
+        inputName.value = name;
+        showModal(modalOverlay);
+      }
+
+      if (action === 'delete') {
+        const ok = await confirmDialog(
+          `Delete topic "${name}" and all its vocabulary and paragraphs?`,
+          { title: 'Delete Topic', confirmText: 'Delete' }
+        );
+        if (!ok) return;
+
+        try {
+          await deleteTopic(id);
+          showToast('Topic deleted.', 'success');
+          render();
+        } catch (err) {
+          console.error(err);
+          showToast('Failed to delete topic.', 'error');
+        }
+      }
+    });
+
+    // ---- New topic buttons ----
+    function openNewTopicModal() {
+      editingTopicId = null;
+      modalTitle.textContent = 'New Topic';
+      btnSave.textContent = 'Create';
+      inputName.value = '';
+      showModal(modalOverlay);
+    }
+
+    document.getElementById('btn-new-topic').addEventListener('click', openNewTopicModal);
+    document.getElementById('btn-new-topic-empty').addEventListener('click', openNewTopicModal);
+
+    // ---- Form submit (create or rename) ----
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = inputName.value.trim();
+      if (!name) return;
+
+      btnSave.disabled = true;
+
+      try {
+        if (editingTopicId) {
+          await renameTopic(editingTopicId, name);
+          showToast('Topic renamed.', 'success');
+        } else {
+          await createTopic(name);
+          showToast('Topic created!', 'success');
+        }
+        closeModal(modalOverlay);
+        render();
+      } catch (err) {
+        console.error(err);
+        showToast('Operation failed. Please try again.', 'error');
+      } finally {
+        btnSave.disabled = false;
+      }
+    });
+
+    // ---- Initial load ----
+    render();
+  </script>
+</body>
+</html>
