@@ -31,14 +31,16 @@ export async function generateParagraph(englishWords) {
   const wordList = englishWords.join(', ');
 
   const systemPrompt = `You are an English language tutor. 
-Your task is to write a short, coherent paragraph (4-8 sentences) using the provided vocabulary words. 
+Your task is to write a coherent paragraph using the provided vocabulary words. 
 The paragraph should be natural, educational, and easy to understand for English learners.
 Then provide the Vietnamese translation of the entire paragraph.
 
 IMPORTANT: 
 - Use ALL of the given words in the English paragraph.
 - The paragraph should tell a small story or describe a situation.
-- Keep sentences simple and clear.
+- Adjust the number of sentences based on the number of vocabulary words provided: roughly 1-2 sentences per word, but keep the total between 3 and 10 sentences maximum.
+- ONLY the provided vocabulary words may be advanced or unfamiliar. All other words in the paragraph must be extremely common, basic English (A1-A2 level) so that learners can focus on the target vocabulary without being overwhelmed by additional unknown words.
+- Keep sentence structure simple and clear.
 - Return ONLY valid JSON with exactly two fields: "english" and "vietnamese".
 - Do NOT wrap the JSON in markdown code blocks.`;
 
@@ -55,8 +57,8 @@ Return your response as JSON:
       { role: 'system', content: systemPrompt },
       { role: 'user',   content: userPrompt },
     ],
-    temperature: 0.7,
-    max_completion_tokens: 1000,
+    temperature: 1,
+    max_completion_tokens: 2000,
   };
 
   const response = await fetch(url, {
@@ -105,10 +107,10 @@ Return your response as JSON:
 /**
  * Call Azure OpenAI to auto-fill word details for a given English word.
  *
- * Returns { vietnamese, ipa, wordType, description }
+ * Returns { vietnamese, ipaUS, ipaUK, wordType, description }
  *
  * @param {string} englishWord  The English word to look up
- * @returns {Promise<{ vietnamese: string, ipa: string, wordType: string, description: string }>}
+ * @returns {Promise<{ vietnamese: string, ipaUS: string, ipaUK: string, wordType: string, description: string }>}
  */
 export async function generateWordInfo(englishWord) {
   const session = getSession();
@@ -149,7 +151,7 @@ Return JSON:
       { role: 'system', content: systemPrompt },
       { role: 'user',   content: userPrompt },
     ],
-    temperature: 0.3,
+    temperature: 0.5,
     max_completion_tokens: 300,
   };
 
