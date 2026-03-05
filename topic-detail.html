@@ -339,7 +339,15 @@
         <!-- Loading state -->
         <div id="bulk-loading" class="ai-generating hidden">
           <div class="spinner"></div>
-          <span id="bulk-loading-text">AI is generating word details… This may take a moment.</span>
+          <div class="bulk-progress-info">
+            <span id="bulk-loading-text">AI is generating word details… This may take a moment.</span>
+            <div id="bulk-progress-bar-wrap" class="bulk-progress-bar-wrap hidden">
+              <div class="bulk-progress-track">
+                <div id="bulk-progress-fill" class="bulk-progress-fill"></div>
+              </div>
+              <span id="bulk-progress-count"></span>
+            </div>
+          </div>
         </div>
 
         <!-- Step 2: Preview results -->
@@ -526,7 +534,7 @@
         Generating…
       `;
       try {
-        const info = await generateWordInfo(word);
+        const info = await generateWordInfo(word, topicName);
         inputVietnamese.value  = info.vietnamese;
         inputIpaUS.value       = info.ipaUS;
         inputIpaUK.value       = info.ipaUK;
@@ -549,22 +557,27 @@
     });
 
     // ---- Bulk Add refs & logic ----
-    const modalBulkAdd      = document.getElementById('modal-bulk-add');
-    const bulkWordsInput    = document.getElementById('bulk-words-input');
-    const bulkStepInput     = document.getElementById('bulk-step-input');
-    const bulkStepPreview   = document.getElementById('bulk-step-preview');
-    const bulkLoading       = document.getElementById('bulk-loading');
-    const bulkLoadingText   = document.getElementById('bulk-loading-text');
-    const bulkAdding        = document.getElementById('bulk-adding');
-    const bulkAddingText    = document.getElementById('bulk-adding-text');
-    const bulkPreviewTbody  = document.getElementById('bulk-preview-tbody');
-    const bulkCounter       = document.getElementById('bulk-counter');
-    const bulkBtnGenerate   = document.getElementById('bulk-btn-generate');
-    const bulkBtnAdd        = document.getElementById('bulk-btn-add');
-    const bulkSelectAll     = document.getElementById('bulk-select-all');
-    const bulkDeselectAll   = document.getElementById('bulk-deselect-all');
-    const bulkModalTitle    = document.getElementById('bulk-modal-title');
-    const btnBulkAdd        = document.getElementById('btn-bulk-add');
+    const modalBulkAdd        = document.getElementById('modal-bulk-add');
+    const bulkWordsInput      = document.getElementById('bulk-words-input');
+    const bulkStepInput       = document.getElementById('bulk-step-input');
+    const bulkStepPreview     = document.getElementById('bulk-step-preview');
+    const bulkLoading         = document.getElementById('bulk-loading');
+    const bulkLoadingText     = document.getElementById('bulk-loading-text');
+    const bulkProgressBarWrap = document.getElementById('bulk-progress-bar-wrap');
+    const bulkProgressFill    = document.getElementById('bulk-progress-fill');
+    const bulkProgressCount   = document.getElementById('bulk-progress-count');
+    const bulkAdding          = document.getElementById('bulk-adding');
+    const bulkAddingText      = document.getElementById('bulk-adding-text');
+    const bulkPreviewTbody    = document.getElementById('bulk-preview-tbody');
+    const bulkCounter         = document.getElementById('bulk-counter');
+    const bulkBtnGenerate     = document.getElementById('bulk-btn-generate');
+    const bulkBtnAdd          = document.getElementById('bulk-btn-add');
+    const bulkSelectAll       = document.getElementById('bulk-select-all');
+    const bulkDeselectAll     = document.getElementById('bulk-deselect-all');
+    const bulkModalTitle      = document.getElementById('bulk-modal-title');
+    const btnBulkAdd          = document.getElementById('btn-bulk-add');
+
+    const GENERATE_BTN_HTML = bulkBtnGenerate.innerHTML;
 
     let bulkResults = [];
 
@@ -602,9 +615,11 @@
       bulkStepInput.classList.remove('hidden');
       bulkStepPreview.classList.add('hidden');
       bulkLoading.classList.add('hidden');
+      bulkProgressBarWrap.classList.add('hidden');
       bulkAdding.classList.add('hidden');
       bulkBtnGenerate.classList.remove('hidden');
       bulkBtnGenerate.disabled = false;
+      bulkBtnGenerate.innerHTML = GENERATE_BTN_HTML;
       bulkBtnAdd.classList.add('hidden');
       bulkModalTitle.textContent = 'Bulk Add Words';
       bulkResults = [];
@@ -645,13 +660,34 @@
       }
 
       bulkBtnGenerate.disabled = true;
+      bulkBtnGenerate.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             class="spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+        Generating…
+      `;
       bulkStepInput.classList.add('hidden');
       bulkLoading.classList.remove('hidden');
-      bulkLoadingText.textContent = `AI is generating details for ${words.length} word${words.length > 1 ? 's' : ''}… This may take a moment.`;
+      bulkProgressBarWrap.classList.add('hidden');
+      bulkProgressFill.style.width = '0%';
+      bulkLoadingText.textContent = `AI is generating details for ${words.length} word${words.length > 1 ? 's' : ''}…`;
+
+      let progressBarShown = false;
 
       try {
-        const results = await generateBulkWordInfo(words);
+        const results = await generateBulkWordInfo(words, (done, total) => {
+          if (done < total) {
+            if (!progressBarShown) {
+              bulkProgressBarWrap.classList.remove('hidden');
+              progressBarShown = true;
+            }
+            const pct = Math.round((done / total) * 100);
+            bulkProgressFill.style.width = `${pct}%`;
+            bulkProgressCount.textContent = `${done} / ${total} words`;
+          }
+        }, topicName);
         bulkLoading.classList.add('hidden');
+        bulkProgressBarWrap.classList.add('hidden');
         bulkStepPreview.classList.remove('hidden');
         bulkBtnGenerate.classList.add('hidden');
         bulkBtnAdd.classList.remove('hidden');
@@ -661,8 +697,10 @@
         console.error(err);
         showToast('AI generation failed. ' + (err.message || ''), 'error');
         bulkLoading.classList.add('hidden');
+        bulkProgressBarWrap.classList.add('hidden');
         bulkStepInput.classList.remove('hidden');
         bulkBtnGenerate.disabled = false;
+        bulkBtnGenerate.innerHTML = GENERATE_BTN_HTML;
       }
     });
 
@@ -704,6 +742,7 @@
     // ---- State ----
     let allWords = [];
     let editingWordId = null;
+    let topicName = '';
 
     // ============================================================
     // TABS
@@ -733,6 +772,7 @@
           navigateTo('topics.html');
           return;
         }
+        topicName = topic.name;
         breadcrumbTopic.textContent = topic.name;
         detailTitle.textContent = topic.name;
         document.title = `WordCraft — ${topic.name}`;
@@ -1068,7 +1108,9 @@
         return;
       }
 
+      const originalSaveText = btnWordSave.textContent;
       btnWordSave.disabled = true;
+      btnWordSave.textContent = editingWordId ? 'Saving…' : 'Adding…';
       try {
         if (editingWordId) {
           await updateWord(topicId, editingWordId, data);
@@ -1084,6 +1126,7 @@
         showToast('Operation failed.', 'error');
       } finally {
         btnWordSave.disabled = false;
+        btnWordSave.textContent = originalSaveText;
       }
     });
 

@@ -124,6 +124,16 @@ h4 { font-size: var(--fs-md); }
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.btn:disabled:hover { transform: none; }
+.btn:disabled:active { transform: none; }
+.btn .spin {
+  animation: spin .8s linear infinite;
+  display: inline-block;
+}
 
 .btn-primary {
   background: var(--color-primary);

@@ -115,7 +115,7 @@ Return your response as JSON:
  * @param {string} englishWord  The English word to look up
  * @returns {Promise<{ vietnamese: string, ipaUS: string, ipaUK: string, wordType: string, description: string }>}
  */
-export async function generateWordInfo(englishWord) {
+export async function generateWordInfo(englishWord, topicName) {
   const session = getSession();
   if (!session || !session.azureOpenAI) {
     throw new Error('Azure OpenAI config not found. Please log in again.');
@@ -126,6 +126,10 @@ export async function generateWordInfo(englishWord) {
   const version = apiVersion || '2024-08-01-preview';
   const url = `${baseUrl}/openai/deployments/${deploymentName}/chat/completions?api-version=${version}`;
 
+  const topicContext = topicName
+    ? `\nThis word is being added to a vocabulary topic called "${topicName}". Use this context to choose the most relevant meaning and usage.`
+    : '';
+
   const systemPrompt = `You are an English-Vietnamese dictionary assistant.
 Given an English word or phrase, return a JSON object with these fields:
 - "vietnamese": the most common Vietnamese translation (short, 1-5 words)
@@ -133,7 +137,7 @@ Given an English word or phrase, return a JSON object with these fields:
 - "ipaUK": the IPA pronunciation for British English (e.g. /əˈkʌm.plɪʃ/)
 - "wordType": one of exactly: noun, verb, adj, adv, phrase, other
 - "description": a brief Vietnamese description or usage note (1-2 short sentences)
-
+${topicContext}
 IMPORTANT:
 - Return ONLY valid JSON, no markdown code blocks, no extra text.
 - Use standard IPA notation with slashes for both US and UK pronunciations.`;
@@ -207,7 +211,7 @@ Return JSON:
  * @param {string[]} englishWords  Array of English words to look up
  * @returns {Promise<Array<{ english: string, vietnamese: string, ipaUS: string, ipaUK: string, wordType: string, description: string }>>}
  */
-export async function generateBulkWordInfo(englishWords) {
+export async function generateBulkWordInfo(englishWords, onProgress, topicName) {
   const session = getSession();
   if (!session || !session.azureOpenAI) {
     throw new Error('Azure OpenAI config not found. Please log in again.');
@@ -225,15 +229,22 @@ export async function generateBulkWordInfo(englishWords) {
   const allResults = [];
   for (let i = 0; i < englishWords.length; i += BULK_WORD_BATCH_SIZE) {
     const batchWords = englishWords.slice(i, i + BULK_WORD_BATCH_SIZE);
-    const batchResults = await requestBulkWordInfoBatch(url, apiKey, batchWords);
+    const batchResults = await requestBulkWordInfoBatch(url, apiKey, batchWords, topicName);
     allResults.push(...batchResults);
+    if (typeof onProgress === 'function') {
+      onProgress(allResults.length, englishWords.length);
+    }
   }
 
   return allResults;
 }
 
-async function requestBulkWordInfoBatch(url, apiKey, englishWords) {
+async function requestBulkWordInfoBatch(url, apiKey, englishWords, topicName) {
   const wordList = englishWords.map(w => `"${w}"`).join(', ');
+
+  const topicContext = topicName
+    ? `\nThese words are being added to a vocabulary topic called "${topicName}". Use this context to choose the most relevant meaning and usage for each word.`
+    : '';
 
   const systemPrompt = `You are an English-Vietnamese dictionary assistant.
 Given a list of English words or phrases, return a JSON array where each element has these fields:
@@ -243,7 +254,7 @@ Given a list of English words or phrases, return a JSON array where each element
 - "ipaUK": the IPA pronunciation for British English (e.g. /əˈkʌm.plɪʃ/)
 - "wordType": one of exactly: noun, verb, adj, adv, phrase, other
 - "description": a brief Vietnamese description or usage note (1-2 short sentences)
-
+${topicContext}
 IMPORTANT:
 - Return ONLY a valid JSON array, no markdown code blocks, no extra text.
 - The array must have exactly one element per input word, in the same order.
