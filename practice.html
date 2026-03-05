@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WordCraft — Practice</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/practice.css" />
+</head>
+<body class="practice-page">
+
+  <!-- ===== Navbar ===== -->
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a class="navbar-brand" href="topics.html">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+        </svg>
+        WordCraft
+      </a>
+      <div class="navbar-spacer"></div>
+      <div class="navbar-right">
+        <div class="navbar-user-info">
+          <span class="navbar-avatar" id="nav-avatar"></span>
+          <span class="navbar-username" id="nav-username"></span>
+        </div>
+        <div class="navbar-vdivider"></div>
+        <button id="btn-logout" class="btn-signout">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          Sign out
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ===== Main Content ===== -->
+  <main class="container">
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+      <a href="topics.html">My Topics</a>
+      <span class="breadcrumb-separator">›</span>
+      <a href="#" id="breadcrumb-topic-link">Loading…</a>
+      <span class="breadcrumb-separator">›</span>
+      <span>Practice</span>
+    </div>
+
+    <!-- Header -->
+    <div class="detail-header">
+      <h2 class="detail-title">
+        <span>Practice</span>
+        <span class="detail-word-badge" id="detail-word-badge"></span>
+      </h2>
+    </div>
+
+    <!-- Mode Selector -->
+    <div class="mode-selector">
+      <button class="mode-btn active" data-mode="flashcard">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+        </svg>
+        Flashcard
+      </button>
+      <button class="mode-btn" data-mode="quiz">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        Quiz
+      </button>
+      <button class="mode-btn" data-mode="matching">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/>
+          <polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/>
+          <line x1="4" y1="4" x2="9" y2="9"/>
+        </svg>
+        Matching
+      </button>
+    </div>
+
+    <!-- Empty state (shown when no words) -->
+    <div id="practice-empty" class="practice-empty hidden">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+      </svg>
+      <h3>Not Enough Words</h3>
+      <p>Add at least 4 vocabulary words to start practicing.</p>
+      <br/>
+      <a id="link-back-detail" href="#" class="btn btn-primary">Go to Topic</a>
+    </div>
+
+    <!-- Loading -->
+    <div id="practice-loading" class="text-center" style="padding:var(--sp-7)">
+      <div class="spinner spinner-lg"></div>
+    </div>
+
+    <!-- ============ FLASHCARD MODE ============ -->
+    <div id="panel-flashcard" class="practice-panel">
+      <div class="stats-bar">
+        <div class="stat">Card <strong id="fc-current">1</strong> of <strong id="fc-total">0</strong></div>
+        <div class="stat stat-progress">
+          <div class="progress-bar"><div class="progress-bar-fill" id="fc-progress" style="width:0%"></div></div>
+          <span id="fc-progress-text">0%</span>
+        </div>
+        <div class="stat">
+          <span style="color:var(--color-success)">✓ <strong id="fc-known">0</strong></span>&nbsp;&nbsp;
+          <span style="color:var(--color-danger)">✗ <strong id="fc-unknown">0</strong></span>
+        </div>
+      </div>
+
+      <div class="flashcard-container" id="fc-container">
+        <div class="flashcard-wrapper">
+          <div class="flashcard" id="fc-card">
+            <div class="flashcard-face flashcard-front">
+              <button class="flashcard-speak-btn" id="fc-speak" title="Listen" type="button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+                </svg>
+              </button>
+              <div class="flashcard-label">English</div>
+              <div class="flashcard-word" id="fc-front-word"></div>
+              <div class="flashcard-ipa" id="fc-front-ipa"></div>
+              <div class="flashcard-type" id="fc-front-type"></div>
+              <div class="flashcard-hint">Click to flip</div>
+            </div>
+            <div class="flashcard-face flashcard-back">
+              <div class="flashcard-label">Vietnamese</div>
+              <div class="flashcard-meaning" id="fc-back-meaning"></div>
+              <div class="flashcard-desc" id="fc-back-desc"></div>
+              <div class="flashcard-hint">Click to flip back</div>
+            </div>
+          </div>
+        </div>
+        <div class="flashcard-actions">
+          <button class="btn btn-dont-know" id="fc-btn-dont-know">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+            Don't know
+          </button>
+          <button class="btn btn-know" id="fc-btn-know">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Know it
+          </button>
+        </div>
+      </div>
+
+      <!-- Flashcard Result -->
+      <div id="fc-result" class="practice-result hidden"></div>
+    </div>
+
+    <!-- ============ QUIZ MODE ============ -->
+    <div id="panel-quiz" class="practice-panel">
+      <div class="direction-toggle">
+        <label for="quiz-direction">Question type:</label>
+        <select id="quiz-direction">
+          <option value="en-vi">English → Vietnamese</option>
+          <option value="vi-en">Vietnamese → English</option>
+        </select>
+      </div>
+
+      <div class="stats-bar">
+        <div class="stat">Question <strong id="qz-current">1</strong> / <strong id="qz-total">0</strong></div>
+        <div class="stat stat-progress">
+          <div class="progress-bar"><div class="progress-bar-fill" id="qz-progress" style="width:0%"></div></div>
+          <span id="qz-progress-text">0%</span>
+        </div>
+        <div class="stat">Score: <strong id="qz-score">0</strong></div>
+      </div>
+
+      <div class="quiz-container" id="qz-container">
+        <div class="quiz-question-card">
+          <div class="quiz-prompt-label" id="qz-label">What does this word mean?</div>
+          <div class="quiz-prompt-word" id="qz-word"></div>
+          <div class="quiz-prompt-ipa" id="qz-ipa"></div>
+        </div>
+        <div class="quiz-options" id="qz-options"></div>
+        <div class="quiz-next-row">
+          <button class="btn btn-primary hidden" id="qz-btn-next">Next Question →</button>
+        </div>
+      </div>
+
+      <!-- Quiz Result -->
+      <div id="qz-result" class="practice-result hidden"></div>
+    </div>
+
+    <!-- ============ MATCHING MODE ============ -->
+    <div id="panel-matching" class="practice-panel">
+      <div class="stats-bar">
+        <div class="stat">Pairs: <strong id="mt-matched">0</strong> / <strong id="mt-total">0</strong></div>
+        <div class="stat">Attempts: <strong id="mt-attempts">0</strong></div>
+        <div class="stat stat-progress">
+          <div class="progress-bar"><div class="progress-bar-fill" id="mt-progress" style="width:0%"></div></div>
+        </div>
+      </div>
+
+      <div class="matching-container" id="mt-container">
+        <div class="matching-grid">
+          <div>
+            <div class="matching-column-header">English</div>
+            <div class="matching-column" id="mt-col-en"></div>
+          </div>
+          <div>
+            <div class="matching-column-header">Vietnamese</div>
+            <div class="matching-column" id="mt-col-vi"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Matching Result -->
+      <div id="mt-result" class="practice-result hidden"></div>
+    </div>
+
+  </main>
+
+  <!-- ===== Firebase SDK ===== -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+  <!-- ===== App Script ===== -->
+  <script type="module">
+    import { guardAuth, logout, getQueryParam, navigateTo } from './js/router.js';
+    import { initFirebase } from './js/firebase.js';
+    import { getTopic } from './js/topics.js';
+    import { loadWords } from './js/vocabulary.js';
+    import { showToast, escapeHtml } from './js/ui.js';
+
+    // ---- Auth & Firebase ----
+    const session = guardAuth();
+    initFirebase(session.firebase);
+
+    document.getElementById('nav-username').textContent = session.username;
+    document.getElementById('nav-avatar').textContent = session.username.charAt(0).toUpperCase();
+    document.getElementById('btn-logout').addEventListener('click', logout);
+
+    // ---- Topic ID from URL ----
+    const topicId = getQueryParam('topicId');
+    if (!topicId) {
+      navigateTo('topics.html');
+      throw new Error('No topicId');
+    }
+
+    // Update breadcrumb link back to topic detail
+    const bcLink = document.getElementById('breadcrumb-topic-link');
+    bcLink.href = `topic-detail.html?topicId=${topicId}`;
+    document.getElementById('link-back-detail').href = `topic-detail.html?topicId=${topicId}`;
+
+    // ---- DOM Refs ----
+    const practiceLoading = document.getElementById('practice-loading');
+    const practiceEmpty   = document.getElementById('practice-empty');
+    const wordBadge       = document.getElementById('detail-word-badge');
+
+    // ---- State ----
+    let allWords = [];
+    const WORD_TYPE_LABELS = {
+      noun: 'Noun', verb: 'Verb', adj: 'Adjective',
+      adv: 'Adverb', phrase: 'Phrase', other: 'Other',
+    };
+
+    // ---- Utility ----
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function speakWord(word) {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(word);
+      u.lang = 'en-US';
+      u.rate = 0.9;
+      window.speechSynthesis.speak(u);
+    }
+
+    function buildResultHtml(correct, total, mode) {
+      const pct = Math.round((correct / total) * 100);
+      let iconClass, iconSvg, label;
+
+      if (pct >= 80) {
+        iconClass = 'great';
+        iconSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+        label = 'Excellent! 🎉';
+      } else if (pct >= 50) {
+        iconClass = 'good';
+        iconSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+        label = 'Good effort! Keep practicing.';
+      } else {
+        iconClass = 'needs-work';
+        iconSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+        label = 'Keep going! Practice makes perfect.';
+      }
+
+      return `
+        <div class="result-icon ${iconClass}">${iconSvg}</div>
+        <div class="result-score">${pct}%</div>
+        <div class="result-label">${label}</div>
+        <div class="result-details">
+          <div class="result-detail-item">
+            <div class="num green">${correct}</div>
+            <div class="lbl">Correct</div>
+          </div>
+          <div class="result-detail-item">
+            <div class="num red">${total - correct}</div>
+            <div class="lbl">Wrong</div>
+          </div>
+        </div>
+        <div class="result-actions">
+          <button class="btn btn-primary" onclick="location.reload()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            Play Again
+          </button>
+          <a class="btn btn-ghost" href="topic-detail.html?topicId=${topicId}">Back to Topic</a>
+        </div>
+      `;
+    }
+
+    // ============================================================
+    // MODE SWITCHING
+    // ============================================================
+    let currentMode = 'flashcard';
+
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (allWords.length < 4) return;
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.practice-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        currentMode = btn.dataset.mode;
+        document.getElementById(`panel-${currentMode}`).classList.add('active');
+        startMode(currentMode);
+      });
+    });
+
+    function startMode(mode) {
+      if (mode === 'flashcard') initFlashcard();
+      else if (mode === 'quiz') initQuiz();
+      else if (mode === 'matching') initMatching();
+    }
+
+    // ============================================================
+    // FLASHCARD
+    // ============================================================
+    let fcWords = [], fcIndex = 0, fcKnown = 0, fcUnknown = 0;
+    const fcCard       = document.getElementById('fc-card');
+    const fcContainer  = document.getElementById('fc-container');
+    const fcResult     = document.getElementById('fc-result');
+    const fcFrontWord  = document.getElementById('fc-front-word');
+    const fcFrontIpa   = document.getElementById('fc-front-ipa');
+    const fcFrontType  = document.getElementById('fc-front-type');
+    const fcBackMeaning= document.getElementById('fc-back-meaning');
+    const fcBackDesc   = document.getElementById('fc-back-desc');
+    const fcCurrent    = document.getElementById('fc-current');
+    const fcTotal      = document.getElementById('fc-total');
+    const fcProgress   = document.getElementById('fc-progress');
+    const fcProgressTxt= document.getElementById('fc-progress-text');
+    const fcKnownEl    = document.getElementById('fc-known');
+    const fcUnknownEl  = document.getElementById('fc-unknown');
+    const fcSpeak      = document.getElementById('fc-speak');
+
+    function initFlashcard() {
+      fcWords = shuffle(allWords);
+      fcIndex = 0;
+      fcKnown = 0;
+      fcUnknown = 0;
+      fcContainer.classList.remove('hidden');
+      fcResult.classList.add('hidden');
+      showFlashcard();
+    }
+
+    function showFlashcard() {
+      if (fcIndex >= fcWords.length) {
+        fcContainer.classList.add('hidden');
+        fcResult.classList.remove('hidden');
+        fcResult.innerHTML = buildResultHtml(fcKnown, fcWords.length, 'flashcard');
+        return;
+      }
+
+      const w = fcWords[fcIndex];
+      fcCard.classList.remove('flipped');
+      fcFrontWord.textContent = w.english;
+      fcFrontIpa.textContent = w.ipaUS || w.ipa || '';
+      fcFrontType.textContent = WORD_TYPE_LABELS[w.wordType] || w.wordType || '';
+      fcBackMeaning.textContent = w.vietnamese;
+      fcBackDesc.textContent = w.description || '';
+
+      fcCurrent.textContent = fcIndex + 1;
+      fcTotal.textContent = fcWords.length;
+      fcKnownEl.textContent = fcKnown;
+      fcUnknownEl.textContent = fcUnknown;
+      const pct = Math.round((fcIndex / fcWords.length) * 100);
+      fcProgress.style.width = pct + '%';
+      fcProgressTxt.textContent = pct + '%';
+    }
+
+    fcCard.addEventListener('click', (e) => {
+      if (e.target.closest('.flashcard-speak-btn')) return;
+      fcCard.classList.toggle('flipped');
+    });
+
+    fcSpeak.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (fcIndex < fcWords.length) speakWord(fcWords[fcIndex].english);
+    });
+
+    document.getElementById('fc-btn-know').addEventListener('click', () => {
+      fcKnown++;
+      fcIndex++;
+      showFlashcard();
+    });
+
+    document.getElementById('fc-btn-dont-know').addEventListener('click', () => {
+      fcUnknown++;
+      fcIndex++;
+      showFlashcard();
+    });
+
+    // Keyboard shortcuts for flashcard
+    document.addEventListener('keydown', (e) => {
+      if (currentMode !== 'flashcard' || fcIndex >= fcWords.length) return;
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        fcCard.classList.toggle('flipped');
+      }
+      if (e.key === 'ArrowRight' || e.key === 'j') {
+        fcKnown++;
+        fcIndex++;
+        showFlashcard();
+      }
+      if (e.key === 'ArrowLeft' || e.key === 'k') {
+        fcUnknown++;
+        fcIndex++;
+        showFlashcard();
+      }
+    });
+
+    // ============================================================
+    // QUIZ
+    // ============================================================
+    let qzWords = [], qzIndex = 0, qzScore = 0, qzAnswered = false;
+    const qzContainer = document.getElementById('qz-container');
+    const qzResult    = document.getElementById('qz-result');
+    const qzWord      = document.getElementById('qz-word');
+    const qzIpa       = document.getElementById('qz-ipa');
+    const qzLabel     = document.getElementById('qz-label');
+    const qzOptions   = document.getElementById('qz-options');
+    const qzBtnNext   = document.getElementById('qz-btn-next');
+    const qzCurrent   = document.getElementById('qz-current');
+    const qzTotal     = document.getElementById('qz-total');
+    const qzScoreEl   = document.getElementById('qz-score');
+    const qzProgress  = document.getElementById('qz-progress');
+    const qzProgressTxt = document.getElementById('qz-progress-text');
+    const qzDirection = document.getElementById('quiz-direction');
+
+    function getDirection() {
+      return qzDirection.value; // 'en-vi' or 'vi-en'
+    }
+
+    qzDirection.addEventListener('change', () => initQuiz());
+
+    function initQuiz() {
+      qzWords = shuffle(allWords);
+      qzIndex = 0;
+      qzScore = 0;
+      qzAnswered = false;
+      qzContainer.classList.remove('hidden');
+      qzResult.classList.add('hidden');
+      showQuizQuestion();
+    }
+
+    function showQuizQuestion() {
+      if (qzIndex >= qzWords.length) {
+        qzContainer.classList.add('hidden');
+        qzResult.classList.remove('hidden');
+        qzResult.innerHTML = buildResultHtml(qzScore, qzWords.length, 'quiz');
+        return;
+      }
+
+      qzAnswered = false;
+      qzBtnNext.classList.add('hidden');
+      const dir = getDirection();
+      const w = qzWords[qzIndex];
+
+      if (dir === 'en-vi') {
+        qzLabel.textContent = 'What does this word mean?';
+        qzWord.textContent = w.english;
+        qzIpa.textContent = w.ipaUS || w.ipa || '';
+      } else {
+        qzLabel.textContent = 'Which English word matches?';
+        qzWord.textContent = w.vietnamese;
+        qzIpa.textContent = '';
+      }
+
+      // Build 4 options: 1 correct + 3 random wrong
+      const others = allWords.filter(x => x.id !== w.id);
+      const wrongPicks = shuffle(others).slice(0, 3);
+      const options = shuffle([w, ...wrongPicks]);
+
+      const keys = ['A', 'B', 'C', 'D'];
+      qzOptions.innerHTML = options.map((opt, i) => {
+        const text = dir === 'en-vi' ? opt.vietnamese : opt.english;
+        return `
+          <button class="quiz-option" data-id="${opt.id}">
+            <span class="option-key">${keys[i]}</span>
+            <span>${escapeHtml(text)}</span>
+          </button>
+        `;
+      }).join('');
+
+      qzCurrent.textContent = qzIndex + 1;
+      qzTotal.textContent = qzWords.length;
+      qzScoreEl.textContent = qzScore;
+      const pct = Math.round((qzIndex / qzWords.length) * 100);
+      qzProgress.style.width = pct + '%';
+      qzProgressTxt.textContent = pct + '%';
+    }
+
+    qzOptions.addEventListener('click', (e) => {
+      const btn = e.target.closest('.quiz-option');
+      if (!btn || qzAnswered) return;
+      qzAnswered = true;
+
+      const selectedId = btn.dataset.id;
+      const correctId = qzWords[qzIndex].id;
+      const isCorrect = selectedId === correctId;
+
+      if (isCorrect) {
+        btn.classList.add('correct');
+        qzScore++;
+        qzScoreEl.textContent = qzScore;
+      } else {
+        btn.classList.add('wrong');
+        // Highlight correct answer
+        qzOptions.querySelector(`[data-id="${correctId}"]`).classList.add('correct');
+      }
+
+      // Disable all options
+      qzOptions.querySelectorAll('.quiz-option').forEach(o => o.classList.add('disabled'));
+      qzBtnNext.classList.remove('hidden');
+    });
+
+    qzBtnNext.addEventListener('click', () => {
+      qzIndex++;
+      showQuizQuestion();
+    });
+
+    // Keyboard shortcuts for quiz
+    document.addEventListener('keydown', (e) => {
+      if (currentMode !== 'quiz') return;
+      if (qzIndex >= qzWords.length) return;
+
+      const keyMap = { '1': 0, '2': 1, '3': 2, '4': 3, 'a': 0, 'b': 1, 'c': 2, 'd': 3 };
+      const idx = keyMap[e.key.toLowerCase()];
+
+      if (!qzAnswered && idx !== undefined) {
+        const btns = qzOptions.querySelectorAll('.quiz-option');
+        if (btns[idx]) btns[idx].click();
+      }
+
+      if (qzAnswered && (e.key === 'Enter' || e.key === ' ')) {
+        e.preventDefault();
+        qzBtnNext.click();
+      }
+    });
+
+    // ============================================================
+    // MATCHING
+    // ============================================================
+    const MATCH_COUNT = 6; // pairs per round
+    let mtWords = [], mtSelected = null, mtMatched = 0, mtAttempts = 0;
+    const mtContainer = document.getElementById('mt-container');
+    const mtResult    = document.getElementById('mt-result');
+    const mtColEn     = document.getElementById('mt-col-en');
+    const mtColVi     = document.getElementById('mt-col-vi');
+    const mtMatchedEl = document.getElementById('mt-matched');
+    const mtTotalEl   = document.getElementById('mt-total');
+    const mtAttemptsEl= document.getElementById('mt-attempts');
+    const mtProgress  = document.getElementById('mt-progress');
+
+    function initMatching() {
+      const count = Math.min(MATCH_COUNT, allWords.length);
+      mtWords = shuffle(allWords).slice(0, count);
+      mtMatched = 0;
+      mtAttempts = 0;
+      mtSelected = null;
+      mtContainer.classList.remove('hidden');
+      mtResult.classList.add('hidden');
+
+      mtTotalEl.textContent = count;
+      mtMatchedEl.textContent = 0;
+      mtAttemptsEl.textContent = 0;
+      mtProgress.style.width = '0%';
+
+      // Shuffle columns independently
+      const enOrder = shuffle(mtWords);
+      const viOrder = shuffle(mtWords);
+
+      mtColEn.innerHTML = enOrder.map(w =>
+        `<div class="match-card" data-id="${w.id}" data-lang="en">${escapeHtml(w.english)}</div>`
+      ).join('');
+
+      mtColVi.innerHTML = viOrder.map(w =>
+        `<div class="match-card" data-id="${w.id}" data-lang="vi">${escapeHtml(w.vietnamese)}</div>`
+      ).join('');
+    }
+
+    function handleMatchClick(card) {
+      if (card.classList.contains('matched') || card.classList.contains('disabled')) return;
+
+      const lang = card.dataset.lang;
+      const id = card.dataset.id;
+
+      // If nothing selected yet
+      if (!mtSelected) {
+        mtSelected = { card, lang, id };
+        card.classList.add('selected');
+        return;
+      }
+
+      // If same column, switch selection
+      if (mtSelected.lang === lang) {
+        mtSelected.card.classList.remove('selected');
+        mtSelected = { card, lang, id };
+        card.classList.add('selected');
+        return;
+      }
+
+      // Different columns — check match
+      mtAttempts++;
+      mtAttemptsEl.textContent = mtAttempts;
+
+      if (mtSelected.id === id) {
+        // Correct match!
+        card.classList.add('matched');
+        mtSelected.card.classList.remove('selected');
+        mtSelected.card.classList.add('matched');
+        mtMatched++;
+        mtMatchedEl.textContent = mtMatched;
+        mtProgress.style.width = Math.round((mtMatched / mtWords.length) * 100) + '%';
+
+        mtSelected = null;
+
+        // Check if all matched
+        if (mtMatched >= mtWords.length) {
+          setTimeout(() => {
+            mtContainer.classList.add('hidden');
+            mtResult.classList.remove('hidden');
+            // For matching, score = optimal attempts vs actual
+            const optimal = mtWords.length;
+            const efficiency = Math.max(0, Math.round((optimal / mtAttempts) * 100));
+            const score = Math.min(mtWords.length, Math.round(mtWords.length * (efficiency / 100)));
+            mtResult.innerHTML = buildResultHtml(score, mtWords.length, 'matching');
+          }, 500);
+        }
+      } else {
+        // Wrong match — flash red
+        card.classList.add('wrong-flash');
+        mtSelected.card.classList.remove('selected');
+        mtSelected.card.classList.add('wrong-flash');
+
+        const prevCard = mtSelected.card;
+        setTimeout(() => {
+          card.classList.remove('wrong-flash');
+          prevCard.classList.remove('wrong-flash');
+        }, 500);
+
+        mtSelected = null;
+      }
+    }
+
+    mtColEn.addEventListener('click', (e) => {
+      const card = e.target.closest('.match-card');
+      if (card) handleMatchClick(card);
+    });
+
+    mtColVi.addEventListener('click', (e) => {
+      const card = e.target.closest('.match-card');
+      if (card) handleMatchClick(card);
+    });
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    async function init() {
+      try {
+        const [topic, words] = await Promise.all([
+          getTopic(topicId),
+          loadWords(topicId),
+        ]);
+
+        practiceLoading.classList.add('hidden');
+
+        if (!topic) {
+          showToast('Topic not found.', 'error');
+          navigateTo('topics.html');
+          return;
+        }
+
+        bcLink.textContent = topic.name;
+        document.title = `WordCraft — Practice: ${topic.name}`;
+
+        allWords = words;
+        wordBadge.textContent = `${allWords.length} word${allWords.length !== 1 ? 's' : ''}`;
+
+        if (allWords.length < 4) {
+          practiceEmpty.classList.remove('hidden');
+          document.querySelector('.mode-selector').style.display = 'none';
+          return;
+        }
+
+        // Start default mode
+        document.getElementById('panel-flashcard').classList.add('active');
+        initFlashcard();
+
+      } catch (err) {
+        console.error(err);
+        practiceLoading.classList.add('hidden');
+        showToast('Failed to load words.', 'error');
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
