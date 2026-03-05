@@ -8,6 +8,44 @@ import { getDb } from './firebase.js';
 import { getUsername } from './router.js';
 import { updateWordCount } from './topics.js';
 
+let localOrderCounter = 0;
+
+function nextOrderKey() {
+  localOrderCounter += 1;
+  return Date.now() * 1000 + localOrderCounter;
+}
+
+function getOrderKey(word) {
+  const n = Number(word.orderKey);
+  return Number.isFinite(n) ? n : null;
+}
+
+function getCreatedAtMs(word) {
+  return word.createdAt && typeof word.createdAt.toMillis === 'function'
+    ? word.createdAt.toMillis()
+    : null;
+}
+
+function compareWordsByInputOrder(a, b) {
+  const aOrderKey = getOrderKey(a);
+  const bOrderKey = getOrderKey(b);
+  if (aOrderKey !== null && bOrderKey !== null && aOrderKey !== bOrderKey) {
+    return aOrderKey - bOrderKey;
+  }
+  if (aOrderKey !== null && bOrderKey === null) return -1;
+  if (aOrderKey === null && bOrderKey !== null) return 1;
+
+  const aCreatedAtMs = getCreatedAtMs(a);
+  const bCreatedAtMs = getCreatedAtMs(b);
+  if (aCreatedAtMs !== null && bCreatedAtMs !== null && aCreatedAtMs !== bCreatedAtMs) {
+    return aCreatedAtMs - bCreatedAtMs;
+  }
+  if (aCreatedAtMs !== null && bCreatedAtMs === null) return -1;
+  if (aCreatedAtMs === null && bCreatedAtMs !== null) return 1;
+
+  return 0;
+}
+
 /**
  * Get the words subcollection reference.
  * @param {string} topicId
@@ -23,20 +61,22 @@ function wordsRef(topicId) {
 }
 
 /**
- * Load all words in a topic, ordered alphabetically by English word.
+ * Load all words in a topic, preserving user input order.
  * @param {string} topicId
  * @returns {Promise<Array<Object>>}
  */
 export async function loadWords(topicId) {
-  const snapshot = await wordsRef(topicId).orderBy('english').get();
-  return snapshot.docs.map((doc) => {
+  const snapshot = await wordsRef(topicId).get();
+  const words = snapshot.docs.map((doc) => {
     const d = doc.data();
-    // Backward compat: migrate old single `ipa` field → ipaUS
+    // Backward compat: migrate old single `ipa` field -> ipaUS
     if (d.ipa && !d.ipaUS) {
       d.ipaUS = d.ipa;
     }
     return { id: doc.id, ...d };
   });
+  words.sort(compareWordsByInputOrder);
+  return words;
 }
 
 /**
@@ -54,6 +94,7 @@ export async function addWord(topicId, data) {
     ipaUS:       (data.ipaUS       || '').trim(),
     ipaUK:       (data.ipaUK       || '').trim(),
     createdAt:   firebase.firestore.FieldValue.serverTimestamp(),
+    orderKey:    nextOrderKey(),
   });
 
   // Increment topic wordCount
