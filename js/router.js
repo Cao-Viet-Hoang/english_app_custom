@@ -27,10 +27,11 @@ export function setSession(data) {
 }
 
 /**
- * Clear session and redirect to login.
+ * Clear session, remove saved credentials, and redirect to login.
  */
 export function logout() {
   sessionStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem('app_login_credentials');
   navigateTo('index.html');
 }
 

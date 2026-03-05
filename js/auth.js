@@ -6,7 +6,6 @@
 import { initFirebase } from './firebase.js';
 import { setSession, navigateTo, getSession } from './router.js';
 import { showToast } from './ui.js';
-import { DEV_MODE, DEV_USERNAME, DEV_FIREBASE, DEV_AZURE_OPENAI } from './config.js';
 
 /**
  * Expected JSON secret format:
@@ -29,6 +28,7 @@ import { DEV_MODE, DEV_USERNAME, DEV_FIREBASE, DEV_AZURE_OPENAI } from './config
 
 const REQUIRED_FIREBASE  = ['apiKey', 'projectId'];
 const REQUIRED_AZURE     = ['endpoint', 'apiKey', 'deploymentName'];
+const LOCAL_STORAGE_KEY  = 'app_login_credentials';
 
 /**
  * Validate and parse the JSON secret string.
@@ -69,10 +69,85 @@ function parseSecret(jsonStr) {
 }
 
 /**
+ * Check if the username exists by reading users/{username} and verifying
+ * that the document exists and has active === true.
+ * @param {string} username
+ * @returns {Promise<boolean>}
+ */
+async function userExistsInDb(username) {
+  const db = firebase.firestore();
+  const doc = await db.collection('users').doc(username).get();
+  return doc.exists && doc.data().active === true;
+}
+
+/**
+ * Perform the actual login sequence: init Firebase, verify user, save session.
+ * @param {string} username
+ * @param {Object} config  { firebase, azureOpenAI }
+ * @param {Object} [ui]    Optional UI elements { errorEl, submitBtn } for inline feedback
+ * @returns {Promise<boolean>} true if login succeeded
+ */
+async function performLogin(username, config, ui = {}) {
+  const { errorEl, submitBtn } = ui;
+
+  try {
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner"></span> Connecting…';
+    }
+
+    initFirebase(config.firebase);
+
+    // Connectivity test
+    const db = firebase.firestore();
+    await db.collection('_ping').doc('test').get();
+
+    // Check if user exists in DB
+    const exists = await userExistsInDb(username);
+    if (!exists) {
+      if (errorEl) errorEl.textContent = `User "${username}" does not exist.`;
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Sign In';
+      }
+      // Remove bad credentials from localStorage
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
+      return false;
+    }
+
+    // Save session (sessionStorage — used by router guards)
+    setSession({
+      username:    username,
+      azureOpenAI: config.azureOpenAI,
+      firebase:    config.firebase,
+    });
+
+    // Persist credentials to localStorage for auto-login next time
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({
+      username:  username,
+      secret:    { firebase: config.firebase, azureOpenAI: config.azureOpenAI },
+    }));
+
+    showToast(`Welcome, ${username}!`, 'success');
+    setTimeout(() => navigateTo('topics.html'), 400);
+    return true;
+
+  } catch (err) {
+    console.error('Login error:', err);
+    if (errorEl) errorEl.textContent = 'Could not connect to Firebase. Please check your config.';
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Sign In';
+    }
+    return false;
+  }
+}
+
+/**
  * Initialise the login page.
  */
-export function initLoginPage() {
-  // If already logged in, redirect to dashboard
+export async function initLoginPage() {
+  // If already logged in (session exists), redirect to dashboard
   const existing = getSession();
   if (existing && existing.username) {
     navigateTo('topics.html');
@@ -85,16 +160,23 @@ export function initLoginPage() {
 
   if (!form) return;
 
-  // --- DEV MODE: pre-fill form fields so you just click Sign In ---
-  if (DEV_MODE) {
-    const usernameInput = document.getElementById('login-username');
-    const secretInput   = document.getElementById('login-secret');
-    if (usernameInput) usernameInput.value = DEV_USERNAME;
-    if (secretInput) {
-      secretInput.value = JSON.stringify({
-        firebase:    DEV_FIREBASE,
-        azureOpenAI: DEV_AZURE_OPENAI,
-      }, null, 2);
+  // --- AUTO-LOGIN from localStorage ---
+  const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+  if (saved) {
+    try {
+      const creds = JSON.parse(saved);
+      if (creds.username && creds.secret) {
+        // Show a loading state while auto-logging in
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner"></span> Signing in…';
+        errorEl.textContent = '';
+
+        const ok = await performLogin(creds.username, creds.secret, { errorEl, submitBtn });
+        if (ok) return; // successfully auto-logged in
+        // If auto-login failed (user removed from DB, etc.), fall through to manual form
+      }
+    } catch {
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
     }
   }
 
@@ -128,31 +210,7 @@ export function initLoginPage() {
       return;
     }
 
-    // Init Firebase
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner"></span> Connecting…';
-    try {
-      initFirebase(config.firebase);
-
-      // Quick connectivity test — try reading a non-existent doc
-      const db = firebase.firestore();
-      await db.collection('_ping').doc('test').get();
-
-      // Save session
-      setSession({
-        username:    username,
-        azureOpenAI: config.azureOpenAI,
-        firebase:    config.firebase,
-      });
-
-      showToast(`Welcome, ${username}!`, 'success');
-      setTimeout(() => navigateTo('topics.html'), 400);
-
-    } catch (err) {
-      console.error('Firebase init error:', err);
-      errorEl.textContent = 'Could not connect to Firebase. Please check your config.';
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Sign In';
-    }
+    // Perform login (init Firebase, check user in DB, save session + localStorage)
+    await performLogin(username, config, { errorEl, submitBtn });
   });
 }
