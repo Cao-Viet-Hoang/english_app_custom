@@ -46,6 +46,7 @@
   --sp-6: 32px;
   --sp-7: 48px;
   --sp-8: 64px;
+  --navbar-height: 56px;
 
   /* Typography */
   --font-sans:  'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
@@ -325,7 +326,7 @@ h4 { font-size: var(--fs-md); }
 /* ---------- Toast Notifications ---------- */
 .toast-container {
   position: fixed;
-  top: var(--sp-5);
+  top: calc(var(--navbar-height) + var(--sp-3));
   right: var(--sp-5);
   z-index: 2000;
   display: flex;
@@ -452,7 +453,7 @@ h4 { font-size: var(--fs-md); }
 .navbar-inner {
   display: flex;
   align-items: center;
-  height: 56px;
+  height: var(--navbar-height);
   max-width: 1100px;
   margin: 0 auto;
   padding: 0 var(--sp-6);
