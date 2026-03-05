@@ -131,6 +131,7 @@
         <div class="flashcard-wrapper">
           <div class="flashcard" id="fc-card">
             <div class="flashcard-face flashcard-front">
+              <span class="fc-review-badge hidden" id="fc-review-badge">Review</span>
               <button class="flashcard-speak-btn" id="fc-speak" title="Listen" type="button">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
                      fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -371,6 +372,11 @@
     // FLASHCARD
     // ============================================================
     let fcWords = [], fcIndex = 0, fcKnown = 0, fcUnknown = 0;
+    let fcOriginalTotal = 0;        // number of unique words (fixed)
+    let fcRetryCount = new Map();    // wordId → number of times retried
+    let fcDontKnowSet = new Set();   // wordIds the user didn't know (for result list)
+    const FC_MAX_RETRY = 2;
+
     const fcCard       = document.getElementById('fc-card');
     const fcContainer  = document.getElementById('fc-container');
     const fcResult     = document.getElementById('fc-result');
@@ -386,26 +392,59 @@
     const fcKnownEl    = document.getElementById('fc-known');
     const fcUnknownEl  = document.getElementById('fc-unknown');
     const fcSpeak      = document.getElementById('fc-speak');
+    const fcReviewBadge= document.getElementById('fc-review-badge');
 
     function initFlashcard() {
       fcWords = shuffle(allWords);
       fcIndex = 0;
       fcKnown = 0;
       fcUnknown = 0;
+      fcOriginalTotal = fcWords.length;
+      fcRetryCount = new Map();
+      fcDontKnowSet = new Set();
       fcContainer.classList.remove('hidden');
       fcResult.classList.add('hidden');
       showFlashcard();
     }
 
+    function fcHandleKnow() {
+      fcKnown++;
+      fcIndex++;
+      showFlashcard();
+    }
+
+    function fcHandleDontKnow() {
+      const w = fcWords[fcIndex];
+      const retries = fcRetryCount.get(w.id) || 0;
+      fcDontKnowSet.add(w.id);
+
+      if (retries < FC_MAX_RETRY) {
+        // Push word to end of deck for review
+        fcWords.push(w);
+        fcRetryCount.set(w.id, retries + 1);
+      } else {
+        // Max retries reached, count as unknown
+        fcUnknown++;
+      }
+
+      fcIndex++;
+      showFlashcard();
+    }
+
     function showFlashcard() {
       if (fcIndex >= fcWords.length) {
+        // Every word ends up either "Know it" (fcKnown++) or max-retried (fcUnknown++)
+        fcUnknown = fcOriginalTotal - fcKnown;
+
         fcContainer.classList.add('hidden');
         fcResult.classList.remove('hidden');
-        fcResult.innerHTML = buildResultHtml(fcKnown, fcWords.length, 'flashcard');
+        fcResult.innerHTML = buildFlashcardResultHtml(fcKnown, fcOriginalTotal, fcDontKnowSet);
         return;
       }
 
       const w = fcWords[fcIndex];
+      const isReview = fcRetryCount.has(w.id) && fcRetryCount.get(w.id) > 0;
+
       fcCard.classList.remove('flipped');
       fcFrontWord.textContent = w.english;
       fcFrontIpa.textContent = w.ipaUS || w.ipa || '';
@@ -413,13 +452,42 @@
       fcBackMeaning.textContent = w.vietnamese;
       fcBackDesc.textContent = w.description || '';
 
-      fcCurrent.textContent = fcIndex + 1;
-      fcTotal.textContent = fcWords.length;
+      // Review badge
+      if (isReview) {
+        fcReviewBadge.classList.remove('hidden');
+      } else {
+        fcReviewBadge.classList.add('hidden');
+      }
+
+      fcCurrent.textContent = fcKnown + fcUnknown + 1;
+      fcTotal.textContent = fcOriginalTotal;
       fcKnownEl.textContent = fcKnown;
       fcUnknownEl.textContent = fcUnknown;
-      const pct = Math.round((fcIndex / fcWords.length) * 100);
+      const pct = Math.round((fcKnown / fcOriginalTotal) * 100);
       fcProgress.style.width = pct + '%';
       fcProgressTxt.textContent = pct + '%';
+    }
+
+    function buildFlashcardResultHtml(correct, total, dontKnowSet) {
+      let html = buildResultHtml(correct, total, 'flashcard');
+
+      if (dontKnowSet.size > 0) {
+        const reviewWords = allWords.filter(w => dontKnowSet.has(w.id));
+        html += `
+          <div class="fc-review-list">
+            <h4 class="fc-review-list-title">Words to review</h4>
+            <div class="fc-review-list-items">
+              ${reviewWords.map(w => `
+                <div class="fc-review-item">
+                  <span class="fc-review-item-word">${w.english}</span>
+                  <span class="fc-review-item-meaning">${w.vietnamese}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>`;
+      }
+
+      return html;
     }
 
     fcCard.addEventListener('click', (e) => {
@@ -432,17 +500,9 @@
       if (fcIndex < fcWords.length) speakWord(fcWords[fcIndex].english);
     });
 
-    document.getElementById('fc-btn-know').addEventListener('click', () => {
-      fcKnown++;
-      fcIndex++;
-      showFlashcard();
-    });
+    document.getElementById('fc-btn-know').addEventListener('click', () => fcHandleKnow());
 
-    document.getElementById('fc-btn-dont-know').addEventListener('click', () => {
-      fcUnknown++;
-      fcIndex++;
-      showFlashcard();
-    });
+    document.getElementById('fc-btn-dont-know').addEventListener('click', () => fcHandleDontKnow());
 
     // Keyboard shortcuts for flashcard
     document.addEventListener('keydown', (e) => {
@@ -452,14 +512,10 @@
         fcCard.classList.toggle('flipped');
       }
       if (e.key === 'ArrowRight' || e.key === 'j') {
-        fcKnown++;
-        fcIndex++;
-        showFlashcard();
+        fcHandleKnow();
       }
       if (e.key === 'ArrowLeft' || e.key === 'k') {
-        fcUnknown++;
-        fcIndex++;
-        showFlashcard();
+        fcHandleDontKnow();
       }
     });
 
