@@ -5,6 +5,9 @@
 
 import { getSession } from './router.js';
 
+const VALID_WORD_TYPES = ['noun', 'verb', 'adj', 'adv', 'phrase', 'other'];
+const BULK_WORD_BATCH_SIZE = 6;
+
 /**
  * Call Azure OpenAI Chat Completions to generate a paragraph
  * using the provided English vocabulary words.
@@ -186,8 +189,7 @@ Return JSON:
     throw new Error('Could not parse AI response as JSON.');
   }
 
-  const VALID_TYPES = ['noun', 'verb', 'adj', 'adv', 'phrase', 'other'];
-  const wordType = VALID_TYPES.includes(parsed.wordType) ? parsed.wordType : 'other';
+  const wordType = VALID_WORD_TYPES.includes(parsed.wordType) ? parsed.wordType : 'other';
 
   return {
     vietnamese:  parsed.vietnamese  || '',
@@ -199,8 +201,8 @@ Return JSON:
 }
 
 /**
- * Call Azure OpenAI to auto-fill word details for multiple English words
- * in a single API call.
+ * Call Azure OpenAI to auto-fill word details for multiple English words.
+ * Requests are split into smaller batches to avoid oversized prompts.
  *
  * @param {string[]} englishWords  Array of English words to look up
  * @returns {Promise<Array<{ english: string, vietnamese: string, ipaUS: string, ipaUK: string, wordType: string, description: string }>>}
@@ -216,6 +218,21 @@ export async function generateBulkWordInfo(englishWords) {
   const version = apiVersion || '2024-08-01-preview';
   const url = `${baseUrl}/openai/deployments/${deploymentName}/chat/completions?api-version=${version}`;
 
+  if (!Array.isArray(englishWords) || englishWords.length === 0) {
+    return [];
+  }
+
+  const allResults = [];
+  for (let i = 0; i < englishWords.length; i += BULK_WORD_BATCH_SIZE) {
+    const batchWords = englishWords.slice(i, i + BULK_WORD_BATCH_SIZE);
+    const batchResults = await requestBulkWordInfoBatch(url, apiKey, batchWords);
+    allResults.push(...batchResults);
+  }
+
+  return allResults;
+}
+
+async function requestBulkWordInfoBatch(url, apiKey, englishWords) {
   const wordList = englishWords.map(w => `"${w}"`).join(', ');
 
   const systemPrompt = `You are an English-Vietnamese dictionary assistant.
@@ -286,14 +303,15 @@ Return a JSON array:
     throw new Error('AI response is not an array.');
   }
 
-  const VALID_TYPES = ['noun', 'verb', 'adj', 'adv', 'phrase', 'other'];
-
-  return parsed.map((item, i) => ({
-    english:     item.english     || englishWords[i] || '',
-    vietnamese:  item.vietnamese  || '',
-    ipaUS:       item.ipaUS       || '',
-    ipaUK:       item.ipaUK       || '',
-    wordType:    VALID_TYPES.includes(item.wordType) ? item.wordType : 'other',
-    description: item.description || '',
-  }));
+  return englishWords.map((originalWord, i) => {
+    const item = parsed[i] && typeof parsed[i] === 'object' ? parsed[i] : {};
+    return {
+      english:     item.english     || originalWord || '',
+      vietnamese:  item.vietnamese  || '',
+      ipaUS:       item.ipaUS       || '',
+      ipaUK:       item.ipaUK       || '',
+      wordType:    VALID_WORD_TYPES.includes(item.wordType) ? item.wordType : 'other',
+      description: item.description || '',
+    };
+  });
 }
