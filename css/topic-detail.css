@@ -320,10 +320,6 @@
   .vocab-search {
     max-width: 100%;
   }
-  .vocab-toolbar .btn {
-    width: 100%;
-    justify-content: center;
-  }
 }
 
 /* ============================================================
@@ -584,6 +580,116 @@
 .ws-word-vi {
   color: var(--color-text-light);
   font-size: var(--fs-xs);
+}
+
+/* ---------- Vocab Toolbar Buttons ---------- */
+.vocab-toolbar-btns {
+  display: flex;
+  gap: var(--sp-2);
+}
+
+@media (max-width: 540px) {
+  .vocab-toolbar-btns {
+    flex-direction: column;
+    width: 100%;
+  }
+  .vocab-toolbar-btns .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ---------- Bulk Add Modal ---------- */
+.bulk-textarea {
+  font-size: var(--fs-sm);
+  resize: vertical;
+  min-height: 100px;
+}
+
+.bulk-hint {
+  font-size: var(--fs-xs);
+  color: var(--color-text-light);
+  margin-top: var(--sp-2);
+}
+
+.bulk-preview-table-wrapper {
+  max-height: 360px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.bulk-preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+}
+
+.bulk-preview-table th,
+.bulk-preview-table td {
+  padding: var(--sp-2) var(--sp-3);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+.bulk-preview-table th {
+  background: var(--color-surface-alt);
+  font-weight: 600;
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-light);
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.bulk-preview-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.bulk-preview-table tbody tr {
+  cursor: pointer;
+}
+
+.bulk-preview-table tbody tr:hover {
+  background: rgba(124, 158, 217, .05);
+}
+
+.bulk-preview-table input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  display: block;
+  width: 17px;
+  height: 17px;
+  margin: 0;
+  border: 1.8px solid var(--color-border);
+  border-radius: 5px;
+  background: var(--color-surface);
+  cursor: pointer;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.bulk-preview-table input[type="checkbox"]:checked {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.bulk-preview-table input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 9px;
+  border: 2px solid #fff;
+  border-top: none;
+  border-left: none;
+  transform: translate(-50%, -58%) rotate(45deg);
 }
 
 /* ---------- AI Generation ---------- */

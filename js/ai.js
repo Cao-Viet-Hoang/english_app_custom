@@ -197,3 +197,103 @@ Return JSON:
     description: parsed.description || '',
   };
 }
+
+/**
+ * Call Azure OpenAI to auto-fill word details for multiple English words
+ * in a single API call.
+ *
+ * @param {string[]} englishWords  Array of English words to look up
+ * @returns {Promise<Array<{ english: string, vietnamese: string, ipaUS: string, ipaUK: string, wordType: string, description: string }>>}
+ */
+export async function generateBulkWordInfo(englishWords) {
+  const session = getSession();
+  if (!session || !session.azureOpenAI) {
+    throw new Error('Azure OpenAI config not found. Please log in again.');
+  }
+
+  const { endpoint, apiKey, deploymentName, apiVersion } = session.azureOpenAI;
+  const baseUrl = endpoint.replace(/\/+$/, '');
+  const version = apiVersion || '2024-08-01-preview';
+  const url = `${baseUrl}/openai/deployments/${deploymentName}/chat/completions?api-version=${version}`;
+
+  const wordList = englishWords.map(w => `"${w}"`).join(', ');
+
+  const systemPrompt = `You are an English-Vietnamese dictionary assistant.
+Given a list of English words or phrases, return a JSON array where each element has these fields:
+- "english": the original English word/phrase (exactly as provided)
+- "vietnamese": the most common Vietnamese translation (short, 1-5 words)
+- "ipaUS": the IPA pronunciation for American English (e.g. /əˈkɑːm.plɪʃ/)
+- "ipaUK": the IPA pronunciation for British English (e.g. /əˈkʌm.plɪʃ/)
+- "wordType": one of exactly: noun, verb, adj, adv, phrase, other
+- "description": a brief Vietnamese description or usage note (1-2 short sentences)
+
+IMPORTANT:
+- Return ONLY a valid JSON array, no markdown code blocks, no extra text.
+- The array must have exactly one element per input word, in the same order.
+- Use standard IPA notation with slashes for both US and UK pronunciations.`;
+
+  const userPrompt = `Words: [${wordList}]
+
+Return a JSON array:
+[
+  { "english": "...", "vietnamese": "...", "ipaUS": "...", "ipaUK": "...", "wordType": "...", "description": "..." },
+  ...
+]`;
+
+  const maxTokens = Math.min(englishWords.length * 300, 4096);
+
+  const body = {
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user',   content: userPrompt },
+    ],
+    temperature: 0.5,
+    max_completion_tokens: maxTokens,
+  };
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'api-key':      apiKey,
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const errBody = await response.text();
+    console.error('Azure OpenAI error:', response.status, errBody);
+    throw new Error(`Azure OpenAI request failed (${response.status}).`);
+  }
+
+  const result = await response.json();
+  const content = result.choices?.[0]?.message?.content;
+  if (!content) throw new Error('Empty response from Azure OpenAI.');
+
+  let cleaned = content.trim();
+  if (cleaned.startsWith('```')) {
+    cleaned = cleaned.replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '');
+  }
+
+  let parsed;
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch {
+    throw new Error('Could not parse AI response as JSON.');
+  }
+
+  if (!Array.isArray(parsed)) {
+    throw new Error('AI response is not an array.');
+  }
+
+  const VALID_TYPES = ['noun', 'verb', 'adj', 'adv', 'phrase', 'other'];
+
+  return parsed.map((item, i) => ({
+    english:     item.english     || englishWords[i] || '',
+    vietnamese:  item.vietnamese  || '',
+    ipaUS:       item.ipaUS       || '',
+    ipaUK:       item.ipaUK       || '',
+    wordType:    VALID_TYPES.includes(item.wordType) ? item.wordType : 'other',
+    description: item.description || '',
+  }));
+}

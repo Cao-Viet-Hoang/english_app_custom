@@ -99,13 +99,22 @@
           </svg>
           <input class="form-input" type="text" id="vocab-search-input" placeholder="Search words…" />
         </div>
-        <button id="btn-add-word" class="btn btn-primary btn-sm">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
-          Add Word
-        </button>
+        <div class="vocab-toolbar-btns">
+          <button id="btn-bulk-add" class="btn btn-accent btn-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+            Bulk Add (AI)
+          </button>
+          <button id="btn-add-word" class="btn btn-primary btn-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Add Word
+          </button>
+        </div>
       </div>
 
       <!-- Loading -->
@@ -294,6 +303,82 @@
     </div>
   </div>
 
+  <!-- ===== Bulk Add Words Modal ===== -->
+  <div id="modal-bulk-add" class="modal-overlay">
+    <div class="modal" style="max-width:720px">
+      <div class="modal-header">
+        <h3 id="bulk-modal-title">Bulk Add Words</h3>
+        <button class="btn-icon" data-close-modal aria-label="Close">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <!-- Step 1: Input words -->
+        <div id="bulk-step-input">
+          <div class="form-group">
+            <label class="form-label" for="bulk-words-input">Enter English words</label>
+            <textarea class="form-textarea bulk-textarea" id="bulk-words-input" rows="5"
+                      placeholder="Enter words separated by commas or one per line, e.g.&#10;accomplish, determine, significant&#10;or:&#10;accomplish&#10;determine&#10;significant"></textarea>
+            <p class="bulk-hint">Separate words with commas, newlines, or both. Duplicates will be removed.</p>
+          </div>
+        </div>
+
+        <!-- Loading state -->
+        <div id="bulk-loading" class="ai-generating hidden">
+          <div class="spinner"></div>
+          <span id="bulk-loading-text">AI is generating word details… This may take a moment.</span>
+        </div>
+
+        <!-- Step 2: Preview results -->
+        <div id="bulk-step-preview" class="hidden">
+          <div class="ws-toolbar">
+            <span class="ws-counter" id="bulk-counter">0 / 0 selected</span>
+            <div class="ws-toolbar-btns">
+              <button type="button" class="btn btn-ghost btn-sm" id="bulk-select-all">Select All</button>
+              <button type="button" class="btn btn-ghost btn-sm" id="bulk-deselect-all">Deselect All</button>
+            </div>
+          </div>
+          <div class="bulk-preview-table-wrapper">
+            <table class="bulk-preview-table">
+              <thead>
+                <tr>
+                  <th style="width:36px"></th>
+                  <th>English</th>
+                  <th>Vietnamese</th>
+                  <th>IPA (US)</th>
+                  <th>Type</th>
+                </tr>
+              </thead>
+              <tbody id="bulk-preview-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Adding progress -->
+        <div id="bulk-adding" class="ai-generating hidden">
+          <div class="spinner"></div>
+          <span id="bulk-adding-text">Adding words… 0 / 0</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" data-close-modal>Cancel</button>
+        <button type="button" id="bulk-btn-generate" class="btn btn-accent">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          </svg>
+          Generate with AI
+        </button>
+        <button type="button" id="bulk-btn-add" class="btn btn-primary hidden">
+          Add Selected Words
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== Firebase SDK ===== -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -305,7 +390,7 @@
     import { getTopic } from './js/topics.js';
     import { loadWords, addWord, updateWord, deleteWord } from './js/vocabulary.js';
     import { loadParagraphs, saveParagraph, deleteParagraph } from './js/paragraphs.js';
-    import { generateParagraph, generateWordInfo } from './js/ai.js';
+    import { generateParagraph, generateWordInfo, generateBulkWordInfo } from './js/ai.js';
     import {
       showModal, closeModal, setupModalClose,
       showToast, confirmDialog, formatDate, escapeHtml
@@ -363,6 +448,7 @@
 
     setupModalClose('#modal-word');
     setupModalClose('#modal-word-select');
+    setupModalClose('#modal-bulk-add');
 
     // ---- Word Selection Modal refs ----
     const modalWordSelect  = document.getElementById('modal-word-select');
@@ -446,6 +532,159 @@
           </svg>
           Generate with AI
         `;
+      }
+    });
+
+    // ---- Bulk Add refs & logic ----
+    const modalBulkAdd      = document.getElementById('modal-bulk-add');
+    const bulkWordsInput    = document.getElementById('bulk-words-input');
+    const bulkStepInput     = document.getElementById('bulk-step-input');
+    const bulkStepPreview   = document.getElementById('bulk-step-preview');
+    const bulkLoading       = document.getElementById('bulk-loading');
+    const bulkLoadingText   = document.getElementById('bulk-loading-text');
+    const bulkAdding        = document.getElementById('bulk-adding');
+    const bulkAddingText    = document.getElementById('bulk-adding-text');
+    const bulkPreviewTbody  = document.getElementById('bulk-preview-tbody');
+    const bulkCounter       = document.getElementById('bulk-counter');
+    const bulkBtnGenerate   = document.getElementById('bulk-btn-generate');
+    const bulkBtnAdd        = document.getElementById('bulk-btn-add');
+    const bulkSelectAll     = document.getElementById('bulk-select-all');
+    const bulkDeselectAll   = document.getElementById('bulk-deselect-all');
+    const bulkModalTitle    = document.getElementById('bulk-modal-title');
+    const btnBulkAdd        = document.getElementById('btn-bulk-add');
+
+    let bulkResults = [];
+
+    function parseBulkInput(text) {
+      return [...new Set(
+        text.split(/[,\n]+/)
+          .map(w => w.trim())
+          .filter(w => w.length > 0)
+      )];
+    }
+
+    function updateBulkCounter() {
+      const checked = bulkPreviewTbody.querySelectorAll('input[type=checkbox]:checked').length;
+      const total = bulkPreviewTbody.querySelectorAll('input[type=checkbox]').length;
+      bulkCounter.textContent = `${checked} / ${total} selected`;
+      bulkBtnAdd.disabled = checked === 0;
+    }
+
+    function renderBulkPreview(results) {
+      bulkResults = results;
+      bulkPreviewTbody.innerHTML = results.map((r, i) => `
+        <tr>
+          <td><input type="checkbox" data-index="${i}" checked /></td>
+          <td class="vocab-english">${escapeHtml(r.english)}</td>
+          <td>${escapeHtml(r.vietnamese)}</td>
+          <td class="vocab-ipa">${escapeHtml(r.ipaUS)}</td>
+          <td><span class="${badgeClass(r.wordType)}">${WORD_TYPE_LABELS[r.wordType] || r.wordType}</span></td>
+        </tr>
+      `).join('');
+      updateBulkCounter();
+    }
+
+    function resetBulkModal() {
+      bulkWordsInput.value = '';
+      bulkStepInput.classList.remove('hidden');
+      bulkStepPreview.classList.add('hidden');
+      bulkLoading.classList.add('hidden');
+      bulkAdding.classList.add('hidden');
+      bulkBtnGenerate.classList.remove('hidden');
+      bulkBtnGenerate.disabled = false;
+      bulkBtnAdd.classList.add('hidden');
+      bulkModalTitle.textContent = 'Bulk Add Words';
+      bulkResults = [];
+    }
+
+    btnBulkAdd.addEventListener('click', () => {
+      resetBulkModal();
+      showModal(modalBulkAdd);
+    });
+
+    bulkPreviewTbody.addEventListener('change', updateBulkCounter);
+    bulkPreviewTbody.addEventListener('click', (e) => {
+      if (e.target.type === 'checkbox') return;
+      const row = e.target.closest('tr');
+      if (!row) return;
+      const cb = row.querySelector('input[type=checkbox]');
+      if (cb) {
+        cb.checked = !cb.checked;
+        updateBulkCounter();
+      }
+    });
+
+    bulkSelectAll.addEventListener('click', () => {
+      bulkPreviewTbody.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = true);
+      updateBulkCounter();
+    });
+    bulkDeselectAll.addEventListener('click', () => {
+      bulkPreviewTbody.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = false);
+      updateBulkCounter();
+    });
+
+    bulkBtnGenerate.addEventListener('click', async () => {
+      const words = parseBulkInput(bulkWordsInput.value);
+      if (words.length === 0) {
+        showToast('Please enter at least one English word.', 'warning');
+        bulkWordsInput.focus();
+        return;
+      }
+
+      bulkBtnGenerate.disabled = true;
+      bulkStepInput.classList.add('hidden');
+      bulkLoading.classList.remove('hidden');
+      bulkLoadingText.textContent = `AI is generating details for ${words.length} word${words.length > 1 ? 's' : ''}… This may take a moment.`;
+
+      try {
+        const results = await generateBulkWordInfo(words);
+        bulkLoading.classList.add('hidden');
+        bulkStepPreview.classList.remove('hidden');
+        bulkBtnGenerate.classList.add('hidden');
+        bulkBtnAdd.classList.remove('hidden');
+        bulkModalTitle.textContent = `Review ${results.length} Words`;
+        renderBulkPreview(results);
+      } catch (err) {
+        console.error(err);
+        showToast('AI generation failed. ' + (err.message || ''), 'error');
+        bulkLoading.classList.add('hidden');
+        bulkStepInput.classList.remove('hidden');
+        bulkBtnGenerate.disabled = false;
+      }
+    });
+
+    bulkBtnAdd.addEventListener('click', async () => {
+      const selectedIndices = Array.from(
+        bulkPreviewTbody.querySelectorAll('input[type=checkbox]:checked')
+      ).map(cb => parseInt(cb.dataset.index));
+
+      if (selectedIndices.length === 0) return;
+
+      const toAdd = selectedIndices.map(i => bulkResults[i]);
+      bulkBtnAdd.disabled = true;
+      bulkStepPreview.classList.add('hidden');
+      bulkAdding.classList.remove('hidden');
+
+      let added = 0;
+      for (const word of toAdd) {
+        bulkAddingText.textContent = `Adding words… ${added + 1} / ${toAdd.length}`;
+        try {
+          await addWord(topicId, word);
+          added++;
+        } catch (err) {
+          console.error(`Failed to add "${word.english}":`, err);
+        }
+      }
+
+      bulkAdding.classList.add('hidden');
+      closeModal(modalBulkAdd);
+
+      if (added > 0) {
+        showToast(`${added} word${added > 1 ? 's' : ''} added!`, 'success');
+        renderVocabulary();
+      }
+      if (added < toAdd.length) {
+        showToast(`${toAdd.length - added} word(s) failed to add.`, 'error');
       }
     });
 
