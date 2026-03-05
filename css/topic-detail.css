@@ -144,12 +144,85 @@
   z-index: 1;
 }
 
-.vocab-table tbody tr:hover {
-  background: rgba(124, 158, 217, .05);
+.vocab-table tbody tr:hover td:not(.swipe-delete-cell) {
+  background-color: #f5f7fa;
+}
+
+.vocab-table tbody tr {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.vocab-table tbody tr td:not(.swipe-delete-cell) {
+  transition: transform 0.25s ease;
+  position: relative;
+  z-index: 1;
+  background-color: var(--color-surface);
 }
 
 .vocab-table tbody tr:last-child td {
   border-bottom: none;
+}
+
+/* ---- Swipe-to-delete ---- */
+.swipe-delete-th {
+  width: 0 !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+}
+
+.swipe-delete-cell {
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  border-bottom: none !important;
+  overflow: visible;
+  position: relative;
+  z-index: 0;
+  background: transparent !important;
+}
+
+.swipe-delete-btn {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: #e57373;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 0;
+  border: none;
+  outline: none;
+  pointer-events: none;
+}
+
+.swipe-delete-btn:hover {
+  background: #ef5350;
+}
+
+.swipe-delete-btn svg {
+  pointer-events: none;
+}
+
+.swipe-row.swiped .swipe-delete-btn {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .vocab-english {
@@ -248,21 +321,6 @@
   color: var(--color-border);
   font-style: normal;
   font-weight: 400;
-}
-
-.vocab-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-1);
-  white-space: nowrap;
-  opacity: 1;
-  visibility: visible;
-}
-
-.vocab-actions .btn-icon {
-  color: var(--color-text-light);
-  opacity: 1;
-  visibility: visible;
 }
 
 /* ---------- Vocab Form Modal ---------- */
