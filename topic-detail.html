@@ -1165,8 +1165,10 @@
     }
 
     /** Build sentence-wrapped HTML for English text with vocab highlights. */
-    function buildEnglishHtml(text) {
-      const vocabWords = allWords.map(w => w.english);
+    function buildEnglishHtml(text, wordsToHighlight) {
+      const vocabWords = Array.isArray(wordsToHighlight) && wordsToHighlight.length > 0
+        ? wordsToHighlight
+        : allWords.map(w => w.english);
       const sentences = splitSentences(text);
       return sentences.map((s, i) =>
         `<span class="para-sentence" data-sentence="${i}">${highlightVocabWords(s, vocabWords)}</span>`
@@ -1236,7 +1238,7 @@
             <div class="para-card-body">
               <div class="para-section">
                 <div class="para-section-label">English</div>
-                <p class="para-english">${buildEnglishHtml(p.englishText)}</p>
+                <p class="para-english">${buildEnglishHtml(p.englishText, p.usedWords)}</p>
               </div>
               <div class="para-section">
                 <div class="para-section-label">Vietnamese</div>

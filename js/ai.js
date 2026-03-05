@@ -41,7 +41,7 @@ Then provide the Vietnamese translation of the entire paragraph.
 IMPORTANT: 
 - Use ALL of the given words in the English paragraph.
 - The paragraph should tell a small story or describe a situation.
-- Adjust the number of sentences based on the number of vocabulary words provided: roughly 1-2 sentences per word, but keep the total between 3 and 10 sentences maximum.
+- Adjust the number of sentences based on the number of vocabulary words provided: roughly 1-2 sentences per word, but keep the total between 3 and 15 sentences maximum.
 - ONLY the provided vocabulary words may be advanced or unfamiliar. All other words in the paragraph must be extremely common, basic English (A1-A2 level) so that learners can focus on the target vocabulary without being overwhelmed by additional unknown words.
 - Keep sentence structure simple and clear.
 - Return ONLY valid JSON with exactly two fields: "english" and "vietnamese".
