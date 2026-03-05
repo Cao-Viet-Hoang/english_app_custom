@@ -184,19 +184,47 @@
         </svg>
         <h3>No Paragraphs Yet</h3>
         <p>Use your vocabulary to generate a contextual English paragraph with AI.</p>
-        <button id="btn-generate-ai-cta" class="btn btn-accent">
-          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
-               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-          </svg>
-          Generate with AI
-        </button>
       </div>
 
       <!-- Paragraph list -->
       <div id="para-list" class="para-list hidden"></div>
     </div>
   </main>
+
+  <!-- ===== Word Selection Modal (for paragraph generation) ===== -->
+  <div id="modal-word-select" class="modal-overlay">
+    <div class="modal" style="max-width:520px">
+      <div class="modal-header">
+        <h3>Select Words to Use</h3>
+        <button class="btn-icon" data-close-modal aria-label="Close">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="ws-toolbar">
+          <span class="ws-counter" id="ws-counter">0 / 0 selected</span>
+          <div class="ws-toolbar-btns">
+            <button type="button" class="btn btn-ghost btn-sm" id="ws-select-all">Select All</button>
+            <button type="button" class="btn btn-ghost btn-sm" id="ws-deselect-all">Deselect All</button>
+          </div>
+        </div>
+        <div class="ws-list" id="ws-list"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" data-close-modal>Cancel</button>
+        <button type="button" id="ws-btn-generate" class="btn btn-accent" disabled>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          </svg>
+          Generate
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- ===== Add / Edit Word Modal ===== -->
   <div id="modal-word" class="modal-overlay">
@@ -334,6 +362,52 @@
     const btnAiFill        = document.getElementById('btn-ai-fill');
 
     setupModalClose('#modal-word');
+    setupModalClose('#modal-word-select');
+
+    // ---- Word Selection Modal refs ----
+    const modalWordSelect  = document.getElementById('modal-word-select');
+    const wsListEl         = document.getElementById('ws-list');
+    const wsCounter        = document.getElementById('ws-counter');
+    const wsBtnGenerate    = document.getElementById('ws-btn-generate');
+    const wsSelectAll      = document.getElementById('ws-select-all');
+    const wsDeselectAll    = document.getElementById('ws-deselect-all');
+
+    function openWordSelectModal() {
+      if (allWords.length === 0) {
+        showToast('Add some vocabulary words first before generating a paragraph.', 'warning');
+        return;
+      }
+      wsListEl.innerHTML = allWords.map((w, i) => `
+        <label class="ws-item">
+          <input type="checkbox" value="${escapeHtml(w.english)}" checked />
+          <span class="ws-word">${escapeHtml(w.english)}</span>
+          <span class="ws-word-vi">${escapeHtml(w.vietnamese)}</span>
+        </label>
+      `).join('');
+      updateWordSelectCounter();
+      showModal(modalWordSelect);
+    }
+
+    function getSelectedWords() {
+      return Array.from(wsListEl.querySelectorAll('input[type=checkbox]:checked')).map(cb => cb.value);
+    }
+
+    function updateWordSelectCounter() {
+      const checked = wsListEl.querySelectorAll('input[type=checkbox]:checked').length;
+      const total = wsListEl.querySelectorAll('input[type=checkbox]').length;
+      wsCounter.textContent = `${checked} / ${total} selected`;
+      wsBtnGenerate.disabled = checked === 0;
+    }
+
+    wsListEl.addEventListener('change', updateWordSelectCounter);
+    wsSelectAll.addEventListener('click', () => {
+      wsListEl.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = true);
+      updateWordSelectCounter();
+    });
+    wsDeselectAll.addEventListener('click', () => {
+      wsListEl.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = false);
+      updateWordSelectCounter();
+    });
 
     // ---- AI Auto-fill word fields ----
     btnAiFill.addEventListener('click', async () => {
@@ -373,11 +447,6 @@
           Generate with AI
         `;
       }
-    });
-
-    // CTA button in para-empty state mirrors the main generate button
-    document.getElementById('btn-generate-ai-cta').addEventListener('click', () => {
-      btnGenerateAI.click();
     });
 
     // ---- State ----
@@ -704,7 +773,21 @@
           return;
         }
 
-        paraList.innerHTML = paragraphs.map((p) => `
+        paraList.innerHTML = paragraphs.map((p) => {
+          // Build word badges if usedWords was saved
+          let wordBadgesHtml = '';
+          if (Array.isArray(p.usedWords) && p.usedWords.length > 0) {
+            const engLower = (p.englishText || '').toLowerCase();
+            const badges = p.usedWords.map(w => {
+              const escaped = w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+              const found = new RegExp(`\\b${escaped}\\b`, 'i').test(p.englishText);
+              const cls = found ? 'badge-word-used' : 'badge-word-missed';
+              return `<span class="para-word-badge ${cls}">${escapeHtml(w)}</span>`;
+            }).join('');
+            wordBadgesHtml = `<div class="para-words-row">${badges}</div>`;
+          }
+
+          return `
           <div class="card para-card" data-id="${p.id}">
             <div class="para-card-header">
               <span>${p.createdAt ? formatDate(p.createdAt) : 'Just now'}</span>
@@ -717,7 +800,7 @@
                   <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
                 </svg>
               </button>
-            </div>
+            </div>${wordBadgesHtml}
             <div class="para-card-body">
               <div class="para-section">
                 <div class="para-section-label">English</div>
@@ -729,7 +812,8 @@
               </div>
             </div>
           </div>
-        `).join('');
+        `;
+        }).join('');
 
         paraList.classList.remove('hidden');
 
@@ -784,26 +868,26 @@
       }
     });
 
-    // Generate with AI
-    btnGenerateAI.addEventListener('click', async () => {
-      // Need words first
-      if (allWords.length === 0) {
-        showToast('Add some vocabulary words first before generating a paragraph.', 'warning');
-        return;
-      }
+    // Generate with AI — open word selection modal
+    btnGenerateAI.addEventListener('click', () => openWordSelectModal());
 
-      const englishWords = allWords.map((w) => w.english);
+    // Confirm generation from modal
+    wsBtnGenerate.addEventListener('click', async () => {
+      const selectedWords = getSelectedWords();
+      if (selectedWords.length === 0) return;
 
+      closeModal(modalWordSelect);
       btnGenerateAI.disabled = true;
       aiGeneratingEl.classList.remove('hidden');
 
       try {
-        const result = await generateParagraph(englishWords);
+        const result = await generateParagraph(selectedWords);
 
-        // Save to Firestore
+        // Save to Firestore with usedWords
         await saveParagraph(topicId, {
           englishText:    result.english,
           vietnameseText: result.vietnamese,
+          usedWords:      selectedWords,
         });
 
         showToast('Paragraph generated and saved!', 'success');

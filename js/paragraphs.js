@@ -40,15 +40,19 @@ export async function loadParagraphs(topicId) {
 /**
  * Save a new paragraph.
  * @param {string} topicId
- * @param {{ englishText: string, vietnameseText: string }} data
+ * @param {{ englishText: string, vietnameseText: string, usedWords?: string[] }} data
  * @returns {Promise<string>}  The new paragraph ID
  */
 export async function saveParagraph(topicId, data) {
-  const docRef = await paragraphsRef(topicId).add({
+  const doc = {
     englishText:    (data.englishText    || '').trim(),
     vietnameseText: (data.vietnameseText || '').trim(),
     createdAt:      firebase.firestore.FieldValue.serverTimestamp(),
-  });
+  };
+  if (Array.isArray(data.usedWords)) {
+    doc.usedWords = data.usedWords;
+  }
+  const docRef = await paragraphsRef(topicId).add(doc);
   return docRef.id;
 }
 
