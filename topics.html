@@ -57,6 +57,14 @@
         <span id="topic-count" class="topics-count-chip"></span>
       </div>
       <div class="topics-header-right">
+        <select id="sort-topics" class="sort-select hidden">
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+          <option value="name-az">Name A → Z</option>
+          <option value="name-za">Name Z → A</option>
+          <option value="words-desc">Most words</option>
+          <option value="words-asc">Fewest words</option>
+        </select>
         <div class="topics-search hidden" id="topics-search-wrap">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -157,32 +165,32 @@
 
     // ---- State ----
     let editingTopicId = null;
+    let allTopics = [];
 
-    // ---- Render ----
-    async function render() {
-      loadingEl.classList.remove('hidden');
-      emptyEl.classList.add('hidden');
-      gridEl.classList.add('hidden');
+    const sortSelect = document.getElementById('sort-topics');
 
-      try {
-        const topics = await loadTopics();
+    function sortTopics(topics) {
+      const val = sortSelect.value;
+      const arr = [...topics];
+      if (val === 'oldest') {
+        arr.sort((a, b) => (a.createdAt?.toMillis?.() || 0) - (b.createdAt?.toMillis?.() || 0));
+      } else if (val === 'name-az') {
+        arr.sort((a, b) => a.name.localeCompare(b.name));
+      } else if (val === 'name-za') {
+        arr.sort((a, b) => b.name.localeCompare(a.name));
+      } else if (val === 'words-desc') {
+        arr.sort((a, b) => (b.wordCount || 0) - (a.wordCount || 0));
+      } else if (val === 'words-asc') {
+        arr.sort((a, b) => (a.wordCount || 0) - (b.wordCount || 0));
+      }
+      // 'newest' is default order from loadTopics()
+      return arr;
+    }
 
-        loadingEl.classList.add('hidden');
-
-        if (topics.length === 0) {
-          emptyEl.classList.remove('hidden');
-          countEl.textContent = '';
-          return;
-        }
-
-        countEl.textContent = topics.length;
-
-        // Show search bar when topics exist
-        document.getElementById('topics-search-wrap').classList.remove('hidden');
-
-        gridEl.innerHTML = topics.map((t) => {
-          const wc = t.wordCount || 0;
-          return `
+    function renderTopicCards(topics) {
+      gridEl.innerHTML = topics.map((t) => {
+        const wc = t.wordCount || 0;
+        return `
           <div class="card topic-card card-clickable" data-action="open" data-id="${t.id}">
             <div class="topic-card-header">
               <span class="topic-card-title">
@@ -228,9 +236,31 @@
               </span>
             </div>
           </div>
-        `}).join('');
+        `;
+      }).join('');
+      gridEl.classList.remove('hidden');
+    }
 
-        gridEl.classList.remove('hidden');
+    // ---- Render ----
+    async function render() {
+      loadingEl.classList.remove('hidden');
+      emptyEl.classList.add('hidden');
+      gridEl.classList.add('hidden');
+
+      try {
+        allTopics = await loadTopics();
+        loadingEl.classList.add('hidden');
+
+        if (allTopics.length === 0) {
+          emptyEl.classList.remove('hidden');
+          countEl.textContent = '';
+          return;
+        }
+
+        countEl.textContent = allTopics.length;
+        document.getElementById('topics-search-wrap').classList.remove('hidden');
+        sortSelect.classList.remove('hidden');
+        renderTopicCards(sortTopics(allTopics));
 
       } catch (err) {
         console.error('Failed to load topics:', err);
@@ -238,6 +268,10 @@
         showToast('Failed to load topics. Please try again.', 'error');
       }
     }
+
+    sortSelect.addEventListener('change', () => {
+      renderTopicCards(sortTopics(allTopics));
+    });
 
     // ---- Event delegation on grid ----
     gridEl.addEventListener('click', async (e) => {
@@ -323,11 +357,10 @@
     const searchInput = document.getElementById('input-search-topics');
     searchInput.addEventListener('input', () => {
       const q = searchInput.value.toLowerCase().trim();
-      const cards = gridEl.querySelectorAll('.topic-card');
-      cards.forEach((card) => {
-        const title = card.querySelector('.topic-card-title').textContent.toLowerCase();
-        card.style.display = title.includes(q) ? '' : 'none';
-      });
+      const filtered = q
+        ? allTopics.filter((t) => t.name.toLowerCase().includes(q))
+        : allTopics;
+      renderTopicCards(sortTopics(filtered));
     });
 
     // ---- Initial load ----

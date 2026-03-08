@@ -102,12 +102,21 @@
     <div id="panel-vocab" class="tab-panel active">
 
       <div class="vocab-toolbar">
-        <div class="vocab-search">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <input class="form-input" type="text" id="vocab-search-input" placeholder="Search words…" />
+        <div class="vocab-search-group">
+          <div class="vocab-search">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input class="form-input" type="text" id="vocab-search-input" placeholder="Search words…" />
+          </div>
+          <select id="sort-words" class="sort-select">
+            <option value="input-order">Input order</option>
+            <option value="name-az">A → Z</option>
+            <option value="name-za">Z → A</option>
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+          </select>
         </div>
         <div class="vocab-toolbar-btns">
           <button id="btn-bulk-add" class="btn btn-accent btn-sm">
@@ -867,6 +876,26 @@
     let editingWordId = null;
     let topicName = '';
 
+    const sortWordsSelect = document.getElementById('sort-words');
+
+    function sortWords(words) {
+      const val = sortWordsSelect.value;
+      const arr = [...words];
+      if (val === 'name-az') {
+        arr.sort((a, b) => a.english.localeCompare(b.english));
+      } else if (val === 'name-za') {
+        arr.sort((a, b) => b.english.localeCompare(a.english));
+      } else if (val === 'newest') {
+        arr.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+      } else if (val === 'oldest') {
+        arr.sort((a, b) => (a.createdAt?.toMillis?.() || 0) - (b.createdAt?.toMillis?.() || 0));
+      }
+      // 'input-order' keeps default order from loadWords()
+      return arr;
+    }
+
+    sortWordsSelect.addEventListener('change', renderFilteredWords);
+
     // ============================================================
     // TABS
     // ============================================================
@@ -946,8 +975,9 @@
             w.vietnamese.toLowerCase().includes(query)
           )
         : allWords;
+      const sorted = sortWords(filtered);
 
-      if (filtered.length === 0) {
+      if (sorted.length === 0) {
         vocabEmpty.classList.remove('hidden');
         vocabWrapper.classList.add('hidden');
         return;
@@ -956,7 +986,7 @@
       vocabEmpty.classList.add('hidden');
       vocabWrapper.classList.remove('hidden');
 
-      vocabTbody.innerHTML = filtered.map((w) => {
+      vocabTbody.innerHTML = sorted.map((w) => {
         const ipaUS = w.ipaUS || w.ipa || '';
         const ipaUK = w.ipaUK || '';
         const ipaHtml = (ipaUS || ipaUK)

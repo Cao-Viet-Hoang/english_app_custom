@@ -86,9 +86,15 @@
   flex-wrap: wrap;
 }
 
+.vocab-search-group {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
 .vocab-search {
   position: relative;
-  max-width: 280px;
+  max-width: 240px;
   width: 100%;
 }
 
@@ -106,6 +112,30 @@
   height: 15px;
   color: var(--color-text-light);
   pointer-events: none;
+}
+
+.sort-select {
+  appearance: none;
+  height: 36px;
+  padding: 0 28px 0 10px;
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237A7A7A' d='M6 8.825a.5.5 0 0 1-.354-.146l-3.5-3.5a.5.5 0 1 1 .708-.708L6 7.618l3.146-3.147a.5.5 0 1 1 .708.708l-3.5 3.5A.5.5 0 0 1 6 8.825z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  flex-shrink: 0;
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+}
+
+.sort-select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(124, 158, 217, .2);
 }
 
 /* ---------- Vocabulary Table ---------- */
