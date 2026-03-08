@@ -127,11 +127,12 @@ export async function generateWordInfo(englishWord, topicName) {
   const url = `${baseUrl}/openai/deployments/${deploymentName}/chat/completions?api-version=${version}`;
 
   const topicContext = topicName
-    ? `\nThis word is being added to a vocabulary topic called "${topicName}". Use this context to choose the most relevant meaning and usage.`
+    ? `\nThis word is being added to a vocabulary topic called "${topicName}". First, evaluate whether this topic name represents a genuine vocabulary domain or category (e.g. "Business English", "Medical Terms", "Travel", "Phrasal Verbs"). If the topic name appears to be a placeholder, random characters, or too vague to indicate a specific vocabulary domain (e.g. "abc", "test", "my topic", single letters, numbers), ignore it and provide the most common/general meaning instead. Only use the topic context to choose the relevant meaning if the topic name clearly indicates a real subject area.`
     : '';
 
   const systemPrompt = `You are an English-Vietnamese dictionary assistant.
 Given an English word or phrase, return a JSON object with these fields:
+- "correctedWord": if the input word is misspelled, provide the correct English spelling here; if spelling is correct, set to null
 - "vietnamese": the most common Vietnamese translation (short, 1-5 words)
 - "ipaUS": the IPA pronunciation for American English (e.g. /əˈkɑːm.plɪʃ/)
 - "ipaUK": the IPA pronunciation for British English (e.g. /əˈkʌm.plɪʃ/)
@@ -139,6 +140,8 @@ Given an English word or phrase, return a JSON object with these fields:
 - "description": a brief Vietnamese description or usage note (1-2 short sentences)
 ${topicContext}
 IMPORTANT:
+- If the input word appears to be misspelled (e.g. "acomplish", "beutiful"), detect the most likely intended English word, provide all field values for that corrected word, and set "correctedWord" to the corrected spelling.
+- If the spelling is correct, set "correctedWord" to null.
 - Return ONLY valid JSON, no markdown code blocks, no extra text.
 - Use standard IPA notation with slashes for both US and UK pronunciations.`;
 
@@ -146,6 +149,7 @@ IMPORTANT:
 
 Return JSON:
 {
+  "correctedWord": null,
   "vietnamese": "...",
   "ipaUS": "...",
   "ipaUK": "...",
@@ -196,6 +200,7 @@ Return JSON:
   const wordType = VALID_WORD_TYPES.includes(parsed.wordType) ? parsed.wordType : 'other';
 
   return {
+    correctedWord: parsed.correctedWord || null,
     vietnamese:  parsed.vietnamese  || '',
     ipaUS:       parsed.ipaUS       || '',
     ipaUK:       parsed.ipaUK       || '',
@@ -243,12 +248,13 @@ async function requestBulkWordInfoBatch(url, apiKey, englishWords, topicName) {
   const wordList = englishWords.map(w => `"${w}"`).join(', ');
 
   const topicContext = topicName
-    ? `\nThese words are being added to a vocabulary topic called "${topicName}". Use this context to choose the most relevant meaning and usage for each word.`
+    ? `\nThese words are being added to a vocabulary topic called "${topicName}". First, evaluate whether this topic name represents a genuine vocabulary domain or category (e.g. "Business English", "Medical Terms", "Travel", "Phrasal Verbs"). If the topic name appears to be a placeholder, random characters, or too vague to indicate a specific vocabulary domain (e.g. "abc", "test", "my topic", single letters, numbers), ignore it and provide the most common/general meaning instead. Only use the topic context to choose the relevant meaning if the topic name clearly indicates a real subject area.`
     : '';
 
   const systemPrompt = `You are an English-Vietnamese dictionary assistant.
 Given a list of English words or phrases, return a JSON array where each element has these fields:
-- "english": the original English word/phrase (exactly as provided)
+- "english": the correctly spelled English word/phrase (if the input has a typo, correct it here)
+- "correctedWord": if the input word was misspelled, provide the corrected spelling here; if spelling was correct, set to null
 - "vietnamese": the most common Vietnamese translation (short, 1-5 words)
 - "ipaUS": the IPA pronunciation for American English (e.g. /əˈkɑːm.plɪʃ/)
 - "ipaUK": the IPA pronunciation for British English (e.g. /əˈkʌm.plɪʃ/)
@@ -256,6 +262,7 @@ Given a list of English words or phrases, return a JSON array where each element
 - "description": a brief Vietnamese description or usage note (1-2 short sentences)
 ${topicContext}
 IMPORTANT:
+- For each word: if it appears misspelled, correct it, return data for the corrected word, and set "correctedWord" to the corrected spelling. If spelling is correct, set "correctedWord" to null.
 - Return ONLY a valid JSON array, no markdown code blocks, no extra text.
 - The array must have exactly one element per input word, in the same order.
 - Use standard IPA notation with slashes for both US and UK pronunciations.`;
@@ -264,7 +271,7 @@ IMPORTANT:
 
 Return a JSON array:
 [
-  { "english": "...", "vietnamese": "...", "ipaUS": "...", "ipaUK": "...", "wordType": "...", "description": "..." },
+  { "english": "...", "correctedWord": null, "vietnamese": "...", "ipaUS": "...", "ipaUK": "...", "wordType": "...", "description": "..." },
   ...
 ]`;
 
@@ -317,12 +324,14 @@ Return a JSON array:
   return englishWords.map((originalWord, i) => {
     const item = parsed[i] && typeof parsed[i] === 'object' ? parsed[i] : {};
     return {
-      english:     item.english     || originalWord || '',
-      vietnamese:  item.vietnamese  || '',
-      ipaUS:       item.ipaUS       || '',
-      ipaUK:       item.ipaUK       || '',
-      wordType:    VALID_WORD_TYPES.includes(item.wordType) ? item.wordType : 'other',
-      description: item.description || '',
+      english:       item.english       || originalWord || '',
+      originalWord:  originalWord,
+      correctedWord: item.correctedWord || null,
+      vietnamese:    item.vietnamese    || '',
+      ipaUS:         item.ipaUS         || '',
+      ipaUK:         item.ipaUK         || '',
+      wordType:      VALID_WORD_TYPES.includes(item.wordType) ? item.wordType : 'other',
+      description:   item.description   || '',
     };
   });
 }

@@ -388,6 +388,8 @@
 
         <!-- Step 2: Preview results -->
         <div id="bulk-step-preview" class="hidden">
+          <!-- Spelling correction notice (shown when AI corrected one or more words) -->
+          <div id="bulk-correction-notice" class="hidden" style="background:rgba(242,208,122,0.15);border-left:3px solid var(--color-warning,#F2D07A);border-radius:6px;padding:10px 14px;margin-bottom:12px;font-size:0.85rem;line-height:1.6;"></div>
           <div class="ws-toolbar">
             <span class="ws-counter" id="bulk-counter">0 / 0 selected</span>
             <div class="ws-toolbar-btns">
@@ -631,7 +633,12 @@
         inputIpaUK.value       = info.ipaUK;
         inputWordType.value    = info.wordType;
         inputDescription.value = info.description;
-        showToast('Fields filled by AI!', 'success');
+        if (info.correctedWord && info.correctedWord.toLowerCase() !== word.toLowerCase()) {
+          inputEnglish.value = info.correctedWord;
+          showToast(`Spelling corrected: "${word}" → "${info.correctedWord}"`, 'warning', 5000);
+        } else {
+          showToast('Fields filled by AI!', 'success');
+        }
       } catch (err) {
         console.error(err);
         showToast('AI generation failed. ' + (err.message || ''), 'error');
@@ -687,17 +694,40 @@
       bulkBtnAdd.disabled = checked === 0;
     }
 
+    const bulkCorrectionNotice = document.getElementById('bulk-correction-notice');
+
     function renderBulkPreview(results) {
       bulkResults = results;
-      bulkPreviewTbody.innerHTML = results.map((r, i) => `
+
+      // Build correction list
+      const corrections = results.filter(r =>
+        r.correctedWord && r.originalWord &&
+        r.correctedWord.toLowerCase() !== r.originalWord.toLowerCase()
+      );
+
+      if (corrections.length > 0) {
+        const list = corrections
+          .map(r => `<strong><s>${escapeHtml(r.originalWord)}</s> → ${escapeHtml(r.correctedWord)}</strong>`)
+          .join(', ');
+        bulkCorrectionNotice.innerHTML =
+          `⚠ Spelling auto-corrected for ${corrections.length} word${corrections.length > 1 ? 's' : ''}: ${list}`;
+        bulkCorrectionNotice.classList.remove('hidden');
+      } else {
+        bulkCorrectionNotice.classList.add('hidden');
+      }
+
+      bulkPreviewTbody.innerHTML = results.map((r, i) => {
+        const wasCorrected = r.correctedWord && r.originalWord &&
+          r.correctedWord.toLowerCase() !== r.originalWord.toLowerCase();
+        return `
         <tr>
           <td><input type="checkbox" data-index="${i}" checked /></td>
-          <td class="vocab-english">${escapeHtml(r.english)}</td>
+          <td class="vocab-english">${escapeHtml(r.english)}${wasCorrected ? `<br><small style="color:var(--color-warning,#F2D07A);"><s>${escapeHtml(r.originalWord)}</s> → corrected</small>` : ''}</td>
           <td>${escapeHtml(r.vietnamese)}</td>
           <td class="vocab-ipa">${escapeHtml(r.ipaUS)}</td>
           <td><span class="${badgeClass(r.wordType)}">${WORD_TYPE_LABELS[r.wordType] || r.wordType}</span></td>
-        </tr>
-      `).join('');
+        </tr>`;
+      }).join('');
       updateBulkCounter();
     }
 
@@ -708,6 +738,8 @@
       bulkLoading.classList.add('hidden');
       bulkProgressBarWrap.classList.add('hidden');
       bulkAdding.classList.add('hidden');
+      bulkCorrectionNotice.classList.add('hidden');
+      bulkCorrectionNotice.innerHTML = '';
       bulkBtnGenerate.classList.remove('hidden');
       bulkBtnGenerate.disabled = false;
       bulkBtnGenerate.innerHTML = GENERATE_BTN_HTML;
