@@ -160,20 +160,30 @@ export async function initLoginPage() {
 
   if (!form) return;
 
-  // --- AUTO-LOGIN from localStorage ---
+  // --- AUTO-LOGIN or PRE-FILL from localStorage ---
   const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
   if (saved) {
     try {
       const creds = JSON.parse(saved);
       if (creds.username && creds.secret) {
-        // Show a loading state while auto-logging in
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="spinner"></span> Signing in…';
-        errorEl.textContent = '';
+        if (creds.autoLogin === false) {
+          // User explicitly logged out: pre-fill the form but don't auto-login
+          document.getElementById('login-username').value = creds.username;
+          document.getElementById('login-secret').value =
+            JSON.stringify(creds.secret, null, 2);
+          // Reset flag so subsequent page loads (without logging out) auto-login again
+          delete creds.autoLogin;
+          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(creds));
+        } else {
+          // Normal visit: auto-login
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<span class="spinner"></span> Signing in…';
+          errorEl.textContent = '';
 
-        const ok = await performLogin(creds.username, creds.secret, { errorEl, submitBtn });
-        if (ok) return; // successfully auto-logged in
-        // If auto-login failed (user removed from DB, etc.), fall through to manual form
+          const ok = await performLogin(creds.username, creds.secret, { errorEl, submitBtn });
+          if (ok) return; // successfully auto-logged in
+          // If auto-login failed (user removed from DB, etc.), fall through to manual form
+        }
       }
     } catch {
       localStorage.removeItem(LOCAL_STORAGE_KEY);

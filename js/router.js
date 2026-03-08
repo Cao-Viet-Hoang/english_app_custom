@@ -27,11 +27,23 @@ export function setSession(data) {
 }
 
 /**
- * Clear session, remove saved credentials, and redirect to login.
+ * Clear session and redirect to login.
+ * Keeps saved credentials in localStorage but marks them as pre-fill only
+ * (no auto-login), so the login form is pre-populated on the next visit.
  */
 export function logout() {
   sessionStorage.removeItem(SESSION_KEY);
-  localStorage.removeItem('app_login_credentials');
+  // Mark credentials for pre-fill only — don't auto-login after explicit logout
+  const saved = localStorage.getItem('app_login_credentials');
+  if (saved) {
+    try {
+      const creds = JSON.parse(saved);
+      creds.autoLogin = false;
+      localStorage.setItem('app_login_credentials', JSON.stringify(creds));
+    } catch {
+      localStorage.removeItem('app_login_credentials');
+    }
+  }
   navigateTo('index.html');
 }
 
