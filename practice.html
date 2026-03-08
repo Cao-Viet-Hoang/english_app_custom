@@ -999,7 +999,10 @@
         bcLink.textContent = topic.name;
         document.title = `WordCraft — Practice: ${topic.name}`;
 
-        allWords = words;
+        const selectedWordIds = getQueryParam('words');
+        allWords = selectedWordIds
+          ? words.filter(w => selectedWordIds.split(',').includes(w.id))
+          : words;
         wordBadge.textContent = `${allWords.length} word${allWords.length !== 1 ? 's' : ''}`;
 
         if (allWords.length < 4) {
