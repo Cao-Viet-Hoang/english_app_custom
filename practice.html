@@ -93,6 +93,14 @@
         </svg>
         Matching
       </button>
+      <button class="mode-btn" data-mode="listening">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
+          <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
+        </svg>
+        Listening
+      </button>
     </div>
 
     <!-- Empty state (shown when no words) -->
@@ -236,6 +244,49 @@
 
       <!-- Matching Result -->
       <div id="mt-result" class="practice-result hidden"></div>
+    </div>
+
+    <!-- ============ LISTENING MODE ============ -->
+    <div id="panel-listening" class="practice-panel">
+      <div class="direction-toggle">
+        <label for="listen-answer-type">Answer type:</label>
+        <select id="listen-answer-type">
+          <option value="vi">Vietnamese</option>
+          <option value="en">English</option>
+        </select>
+      </div>
+
+      <div class="stats-bar">
+        <div class="stat">Question <strong id="ls-current">1</strong> / <strong id="ls-total">0</strong></div>
+        <div class="stat stat-progress">
+          <div class="progress-bar"><div class="progress-bar-fill" id="ls-progress" style="width:0%"></div></div>
+          <span id="ls-progress-text">0%</span>
+        </div>
+        <div class="stat">Score: <strong id="ls-score">0</strong></div>
+      </div>
+
+      <div class="listening-container" id="ls-container">
+        <div class="listening-prompt-card">
+          <div class="listening-prompt-label">Listen and choose the correct answer</div>
+          <button class="listening-play-btn" id="ls-play-btn" type="button">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+            </svg>
+            <span>Play Sound</span>
+          </button>
+          <div class="listening-replay-hint">Click to listen again</div>
+        </div>
+        <div class="quiz-options" id="ls-options"></div>
+        <div class="quiz-next-row">
+          <button class="btn btn-primary hidden" id="ls-btn-next">Next Question →</button>
+        </div>
+      </div>
+
+      <!-- Listening Result -->
+      <div id="ls-result" class="practice-result hidden"></div>
     </div>
 
   </main>
@@ -405,6 +456,7 @@
       if (mode === 'flashcard') initFlashcard();
       else if (mode === 'quiz') initQuiz();
       else if (mode === 'matching') initMatching();
+      else if (mode === 'listening') initListening();
     }
 
     // ============================================================
@@ -800,6 +852,130 @@
     mtColVi.addEventListener('click', (e) => {
       const card = e.target.closest('.match-card');
       if (card) handleMatchClick(card);
+    });
+
+    // ============================================================
+    // LISTENING
+    // ============================================================
+    let lsWords = [], lsIndex = 0, lsScore = 0, lsAnswered = false;
+    const lsContainer  = document.getElementById('ls-container');
+    const lsResult     = document.getElementById('ls-result');
+    const lsOptions    = document.getElementById('ls-options');
+    const lsBtnNext    = document.getElementById('ls-btn-next');
+    const lsCurrent    = document.getElementById('ls-current');
+    const lsTotal      = document.getElementById('ls-total');
+    const lsScoreEl    = document.getElementById('ls-score');
+    const lsProgress   = document.getElementById('ls-progress');
+    const lsProgressTxt= document.getElementById('ls-progress-text');
+    const lsPlayBtn    = document.getElementById('ls-play-btn');
+    const lsAnswerType = document.getElementById('listen-answer-type');
+
+    lsAnswerType.addEventListener('change', () => initListening());
+
+    function initListening() {
+      lsWords = shuffle(allWords);
+      lsIndex = 0;
+      lsScore = 0;
+      lsAnswered = false;
+      lsContainer.classList.remove('hidden');
+      lsResult.classList.add('hidden');
+      showListeningQuestion();
+    }
+
+    function showListeningQuestion() {
+      if (lsIndex >= lsWords.length) {
+        lsContainer.classList.add('hidden');
+        lsResult.classList.remove('hidden');
+        lsResult.innerHTML = buildResultHtml(lsScore, lsWords.length, 'listening');
+        return;
+      }
+
+      lsAnswered = false;
+      lsBtnNext.classList.add('hidden');
+      const w = lsWords[lsIndex];
+      const ansType = lsAnswerType.value; // 'vi' or 'en'
+
+      // Auto-play the word
+      speakWord(w.english);
+
+      // Build 4 options
+      const others = allWords.filter(x => x.id !== w.id);
+      const wrongPicks = shuffle(others).slice(0, 3);
+      const options = shuffle([w, ...wrongPicks]);
+
+      const keys = ['A', 'B', 'C', 'D'];
+      lsOptions.innerHTML = options.map((opt, i) => {
+        const text = ansType === 'vi' ? opt.vietnamese : opt.english;
+        return `
+          <button class="quiz-option" data-id="${opt.id}">
+            <span class="option-key">${keys[i]}</span>
+            <span>${escapeHtml(text)}</span>
+          </button>
+        `;
+      }).join('');
+
+      lsCurrent.textContent = lsIndex + 1;
+      lsTotal.textContent = lsWords.length;
+      lsScoreEl.textContent = lsScore;
+      const pct = Math.round((lsIndex / lsWords.length) * 100);
+      lsProgress.style.width = pct + '%';
+      lsProgressTxt.textContent = pct + '%';
+    }
+
+    lsPlayBtn.addEventListener('click', () => {
+      if (lsIndex < lsWords.length) speakWord(lsWords[lsIndex].english);
+    });
+
+    lsOptions.addEventListener('click', (e) => {
+      const btn = e.target.closest('.quiz-option');
+      if (!btn || lsAnswered) return;
+      lsAnswered = true;
+
+      const selectedId = btn.dataset.id;
+      const correctId = lsWords[lsIndex].id;
+      const isCorrect = selectedId === correctId;
+
+      if (isCorrect) {
+        btn.classList.add('correct');
+        lsScore++;
+        lsScoreEl.textContent = lsScore;
+      } else {
+        btn.classList.add('wrong');
+        lsOptions.querySelector(`[data-id="${correctId}"]`).classList.add('correct');
+      }
+
+      lsOptions.querySelectorAll('.quiz-option').forEach(o => o.classList.add('disabled'));
+      lsBtnNext.classList.remove('hidden');
+    });
+
+    lsBtnNext.addEventListener('click', () => {
+      lsIndex++;
+      showListeningQuestion();
+    });
+
+    // Keyboard shortcuts for listening
+    document.addEventListener('keydown', (e) => {
+      if (currentMode !== 'listening') return;
+      if (lsIndex >= lsWords.length) return;
+
+      // Press R to replay sound
+      if (!lsAnswered && e.key.toLowerCase() === 'r') {
+        speakWord(lsWords[lsIndex].english);
+        return;
+      }
+
+      const keyMap = { '1': 0, '2': 1, '3': 2, '4': 3, 'a': 0, 'b': 1, 'c': 2, 'd': 3 };
+      const idx = keyMap[e.key.toLowerCase()];
+
+      if (!lsAnswered && idx !== undefined) {
+        const btns = lsOptions.querySelectorAll('.quiz-option');
+        if (btns[idx]) btns[idx].click();
+      }
+
+      if (lsAnswered && (e.key === 'Enter' || e.key === ' ')) {
+        e.preventDefault();
+        lsBtnNext.click();
+      }
     });
 
     // ============================================================
