@@ -881,16 +881,61 @@
     vocabSearch.addEventListener('input', renderFilteredWords);
 
     // ---- TTS (Text-to-Speech) ----
+    // Preferred en-US voice names in priority order.
+    // Chrome/Edge desktop ship Google/Microsoft voices; iOS/macOS ship Samantha.
+    const TTS_PREFERRED_VOICES = [
+      'Google US English',
+      'Microsoft Aria Online (Natural) - English (United States)',
+      'Microsoft David - English (United States)',
+      'Microsoft Zira - English (United States)',
+      'Samantha',   // macOS / iOS
+    ];
+    let _ttsVoice = null;   // cached en-US voice
+    let _ttsReady = false;
+
+    function _loadTTSVoice() {
+      const voices = window.speechSynthesis.getVoices();
+      if (!voices.length) return;          // not ready yet
+      for (const name of TTS_PREFERRED_VOICES) {
+        const v = voices.find(v => v.name === name);
+        if (v) { _ttsVoice = v; _ttsReady = true; return; }
+      }
+      // Fallback: first available en-US voice
+      _ttsVoice = voices.find(v => v.lang === 'en-US') || null;
+      _ttsReady = true;
+    }
+
+    // Try loading immediately (works on desktop), then listen for the async
+    // voiceschanged event which iOS Safari / Chrome fire after page load.
+    _loadTTSVoice();
+    window.speechSynthesis.addEventListener('voiceschanged', _loadTTSVoice);
+
     function speakWord(word) {
       if (!('speechSynthesis' in window)) {
         showToast('Text-to-speech is not supported in this browser.', 'warning');
         return;
       }
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(word);
-      utterance.lang = 'en-US';
-      utterance.rate = 0.9;
-      window.speechSynthesis.speak(utterance);
+      function _doSpeak() {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(word);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.9;
+        if (_ttsVoice) utterance.voice = _ttsVoice;
+        window.speechSynthesis.speak(utterance);
+      }
+      if (_ttsReady) {
+        _doSpeak();
+      } else {
+        // Voices not yet loaded (common on iOS Safari first gesture)
+        window.speechSynthesis.addEventListener('voiceschanged', function _once() {
+          window.speechSynthesis.removeEventListener('voiceschanged', _once);
+          _loadTTSVoice();
+          _doSpeak();
+        });
+        // Belt-and-suspenders: try again immediately in case event already fired
+        _loadTTSVoice();
+        if (_ttsReady) _doSpeak();
+      }
     }
 
     // Speak button delegation

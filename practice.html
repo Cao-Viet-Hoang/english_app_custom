@@ -294,13 +294,52 @@
       return a;
     }
 
+    // Preferred en-US voice names in priority order.
+    const TTS_PREFERRED_VOICES = [
+      'Google US English',
+      'Microsoft Aria Online (Natural) - English (United States)',
+      'Microsoft David - English (United States)',
+      'Microsoft Zira - English (United States)',
+      'Samantha',   // macOS / iOS
+    ];
+    let _ttsVoice = null;
+    let _ttsReady = false;
+
+    function _loadTTSVoice() {
+      const voices = window.speechSynthesis.getVoices();
+      if (!voices.length) return;
+      for (const name of TTS_PREFERRED_VOICES) {
+        const v = voices.find(v => v.name === name);
+        if (v) { _ttsVoice = v; _ttsReady = true; return; }
+      }
+      _ttsVoice = voices.find(v => v.lang === 'en-US') || null;
+      _ttsReady = true;
+    }
+
+    _loadTTSVoice();
+    window.speechSynthesis.addEventListener('voiceschanged', _loadTTSVoice);
+
     function speakWord(word) {
       if (!('speechSynthesis' in window)) return;
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(word);
-      u.lang = 'en-US';
-      u.rate = 0.9;
-      window.speechSynthesis.speak(u);
+      function _doSpeak() {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(word);
+        u.lang = 'en-US';
+        u.rate = 0.9;
+        if (_ttsVoice) u.voice = _ttsVoice;
+        window.speechSynthesis.speak(u);
+      }
+      if (_ttsReady) {
+        _doSpeak();
+      } else {
+        window.speechSynthesis.addEventListener('voiceschanged', function _once() {
+          window.speechSynthesis.removeEventListener('voiceschanged', _once);
+          _loadTTSVoice();
+          _doSpeak();
+        });
+        _loadTTSVoice();
+        if (_ttsReady) _doSpeak();
+      }
     }
 
     function buildResultHtml(correct, total, mode) {
