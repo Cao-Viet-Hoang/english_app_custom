@@ -1414,7 +1414,9 @@
               const escaped = w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
               const found = new RegExp(`\\b${escaped}\\b`, 'i').test(p.englishText);
               const cls = found ? 'badge-word-used' : 'badge-word-missed';
-              return `<span class="para-word-badge ${cls}">${escapeHtml(w)}</span>`;
+              const wordObj = allWords.find(aw => aw.english.toLowerCase() === w.toLowerCase());
+              const meaning = wordObj ? escapeHtml(wordObj.vietnamese) : '';
+              return `<span class="para-word-badge ${cls}" data-meaning="${meaning}">${escapeHtml(w)}</span>`;
             }).join('');
             wordBadgesHtml = `<div class="para-words-row">${badges}</div>`;
           }
@@ -1455,6 +1457,24 @@
         showToast('Failed to load paragraphs.', 'error');
       }
     }
+
+    // Word badge click → show Vietnamese meaning popover
+    paraList.addEventListener('click', (e) => {
+      const badge = e.target.closest('.para-word-badge[data-meaning]');
+      // Close any existing popover first
+      const existing = paraList.querySelector('.badge-popover');
+      if (existing) existing.remove();
+      if (!badge || !badge.dataset.meaning) return;
+      const pop = document.createElement('span');
+      pop.className = 'badge-popover';
+      pop.textContent = badge.dataset.meaning;
+      badge.appendChild(pop);
+      // Auto-dismiss on next click anywhere or after timeout
+      const dismiss = () => { pop.remove(); document.removeEventListener('click', onOutside); };
+      const onOutside = (ev) => { if (!badge.contains(ev.target)) dismiss(); };
+      setTimeout(() => document.addEventListener('click', onOutside), 0);
+      setTimeout(dismiss, 4000);
+    });
 
     // Paragraph delegation
     paraList.addEventListener('click', async (e) => {
