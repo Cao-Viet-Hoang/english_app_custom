@@ -101,6 +101,28 @@
         </svg>
         Listening
       </button>
+      <button class="mode-btn" data-mode="fillblank">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/>
+        </svg>
+        Fill Blank
+      </button>
+      <button class="mode-btn" data-mode="speedtype">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.01"/><path d="M10 8h.01"/><path d="M14 8h.01"/><path d="M18 8h.01"/><path d="M6 12h.01"/><path d="M10 12h.01"/><path d="M14 12h.01"/><path d="M18 12h.01"/><path d="M8 16h8"/>
+        </svg>
+        Speed Type
+      </button>
+      <button class="mode-btn" data-mode="unscramble">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+          <polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+        </svg>
+        Unscramble
+      </button>
     </div>
 
     <!-- Empty state (shown when no words) -->
@@ -289,6 +311,193 @@
       <div id="ls-result" class="practice-result hidden"></div>
     </div>
 
+    <!-- ============ FILL IN THE BLANK MODE ============ -->
+    <div id="panel-fillblank" class="practice-panel">
+      <div class="stats-bar">
+        <div class="stat">Word <strong id="fb-current">1</strong> / <strong id="fb-total">0</strong></div>
+        <div class="stat stat-progress">
+          <div class="progress-bar"><div class="progress-bar-fill" id="fb-progress" style="width:0%"></div></div>
+          <span id="fb-progress-text">0%</span>
+        </div>
+        <div class="stat">Score: <strong id="fb-score">0</strong></div>
+      </div>
+
+      <div class="fillblank-container" id="fb-container">
+        <div class="fillblank-card">
+          <!-- Top hint section -->
+          <div class="fb-hint-section">
+            <div class="fb-hint-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+              </svg>
+            </div>
+            <span class="fillblank-label">Fill in the missing letters</span>
+          </div>
+
+          <!-- Vietnamese meaning badge -->
+          <div class="fb-meaning-section">
+            <div class="fb-meaning-badge" id="fb-vietnamese"></div>
+            <div class="fb-word-type" id="fb-word-type"></div>
+          </div>
+
+          <!-- Divider -->
+          <div class="fb-divider"></div>
+
+          <!-- Word with blanks -->
+          <div class="fillblank-word" id="fb-word"></div>
+
+          <!-- Feedback banner -->
+          <div class="fillblank-feedback hidden" id="fb-feedback"></div>
+
+          <!-- Actions -->
+          <div class="fillblank-actions">
+            <button class="btn btn-primary" id="fb-btn-check">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              Check Answer
+            </button>
+            <button class="btn btn-primary hidden" id="fb-btn-next">
+              Next Word
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="fb-result" class="practice-result hidden"></div>
+    </div>
+
+    <!-- ============ SPEED TYPING MODE ============ -->
+    <div id="panel-speedtype" class="practice-panel">
+      <div class="speedtype-settings">
+        <label for="st-time-select">Time limit:</label>
+        <select id="st-time-select">
+          <option value="30">30 seconds</option>
+          <option value="60" selected>60 seconds</option>
+          <option value="90">90 seconds</option>
+          <option value="120">2 minutes</option>
+        </select>
+      </div>
+
+      <div class="stats-bar">
+        <div class="stat">Time: <strong id="st-timer">60</strong>s</div>
+        <div class="stat stat-progress">
+          <div class="progress-bar"><div class="progress-bar-fill" id="st-progress" style="width:100%"></div></div>
+        </div>
+        <div class="stat">Correct: <strong id="st-score">0</strong> / <strong id="st-total">0</strong></div>
+      </div>
+
+      <div class="speedtype-container" id="st-container">
+        <div class="speedtype-prompt-card">
+          <div class="speedtype-label">Type the English word</div>
+          <div class="speedtype-vietnamese" id="st-vietnamese"></div>
+          <div class="speedtype-english-hint" id="st-english-hint"></div>
+        </div>
+        <div class="speedtype-input-row">
+          <input type="text" class="speedtype-input" id="st-input" placeholder="Type here..." autocomplete="off" spellcheck="false" />
+        </div>
+        <div class="speedtype-start-overlay" id="st-start-overlay">
+          <button class="btn btn-primary btn-lg" id="st-btn-start">Start Typing!</button>
+        </div>
+      </div>
+
+      <div id="st-result" class="practice-result hidden"></div>
+    </div>
+
+    <!-- ============ UNSCRAMBLE MODE ============ -->
+    <div id="panel-unscramble" class="practice-panel">
+      <div class="stats-bar">
+        <div class="stat">Word <strong id="us-current">1</strong> / <strong id="us-total">0</strong></div>
+        <div class="stat stat-progress">
+          <div class="progress-bar"><div class="progress-bar-fill" id="us-progress" style="width:0%"></div></div>
+          <span id="us-progress-text">0%</span>
+        </div>
+        <div class="stat">Score: <strong id="us-score">0</strong></div>
+      </div>
+
+      <div class="unscramble-container" id="us-container">
+        <div class="unscramble-card">
+          <!-- Top hint section -->
+          <div class="us-hint-section">
+            <div class="us-hint-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+                <polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+              </svg>
+            </div>
+            <span class="unscramble-label">Drag & drop to form the correct word</span>
+          </div>
+
+          <!-- Vietnamese meaning badge -->
+          <div class="us-meaning-section">
+            <div class="us-meaning-badge" id="us-vietnamese"></div>
+            <div class="us-word-type" id="us-word-type"></div>
+          </div>
+
+          <!-- Divider -->
+          <div class="us-divider"></div>
+
+          <!-- Drop zone with label -->
+          <div class="us-zone-label">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Drop here
+          </div>
+          <div class="unscramble-drop-zone" id="us-dropzone"></div>
+
+          <!-- Source tiles with label -->
+          <div class="us-zone-label">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+              <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+            </svg>
+            Available letters
+          </div>
+          <div class="unscramble-source" id="us-source"></div>
+
+          <!-- Feedback banner -->
+          <div class="unscramble-feedback hidden" id="us-feedback"></div>
+
+          <!-- Actions -->
+          <div class="unscramble-actions">
+            <button class="btn btn-ghost" id="us-btn-reset">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+              </svg>
+              Reset
+            </button>
+            <button class="btn btn-primary" id="us-btn-check">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              Check Answer
+            </button>
+            <button class="btn btn-primary hidden" id="us-btn-next">
+              Next Word
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="us-result" class="practice-result hidden"></div>
+    </div>
+
   </main>
 
   <!-- ===== Firebase SDK ===== -->
@@ -457,6 +666,9 @@
       else if (mode === 'quiz') initQuiz();
       else if (mode === 'matching') initMatching();
       else if (mode === 'listening') initListening();
+      else if (mode === 'fillblank') initFillBlank();
+      else if (mode === 'speedtype') initSpeedType();
+      else if (mode === 'unscramble') initUnscramble();
     }
 
     // ============================================================
@@ -526,6 +738,8 @@
       if (fcIndex >= fcWords.length) {
         // Every word ends up either "Know it" (fcKnown++) or max-retried (fcUnknown++)
         fcUnknown = fcOriginalTotal - fcKnown;
+        fcProgress.style.width = '100%';
+        fcProgressTxt.textContent = '100%';
 
         fcContainer.classList.add('hidden');
         fcResult.classList.remove('hidden');
@@ -646,6 +860,8 @@
 
     function showQuizQuestion() {
       if (qzIndex >= qzWords.length) {
+        qzProgress.style.width = '100%';
+        qzProgressTxt.textContent = '100%';
         qzContainer.classList.add('hidden');
         qzResult.classList.remove('hidden');
         qzResult.innerHTML = buildResultHtml(qzScore, qzWords.length, 'quiz');
@@ -884,6 +1100,8 @@
 
     function showListeningQuestion() {
       if (lsIndex >= lsWords.length) {
+        lsProgress.style.width = '100%';
+        lsProgressTxt.textContent = '100%';
         lsContainer.classList.add('hidden');
         lsResult.classList.remove('hidden');
         lsResult.innerHTML = buildResultHtml(lsScore, lsWords.length, 'listening');
@@ -975,6 +1193,573 @@
       if (lsAnswered && (e.key === 'Enter' || e.key === ' ')) {
         e.preventDefault();
         lsBtnNext.click();
+      }
+    });
+
+    // ============================================================
+    // FILL IN THE BLANK
+    // ============================================================
+    let fbWords = [], fbIndex = 0, fbScore = 0, fbAnswered = false;
+    const fbContainer = document.getElementById('fb-container');
+    const fbResult    = document.getElementById('fb-result');
+    const fbWordEl    = document.getElementById('fb-word');
+    const fbVietnamese= document.getElementById('fb-vietnamese');
+    const fbBtnCheck  = document.getElementById('fb-btn-check');
+    const fbBtnNext   = document.getElementById('fb-btn-next');
+    const fbFeedback  = document.getElementById('fb-feedback');
+    const fbCurrent   = document.getElementById('fb-current');
+    const fbTotal     = document.getElementById('fb-total');
+    const fbScoreEl   = document.getElementById('fb-score');
+    const fbProgress  = document.getElementById('fb-progress');
+    const fbProgressTxt = document.getElementById('fb-progress-text');
+
+    function initFillBlank() {
+      fbWords = shuffle(allWords);
+      fbIndex = 0;
+      fbScore = 0;
+      fbAnswered = false;
+      fbContainer.classList.remove('hidden');
+      fbResult.classList.add('hidden');
+      showFillBlank();
+    }
+
+    function generateBlanks(word) {
+      // For each "token" (space-separated), hide ~40% of characters
+      const tokens = word.split('');
+      const letterIndices = [];
+      tokens.forEach((ch, i) => {
+        if (ch !== ' ') letterIndices.push(i);
+      });
+
+      // Pick ~40% of letter positions to blank out (min 1)
+      const blankCount = Math.max(1, Math.round(letterIndices.length * 0.4));
+      const blankedPositions = new Set();
+      const shuffledIndices = shuffle(letterIndices);
+      for (let i = 0; i < blankCount; i++) {
+        blankedPositions.add(shuffledIndices[i]);
+      }
+
+      let html = '';
+      tokens.forEach((ch, i) => {
+        if (ch === ' ') {
+          html += '<span class="fb-space">&nbsp;</span>';
+        } else if (blankedPositions.has(i)) {
+          html += `<input type="text" class="fb-char-input" data-answer="${ch.toLowerCase()}" maxlength="1" autocomplete="off" spellcheck="false" />`;
+        } else {
+          html += `<span class="fb-char">${ch}</span>`;
+        }
+      });
+      return html;
+    }
+
+    function showFillBlank() {
+      if (fbIndex >= fbWords.length) {
+        fbProgress.style.width = '100%';
+        fbProgressTxt.textContent = '100%';
+        fbContainer.classList.add('hidden');
+        fbResult.classList.remove('hidden');
+        fbResult.innerHTML = buildResultHtml(fbScore, fbWords.length, 'fillblank');
+        return;
+      }
+
+      fbAnswered = false;
+      fbBtnCheck.classList.remove('hidden');
+      fbBtnNext.classList.add('hidden');
+      fbFeedback.classList.add('hidden');
+      fbFeedback.textContent = '';
+
+      const w = fbWords[fbIndex];
+      fbVietnamese.textContent = w.vietnamese;
+      const fbWordType = document.getElementById('fb-word-type');
+      fbWordType.textContent = WORD_TYPE_LABELS[w.wordType] || w.wordType || '';
+      fbWordType.style.display = fbWordType.textContent ? '' : 'none';
+      fbWordEl.innerHTML = generateBlanks(w.english);
+
+      fbCurrent.textContent = fbIndex + 1;
+      fbTotal.textContent = fbWords.length;
+      fbScoreEl.textContent = fbScore;
+      const pct = Math.round((fbIndex / fbWords.length) * 100);
+      fbProgress.style.width = pct + '%';
+      fbProgressTxt.textContent = pct + '%';
+
+      // Focus first input
+      const firstInput = fbWordEl.querySelector('.fb-char-input');
+      if (firstInput) firstInput.focus();
+    }
+
+    // Auto-advance to next input on typing
+    fbWordEl.addEventListener('input', (e) => {
+      if (e.target.classList.contains('fb-char-input') && e.target.value.length === 1) {
+        const inputs = [...fbWordEl.querySelectorAll('.fb-char-input')];
+        const idx = inputs.indexOf(e.target);
+        if (idx < inputs.length - 1) inputs[idx + 1].focus();
+      }
+    });
+
+    // Allow backspace to go to previous input
+    fbWordEl.addEventListener('keydown', (e) => {
+      if (e.target.classList.contains('fb-char-input')) {
+        if (e.key === 'Backspace' && e.target.value === '') {
+          const inputs = [...fbWordEl.querySelectorAll('.fb-char-input')];
+          const idx = inputs.indexOf(e.target);
+          if (idx > 0) {
+            inputs[idx - 1].focus();
+            inputs[idx - 1].value = '';
+          }
+        }
+        if (e.key === 'Enter') {
+          if (!fbAnswered) fbCheckAnswer();
+          else { fbIndex++; showFillBlank(); }
+        }
+      }
+    });
+
+    function fbCheckAnswer() {
+      if (fbAnswered) return;
+      fbAnswered = true;
+      const inputs = fbWordEl.querySelectorAll('.fb-char-input');
+      let allCorrect = true;
+
+      inputs.forEach(inp => {
+        const answer = inp.dataset.answer;
+        const val = inp.value.toLowerCase();
+        inp.disabled = true;
+        if (val === answer) {
+          inp.classList.add('correct');
+        } else {
+          inp.classList.add('wrong');
+          inp.value = answer;
+          allCorrect = false;
+        }
+      });
+
+      if (allCorrect) {
+        fbScore++;
+        fbScoreEl.textContent = fbScore;
+        fbFeedback.textContent = 'Correct!';
+        fbFeedback.className = 'fillblank-feedback fb-correct';
+      } else {
+        fbFeedback.textContent = `Answer: ${fbWords[fbIndex].english}`;
+        fbFeedback.className = 'fillblank-feedback fb-wrong';
+      }
+      fbFeedback.classList.remove('hidden');
+      fbBtnCheck.classList.add('hidden');
+      fbBtnNext.classList.remove('hidden');
+      fbBtnNext.focus();
+    }
+
+    fbBtnCheck.addEventListener('click', fbCheckAnswer);
+    fbBtnNext.addEventListener('click', () => { fbIndex++; showFillBlank(); });
+
+    // ============================================================
+    // SPEED TYPING
+    // ============================================================
+    let stWords = [], stIndex = 0, stScore = 0, stTimer = null, stTimeLeft = 60, stTotalAttempted = 0;
+    const stContainer  = document.getElementById('st-container');
+    const stResult     = document.getElementById('st-result');
+    const stInput      = document.getElementById('st-input');
+    const stVietnamese = document.getElementById('st-vietnamese');
+    const stEnglishHint= document.getElementById('st-english-hint');
+    const stTimerEl    = document.getElementById('st-timer');
+    const stScoreEl    = document.getElementById('st-score');
+    const stTotalEl    = document.getElementById('st-total');
+    const stProgressEl = document.getElementById('st-progress');
+    const stStartOverlay = document.getElementById('st-start-overlay');
+    const stBtnStart   = document.getElementById('st-btn-start');
+    const stTimeSelect = document.getElementById('st-time-select');
+
+    function initSpeedType() {
+      stWords = shuffle(allWords);
+      stIndex = 0;
+      stScore = 0;
+      stTotalAttempted = 0;
+      if (stTimer) clearInterval(stTimer);
+      stTimer = null;
+      stContainer.classList.remove('hidden');
+      stResult.classList.add('hidden');
+      stStartOverlay.classList.remove('hidden');
+      stInput.value = '';
+      stInput.disabled = true;
+      stTimeLeft = parseInt(stTimeSelect.value);
+      stTimerEl.textContent = stTimeLeft;
+      stScoreEl.textContent = '0';
+      stTotalEl.textContent = '0';
+      stProgressEl.style.width = '100%';
+      showSpeedTypeWord();
+    }
+
+    function showSpeedTypeWord() {
+      if (stIndex >= stWords.length) stIndex = 0; // cycle
+      const w = stWords[stIndex];
+      stVietnamese.textContent = w.vietnamese;
+      // Show first letter as hint + word length
+      const eng = w.english;
+      stEnglishHint.textContent = `${eng.length} letters — starts with "${eng.charAt(0)}"`;
+    }
+
+    function startSpeedTypeTimer() {
+      stStartOverlay.classList.add('hidden');
+      stInput.disabled = false;
+      stInput.focus();
+      const totalTime = stTimeLeft;
+
+      stTimer = setInterval(() => {
+        stTimeLeft--;
+        stTimerEl.textContent = stTimeLeft;
+        stProgressEl.style.width = Math.round((stTimeLeft / totalTime) * 100) + '%';
+
+        if (stTimeLeft <= 10) {
+          stTimerEl.style.color = 'var(--color-danger)';
+        }
+
+        if (stTimeLeft <= 0) {
+          clearInterval(stTimer);
+          stTimer = null;
+          stInput.disabled = true;
+          stContainer.classList.add('hidden');
+          stResult.classList.remove('hidden');
+          stResult.innerHTML = buildSpeedTypeResultHtml(stScore, stTotalAttempted, totalTime);
+          stTimerEl.style.color = '';
+        }
+      }, 1000);
+    }
+
+    function buildSpeedTypeResultHtml(correct, total, timeLimit) {
+      const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
+      let iconClass, iconSvg, label;
+
+      if (correct >= 10) {
+        iconClass = 'great';
+        iconSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+        label = 'Speed Demon! Excellent!';
+      } else if (correct >= 5) {
+        iconClass = 'good';
+        iconSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+        label = 'Good speed! Keep practicing.';
+      } else {
+        iconClass = 'needs-work';
+        iconSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+        label = 'Keep going! You\'ll get faster.';
+      }
+
+      return `
+        <div class="result-icon ${iconClass}">${iconSvg}</div>
+        <div class="result-score">${correct} words</div>
+        <div class="result-label">${label}</div>
+        <div class="result-details">
+          <div class="result-detail-item">
+            <div class="num green">${correct}</div>
+            <div class="lbl">Correct</div>
+          </div>
+          <div class="result-detail-item">
+            <div class="num red">${total - correct}</div>
+            <div class="lbl">Wrong</div>
+          </div>
+          <div class="result-detail-item">
+            <div class="num" style="color:var(--color-primary)">${timeLimit}s</div>
+            <div class="lbl">Time</div>
+          </div>
+        </div>
+        <div class="result-actions">
+          <button class="btn btn-primary" onclick="window._restartMode()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            Play Again
+          </button>
+          <a class="btn btn-ghost" href="topic-detail.html?topicId=${topicId}">Back to Topic</a>
+        </div>
+      `;
+    }
+
+    stBtnStart.addEventListener('click', startSpeedTypeTimer);
+
+    stInput.addEventListener('input', () => {
+      if (!stTimer) return;
+      const val = stInput.value.trim().toLowerCase();
+      const w = stWords[stIndex];
+      const correct = w.english.toLowerCase();
+
+      if (val === correct) {
+        stScore++;
+        stTotalAttempted++;
+        stScoreEl.textContent = stScore;
+        stTotalEl.textContent = stTotalAttempted;
+        stInput.value = '';
+        stInput.classList.add('st-flash-correct');
+        setTimeout(() => stInput.classList.remove('st-flash-correct'), 300);
+        stIndex++;
+        showSpeedTypeWord();
+      }
+    });
+
+    // Allow skip with Escape
+    stInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && stTimer) {
+        stTotalAttempted++;
+        stTotalEl.textContent = stTotalAttempted;
+        stInput.value = '';
+        stInput.classList.add('st-flash-wrong');
+        setTimeout(() => stInput.classList.remove('st-flash-wrong'), 300);
+        stIndex++;
+        showSpeedTypeWord();
+      }
+    });
+
+    stTimeSelect.addEventListener('change', () => {
+      if (!stTimer) initSpeedType();
+    });
+
+    // ============================================================
+    // UNSCRAMBLE (Drag & Drop)
+    // ============================================================
+    let usWords = [], usIndex = 0, usScore = 0, usAnswered = false;
+    const usContainer = document.getElementById('us-container');
+    const usResult    = document.getElementById('us-result');
+    const usDropzone  = document.getElementById('us-dropzone');
+    const usSource    = document.getElementById('us-source');
+    const usVietnamese= document.getElementById('us-vietnamese');
+    const usBtnCheck  = document.getElementById('us-btn-check');
+    const usBtnNext   = document.getElementById('us-btn-next');
+    const usBtnReset  = document.getElementById('us-btn-reset');
+    const usFeedback  = document.getElementById('us-feedback');
+    const usCurrent   = document.getElementById('us-current');
+    const usTotal     = document.getElementById('us-total');
+    const usScoreEl   = document.getElementById('us-score');
+    const usProgress  = document.getElementById('us-progress');
+    const usProgressTxt = document.getElementById('us-progress-text');
+
+    function initUnscramble() {
+      usWords = shuffle(allWords);
+      usIndex = 0;
+      usScore = 0;
+      usAnswered = false;
+      usContainer.classList.remove('hidden');
+      usResult.classList.add('hidden');
+      showUnscramble();
+    }
+
+    function showUnscramble() {
+      if (usIndex >= usWords.length) {
+        usProgress.style.width = '100%';
+        usProgressTxt.textContent = '100%';
+        usContainer.classList.add('hidden');
+        usResult.classList.remove('hidden');
+        usResult.innerHTML = buildResultHtml(usScore, usWords.length, 'unscramble');
+        return;
+      }
+
+      usAnswered = false;
+      usBtnCheck.classList.remove('hidden');
+      usBtnNext.classList.add('hidden');
+      usFeedback.classList.add('hidden');
+
+      const w = usWords[usIndex];
+      usVietnamese.textContent = w.vietnamese;
+      const usWordType = document.getElementById('us-word-type');
+      usWordType.textContent = WORD_TYPE_LABELS[w.wordType] || w.wordType || '';
+      usWordType.style.display = usWordType.textContent ? '' : 'none';
+
+      // Split word into characters, preserving spaces as visual gaps
+      const english = w.english;
+      const chars = [];
+      for (let i = 0; i < english.length; i++) {
+        chars.push({ char: english[i], isSpace: english[i] === ' ', origIndex: i });
+      }
+
+      // Create drop zone slots
+      let dropHtml = '';
+      chars.forEach((c, i) => {
+        if (c.isSpace) {
+          dropHtml += '<div class="us-slot us-space-slot" data-index="' + i + '"></div>';
+        } else {
+          dropHtml += '<div class="us-slot" data-index="' + i + '"></div>';
+        }
+      });
+      usDropzone.innerHTML = dropHtml;
+
+      // Create scrambled character tiles (only non-space chars)
+      const nonSpaceChars = chars.filter(c => !c.isSpace);
+      const scrambled = shuffle(nonSpaceChars);
+      usSource.innerHTML = scrambled.map((c, i) =>
+        `<div class="us-tile" draggable="true" data-char="${c.char}" data-tile-id="${i}">${c.char}</div>`
+      ).join('');
+
+      usCurrent.textContent = usIndex + 1;
+      usTotal.textContent = usWords.length;
+      usScoreEl.textContent = usScore;
+      const pct = Math.round((usIndex / usWords.length) * 100);
+      usProgress.style.width = pct + '%';
+      usProgressTxt.textContent = pct + '%';
+
+      setupDragAndDrop();
+    }
+
+    let usDraggedTile = null;
+
+    function setupDragAndDrop() {
+      // Drag from source tiles
+      usSource.querySelectorAll('.us-tile').forEach(tile => {
+        tile.addEventListener('dragstart', (e) => {
+          usDraggedTile = tile;
+          tile.classList.add('dragging');
+          e.dataTransfer.effectAllowed = 'move';
+        });
+        tile.addEventListener('dragend', () => {
+          tile.classList.remove('dragging');
+          usDraggedTile = null;
+        });
+        // Click to select/place
+        tile.addEventListener('click', () => {
+          if (usAnswered) return;
+          handleTileClick(tile);
+        });
+      });
+
+      // Drop on slots
+      usDropzone.querySelectorAll('.us-slot:not(.us-space-slot)').forEach(slot => {
+        slot.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          slot.classList.add('drag-over');
+        });
+        slot.addEventListener('dragleave', () => {
+          slot.classList.remove('drag-over');
+        });
+        slot.addEventListener('drop', (e) => {
+          e.preventDefault();
+          slot.classList.remove('drag-over');
+          if (!usDraggedTile) return;
+          placeTileInSlot(usDraggedTile, slot);
+        });
+        // Click on filled slot to return tile
+        slot.addEventListener('click', () => {
+          if (usAnswered) return;
+          returnTileFromSlot(slot);
+        });
+      });
+
+      // Also allow dragging from slots back to source
+      usDropzone.querySelectorAll('.us-slot').forEach(slot => {
+        slot.addEventListener('dragstart', (e) => {
+          const tile = slot.querySelector('.us-tile');
+          if (tile) {
+            usDraggedTile = tile;
+            tile.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+          }
+        });
+      });
+
+      // Allow dropping back on source area
+      usSource.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+      });
+      usSource.addEventListener('drop', (e) => {
+        e.preventDefault();
+        if (!usDraggedTile) return;
+        // Return tile to source
+        const parentSlot = usDraggedTile.closest('.us-slot');
+        if (parentSlot) {
+          parentSlot.classList.remove('filled');
+        }
+        usSource.appendChild(usDraggedTile);
+        usDraggedTile.classList.remove('dragging');
+        usDraggedTile = null;
+      });
+    }
+
+    let usSelectedTile = null;
+
+    function handleTileClick(tile) {
+      // If tile is in source, place it in first empty slot
+      if (tile.parentElement === usSource || tile.closest('#us-source')) {
+        const emptySlot = usDropzone.querySelector('.us-slot:not(.us-space-slot):not(.filled)');
+        if (emptySlot) placeTileInSlot(tile, emptySlot);
+      }
+    }
+
+    function placeTileInSlot(tile, slot) {
+      if (slot.classList.contains('filled')) {
+        // Swap: return existing tile to source first
+        const existingTile = slot.querySelector('.us-tile');
+        if (existingTile) usSource.appendChild(existingTile);
+      }
+      slot.appendChild(tile);
+      slot.classList.add('filled');
+      tile.classList.remove('dragging');
+    }
+
+    function returnTileFromSlot(slot) {
+      const tile = slot.querySelector('.us-tile');
+      if (tile) {
+        usSource.appendChild(tile);
+        slot.classList.remove('filled');
+      }
+    }
+
+    function usCheckAnswer() {
+      if (usAnswered) return;
+      usAnswered = true;
+
+      const w = usWords[usIndex];
+      const english = w.english;
+      const slots = usDropzone.querySelectorAll('.us-slot');
+      let answer = '';
+
+      slots.forEach((slot, i) => {
+        if (slot.classList.contains('us-space-slot')) {
+          answer += ' ';
+        } else {
+          const tile = slot.querySelector('.us-tile');
+          answer += tile ? tile.dataset.char : '';
+        }
+      });
+
+      const isCorrect = answer.toLowerCase() === english.toLowerCase();
+
+      if (isCorrect) {
+        usScore++;
+        usScoreEl.textContent = usScore;
+        usFeedback.textContent = 'Correct!';
+        usFeedback.className = 'unscramble-feedback us-correct';
+        usDropzone.classList.add('us-correct-highlight');
+      } else {
+        usFeedback.textContent = `Answer: ${english}`;
+        usFeedback.className = 'unscramble-feedback us-wrong';
+        usDropzone.classList.add('us-wrong-highlight');
+      }
+
+      usFeedback.classList.remove('hidden');
+      usBtnCheck.classList.add('hidden');
+      usBtnNext.classList.remove('hidden');
+      usBtnNext.focus();
+
+      // Disable all tiles
+      usSource.querySelectorAll('.us-tile').forEach(t => t.setAttribute('draggable', 'false'));
+      usDropzone.querySelectorAll('.us-tile').forEach(t => t.setAttribute('draggable', 'false'));
+    }
+
+    usBtnCheck.addEventListener('click', usCheckAnswer);
+    usBtnNext.addEventListener('click', () => {
+      usDropzone.classList.remove('us-correct-highlight', 'us-wrong-highlight');
+      usIndex++;
+      showUnscramble();
+    });
+    usBtnReset.addEventListener('click', () => {
+      if (usAnswered) return;
+      usDropzone.querySelectorAll('.us-slot.filled').forEach(slot => {
+        const tile = slot.querySelector('.us-tile');
+        if (tile) usSource.appendChild(tile);
+        slot.classList.remove('filled');
+      });
+    });
+
+    // Keyboard: Enter to check/next in unscramble
+    document.addEventListener('keydown', (e) => {
+      if (currentMode !== 'unscramble') return;
+      if (e.key === 'Enter') {
+        if (!usAnswered) usCheckAnswer();
+        else { usDropzone.classList.remove('us-correct-highlight', 'us-wrong-highlight'); usIndex++; showUnscramble(); }
       }
     });
 
