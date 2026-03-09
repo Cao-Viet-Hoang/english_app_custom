@@ -244,6 +244,112 @@ export async function generateBulkWordInfo(englishWords, onProgress, topicName) 
   return allResults;
 }
 
+/**
+ * Generate comprehensive AI insights for a single word.
+ *
+ * @param {{ english: string, wordType: string, vietnamese: string }} word
+ * @param {string} topicName
+ * @returns {Promise<Object>} Structured insights object
+ */
+export async function generateWordInsights(word, topicName) {
+  const session = getSession();
+  if (!session || !session.azureOpenAI) {
+    throw new Error('Azure OpenAI config not found. Please log in again.');
+  }
+
+  const { endpoint, apiKey, deploymentName, apiVersion } = session.azureOpenAI;
+  const baseUrl = endpoint.replace(/\/+$/, '');
+  const version = apiVersion || '2024-08-01-preview';
+  const url = `${baseUrl}/openai/deployments/${deploymentName}/chat/completions?api-version=${version}`;
+
+  const topicContext = topicName
+    ? `\nThis word belongs to the vocabulary topic "${topicName}".`
+    : '';
+
+  const systemPrompt = `You are an advanced English language learning assistant for Vietnamese speakers.
+Given an English word with its type and basic meaning, provide comprehensive learning insights.
+${topicContext}
+Return ONLY valid JSON with these fields:
+- "synonyms": array of { "word": string, "vietnamese": string } (3-5 items)
+- "antonyms": array of { "word": string, "vietnamese": string } (2-3 items, empty array if none apply)
+- "collocations": array of strings (4-6 common collocations, e.g. "make a decision")
+- "exampleSentences": array of { "english": string, "vietnamese": string, "level": string } where level is "A2", "B1", or "B2" (exactly 3 sentences)
+- "wordFamily": array of { "word": string, "wordType": string, "vietnamese": string }
+- "commonMistakes": array of { "wrong": string, "correct": string, "explanation": string } (2-3 items, explanation in Vietnamese)
+- "register": one of "formal", "informal", or "neutral"
+- "usageNote": string (1-2 sentences in Vietnamese about when/how to use this word)
+- "grammarPatterns": array of strings (key grammar patterns like "verb + to-infinitive", empty array if not applicable)
+- "phrasalVerbs": array of { "phrase": string, "meaning": string } (only if word is a verb, otherwise empty array)
+- "countability": string or null (only for nouns: "countable", "uncountable", or "both"; null for non-nouns)
+- "confusedWith": array of { "word": string, "difference": string } (1-2 commonly confused words, difference in Vietnamese)
+
+IMPORTANT:
+- Return ONLY valid JSON, no markdown code blocks, no extra text.
+- All explanations for Vietnamese learners should be in Vietnamese.
+- Example sentences should use simple vocabulary (A1-A2) except for the target word.`;
+
+  const userPrompt = `Word: "${word.english}"
+Type: ${word.wordType || 'other'}
+Vietnamese meaning: ${word.vietnamese || ''}
+
+Return JSON with all the required fields.`;
+
+  const body = {
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user',   content: userPrompt },
+    ],
+    temperature: 0.7,
+    max_completion_tokens: 2000,
+  };
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'api-key':      apiKey,
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const errBody = await response.text();
+    console.error('Azure OpenAI error:', response.status, errBody);
+    throw new Error(`Azure OpenAI request failed (${response.status}).`);
+  }
+
+  const result = await response.json();
+  const content = result.choices?.[0]?.message?.content;
+  if (!content) throw new Error('Empty response from Azure OpenAI.');
+
+  let cleaned = content.trim();
+  if (cleaned.startsWith('```')) {
+    cleaned = cleaned.replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '');
+  }
+
+  let parsed;
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch {
+    throw new Error('Could not parse AI insights response as JSON.');
+  }
+
+  return {
+    synonyms:         Array.isArray(parsed.synonyms) ? parsed.synonyms : [],
+    antonyms:         Array.isArray(parsed.antonyms) ? parsed.antonyms : [],
+    collocations:     Array.isArray(parsed.collocations) ? parsed.collocations : [],
+    exampleSentences: Array.isArray(parsed.exampleSentences) ? parsed.exampleSentences : [],
+    wordFamily:       Array.isArray(parsed.wordFamily) ? parsed.wordFamily : [],
+    commonMistakes:   Array.isArray(parsed.commonMistakes) ? parsed.commonMistakes : [],
+    register:         parsed.register || 'neutral',
+    usageNote:        parsed.usageNote || '',
+    grammarPatterns:  Array.isArray(parsed.grammarPatterns) ? parsed.grammarPatterns : [],
+    phrasalVerbs:     Array.isArray(parsed.phrasalVerbs) ? parsed.phrasalVerbs : [],
+    countability:     parsed.countability || null,
+    confusedWith:     Array.isArray(parsed.confusedWith) ? parsed.confusedWith : [],
+  };
+}
+
 async function requestBulkWordInfoBatch(url, apiKey, englishWords, topicName) {
   const wordList = englishWords.map(w => `"${w}"`).join(', ');
 

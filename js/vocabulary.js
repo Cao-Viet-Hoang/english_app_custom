@@ -130,3 +130,16 @@ export async function deleteWord(topicId, wordId) {
   await wordsRef(topicId).doc(wordId).delete();
   await updateWordCount(topicId, -1);
 }
+
+/**
+ * Save AI-generated insights for a word.
+ * @param {string} topicId
+ * @param {string} wordId
+ * @param {Object} insights  The structured insights object from AI
+ */
+export async function saveWordInsights(topicId, wordId, insights) {
+  await wordsRef(topicId).doc(wordId).update({
+    aiInsights: insights,
+    aiInsightsGeneratedAt: firebase.firestore.FieldValue.serverTimestamp(),
+  });
+}

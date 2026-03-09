@@ -453,9 +453,9 @@
     import { guardAuth, logout, getQueryParam, navigateTo } from './js/router.js';
     import { initFirebase } from './js/firebase.js';
     import { getTopic } from './js/topics.js';
-    import { loadWords, addWord, updateWord, deleteWord } from './js/vocabulary.js';
+    import { loadWords, addWord, updateWord, deleteWord, saveWordInsights } from './js/vocabulary.js';
     import { loadParagraphs, saveParagraph, deleteParagraph } from './js/paragraphs.js';
-    import { generateParagraph, generateWordInfo, generateBulkWordInfo } from './js/ai.js';
+    import { generateParagraph, generateWordInfo, generateBulkWordInfo, generateWordInsights } from './js/ai.js';
     import {
       showModal, closeModal, setupModalClose,
       showToast, confirmDialog, formatDate, escapeHtml
@@ -1005,6 +1005,13 @@
                 <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
               </svg>
             </button>
+            <button class="btn-ai-insights" data-word-id="${w.id}" title="AI Insights" type="button">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.582a.5.5 0 0 1 0 .963L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/>
+                <path d="M20 3v4"/><path d="M22 5h-4"/>
+              </svg>
+            </button>
           </td>
           <td class="vocab-ipa">${ipaHtml}</td>
           <td class="vocab-vietnamese">${escapeHtml(w.vietnamese)}</td>
@@ -1099,13 +1106,257 @@
       speakWord(btn.dataset.word);
     });
 
+    // ---- AI Insights Panel ----
+    function renderInsightsPanel(word) {
+      const ins = word.aiInsights;
+      if (!ins) return '<div class="insights-panel"><p>No insights available.</p></div>';
+
+      const escHtml = (s) => escapeHtml(s || '');
+
+      const registerLabel = { formal: 'Formal', informal: 'Informal', neutral: 'Neutral' };
+      const registerClass = { formal: 'tag-formal', informal: 'tag-informal', neutral: 'tag-neutral' };
+
+      let html = '<div class="insights-panel">';
+
+      // Header with register badge + usage note
+      html += '<div class="insights-header">';
+      html += `<span class="insights-register ${registerClass[ins.register] || 'tag-neutral'}">${registerLabel[ins.register] || 'Neutral'}</span>`;
+      if (ins.countability) {
+        html += `<span class="insights-tag">${escHtml(ins.countability)}</span>`;
+      }
+      if (ins.usageNote) {
+        html += `<p class="insights-usage-note">${escHtml(ins.usageNote)}</p>`;
+      }
+      html += '</div>';
+
+      html += '<div class="insights-grid">';
+
+      // Synonyms
+      if (ins.synonyms?.length) {
+        html += '<div class="insights-section"><h4>Synonyms</h4><div class="insights-tags">';
+        ins.synonyms.forEach(s => {
+          html += `<span class="insights-tag" title="${escHtml(s.vietnamese)}">${escHtml(s.word)} <small>${escHtml(s.vietnamese)}</small></span>`;
+        });
+        html += '</div></div>';
+      }
+
+      // Antonyms
+      if (ins.antonyms?.length) {
+        html += '<div class="insights-section"><h4>Antonyms</h4><div class="insights-tags">';
+        ins.antonyms.forEach(s => {
+          html += `<span class="insights-tag tag-antonym" title="${escHtml(s.vietnamese)}">${escHtml(s.word)} <small>${escHtml(s.vietnamese)}</small></span>`;
+        });
+        html += '</div></div>';
+      }
+
+      // Collocations
+      if (ins.collocations?.length) {
+        html += '<div class="insights-section"><h4>Collocations</h4><div class="insights-tags">';
+        ins.collocations.forEach(c => {
+          html += `<span class="insights-tag tag-collocation">${escHtml(c)}</span>`;
+        });
+        html += '</div></div>';
+      }
+
+      // Word Family
+      if (ins.wordFamily?.length) {
+        html += '<div class="insights-section"><h4>Word Family</h4><div class="insights-tags">';
+        ins.wordFamily.forEach(w => {
+          html += `<span class="insights-tag tag-family"><strong>${escHtml(w.word)}</strong> <small>(${escHtml(w.wordType)}) ${escHtml(w.vietnamese)}</small></span>`;
+        });
+        html += '</div></div>';
+      }
+
+      // Example Sentences
+      if (ins.exampleSentences?.length) {
+        html += '<div class="insights-section insights-section-full"><h4>Example Sentences</h4>';
+        ins.exampleSentences.forEach(ex => {
+          html += `<div class="insights-example">
+            <span class="insights-level">${escHtml(ex.level)}</span>
+            <p class="insights-example-en">${escHtml(ex.english)}</p>
+            <p class="insights-example-vi">${escHtml(ex.vietnamese)}</p>
+          </div>`;
+        });
+        html += '</div>';
+      }
+
+      // Grammar Patterns
+      if (ins.grammarPatterns?.length) {
+        html += '<div class="insights-section"><h4>Grammar Patterns</h4><div class="insights-tags">';
+        ins.grammarPatterns.forEach(p => {
+          html += `<span class="insights-tag tag-grammar">${escHtml(p)}</span>`;
+        });
+        html += '</div></div>';
+      }
+
+      // Phrasal Verbs
+      if (ins.phrasalVerbs?.length) {
+        html += '<div class="insights-section"><h4>Phrasal Verbs</h4><div class="insights-tags">';
+        ins.phrasalVerbs.forEach(p => {
+          html += `<span class="insights-tag tag-phrasal">${escHtml(p.phrase)} <small>${escHtml(p.meaning)}</small></span>`;
+        });
+        html += '</div></div>';
+      }
+
+      // Common Mistakes
+      if (ins.commonMistakes?.length) {
+        html += '<div class="insights-section insights-section-full"><h4>Common Mistakes</h4>';
+        ins.commonMistakes.forEach(m => {
+          html += `<div class="insights-mistake">
+            <span class="mistake-wrong">${escHtml(m.wrong)}</span>
+            <span class="mistake-arrow">→</span>
+            <span class="mistake-correct">${escHtml(m.correct)}</span>
+            <p class="mistake-explanation">${escHtml(m.explanation)}</p>
+          </div>`;
+        });
+        html += '</div>';
+      }
+
+      // Confused With
+      if (ins.confusedWith?.length) {
+        html += '<div class="insights-section"><h4>Confused With</h4>';
+        ins.confusedWith.forEach(c => {
+          html += `<div class="insights-confused">
+            <strong>${escHtml(c.word)}</strong>
+            <p>${escHtml(c.difference)}</p>
+          </div>`;
+        });
+        html += '</div>';
+      }
+
+      html += '</div>'; // close grid
+
+      // Cached timestamp + refresh
+      if (word.aiInsightsGeneratedAt) {
+        const date = word.aiInsightsGeneratedAt.toDate
+          ? word.aiInsightsGeneratedAt.toDate()
+          : new Date(word.aiInsightsGeneratedAt);
+        html += `<div class="insights-footer">
+          <span class="insights-cached-time">Generated ${date.toLocaleDateString()}</span>
+          <button class="btn-insights-refresh" data-word-id="${word.id}" type="button">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+            </svg>
+            Refresh
+          </button>
+        </div>`;
+      }
+
+      html += '</div>';
+      return html;
+    }
+
+    function createInsightsRow(word) {
+      const tr = document.createElement('tr');
+      tr.className = 'insights-row';
+      tr.dataset.insightsFor = word.id;
+      tr.innerHTML = `<td colspan="6">${renderInsightsPanel(word)}</td>`;
+      return tr;
+    }
+
+    function createLoadingInsightsRow(wordId) {
+      const tr = document.createElement('tr');
+      tr.className = 'insights-row';
+      tr.dataset.insightsFor = wordId;
+      tr.innerHTML = `<td colspan="6">
+        <div class="insights-panel insights-loading">
+          <div class="insights-skeleton"></div>
+          <div class="insights-skeleton short"></div>
+          <div class="insights-skeleton"></div>
+          <div class="insights-skeleton shorter"></div>
+        </div>
+      </td>`;
+      return tr;
+    }
+
+    function closeAllInsightsRows() {
+      vocabTbody.querySelectorAll('.insights-row').forEach(r => r.remove());
+      vocabTbody.querySelectorAll('.btn-ai-insights.active').forEach(b => b.classList.remove('active'));
+    }
+
+    async function handleInsightsClick(wordId, btn, forceRefresh = false) {
+      const word = allWords.find(w => w.id === wordId);
+      if (!word) return;
+
+      // Toggle off if already open and not forcing refresh
+      const existing = vocabTbody.querySelector(`.insights-row[data-insights-for="${wordId}"]`);
+      if (existing && !forceRefresh) {
+        existing.remove();
+        btn.classList.remove('active');
+        return;
+      }
+
+      // Close any other open insights
+      closeAllInsightsRows();
+      btn.classList.add('active');
+
+      const wordRow = vocabTbody.querySelector(`tr[data-id="${wordId}"]`);
+      if (!wordRow) return;
+
+      // If cached and not refreshing, show immediately
+      if (word.aiInsights && !forceRefresh) {
+        const insRow = createInsightsRow(word);
+        wordRow.after(insRow);
+        return;
+      }
+
+      // Show loading
+      const loadingRow = createLoadingInsightsRow(wordId);
+      wordRow.after(loadingRow);
+      btn.querySelector('svg').classList.add('spin');
+
+      try {
+        const insights = await generateWordInsights(word, topicName);
+        await saveWordInsights(topicId, wordId, insights);
+
+        // Update local cache
+        word.aiInsights = insights;
+        word.aiInsightsGeneratedAt = new Date();
+
+        // Replace loading with actual content
+        const currentLoading = vocabTbody.querySelector(`.insights-row[data-insights-for="${wordId}"]`);
+        if (currentLoading) {
+          const insRow = createInsightsRow(word);
+          currentLoading.replaceWith(insRow);
+        }
+      } catch (err) {
+        console.error('Failed to generate insights:', err);
+        showToast('Failed to generate AI insights. ' + (err.message || ''), 'error');
+        const currentLoading = vocabTbody.querySelector(`.insights-row[data-insights-for="${wordId}"]`);
+        if (currentLoading) currentLoading.remove();
+        btn.classList.remove('active');
+      } finally {
+        btn.querySelector('svg').classList.remove('spin');
+      }
+    }
+
+    // AI Insights button delegation
+    vocabTbody.addEventListener('click', (e) => {
+      const btn = e.target.closest('.btn-ai-insights');
+      if (!btn) return;
+      e.stopPropagation();
+      handleInsightsClick(btn.dataset.wordId, btn);
+    });
+
+    // Refresh button inside insights panel
+    vocabTbody.addEventListener('click', (e) => {
+      const btn = e.target.closest('.btn-insights-refresh');
+      if (!btn) return;
+      e.stopPropagation();
+      const wordId = btn.dataset.wordId;
+      const sparkleBtn = vocabTbody.querySelector(`.btn-ai-insights[data-word-id="${wordId}"]`);
+      if (sparkleBtn) handleInsightsClick(wordId, sparkleBtn, true);
+    });
+
     // Flag to suppress click-to-edit after any drag gesture
     let swipeDragOccurred = false;
 
     // Row click → open edit modal
     vocabTbody.addEventListener('click', (e) => {
-      // Ignore clicks on speak buttons or delete buttons
-      if (e.target.closest('.btn-speak') || e.target.closest('.swipe-delete-btn')) return;
+      // Ignore clicks on action buttons, insights rows, or delete buttons
+      if (e.target.closest('.btn-speak') || e.target.closest('.btn-ai-insights') || e.target.closest('.insights-row') || e.target.closest('.swipe-delete-btn')) return;
       // Suppress if a drag just happened
       if (swipeDragOccurred) { swipeDragOccurred = false; return; }
       const row = e.target.closest('tr[data-id]');
@@ -1129,7 +1380,7 @@
 
     // ---- Swipe-to-delete gesture ----
     function initSwipeHandlers() {
-      const rows = vocabTbody.querySelectorAll('.swipe-row');
+      const rows = vocabTbody.querySelectorAll('.swipe-row:not(.insights-row)');
       rows.forEach(row => {
         let startX = 0, currentX = 0, isSwiping = false;
         const SWIPE_THRESHOLD = 70;
