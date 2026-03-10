@@ -66,6 +66,58 @@
   flex-wrap: wrap;
 }
 
+/* ---------- Learned Progress ---------- */
+.learned-progress {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-xs);
+  color: var(--color-text-light);
+  padding: 3px var(--sp-3);
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: 100px;
+  line-height: 1.8;
+  vertical-align: middle;
+}
+
+.learned-progress-bar {
+  display: inline-block;
+  width: 60px;
+  height: 5px;
+  background: var(--color-border);
+  border-radius: 3px;
+  overflow: hidden;
+  vertical-align: middle;
+}
+
+.learned-progress-fill {
+  display: block;
+  height: 100%;
+  background: var(--color-success);
+  border-radius: 3px;
+  transition: width 0.4s var(--ease-out);
+}
+
+.learned-progress-text {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.learned-progress.completed {
+  background: rgba(130, 201, 161, 0.12);
+  border-color: rgba(130, 201, 161, 0.35);
+}
+
+.learned-progress.completed .learned-progress-text {
+  color: #4a8a65;
+}
+
+.learned-progress.completed .learned-progress-fill {
+  background: var(--color-success);
+}
+
 /* ============================================================
    VOCABULARY TAB
    ============================================================ */
@@ -253,6 +305,49 @@
 .swipe-row.swiped .swipe-delete-btn {
   opacity: 1;
   pointer-events: auto;
+}
+
+/* ---- Learned toggle button ---- */
+.btn-learned {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  background: none;
+  border: 1.8px solid var(--color-border);
+  border-radius: 50%;
+  cursor: pointer;
+  color: transparent;
+  transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast), transform var(--t-fast);
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.btn-learned:hover {
+  border-color: var(--color-success);
+  color: rgba(130, 201, 161, 0.5);
+}
+
+.btn-learned.learned {
+  background: var(--color-success);
+  border-color: var(--color-success);
+  color: #fff;
+}
+
+.btn-learned.learned:hover {
+  background: #6ab88d;
+  border-color: #6ab88d;
+  color: #fff;
+}
+
+.btn-learned:active {
+  transform: scale(0.88);
+}
+
+.btn-learned svg {
+  pointer-events: none;
 }
 
 .vocab-english {

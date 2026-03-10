@@ -38,6 +38,7 @@ export async function createTopic(name) {
   const docRef = await topicsRef().add({
     name:      name.trim(),
     wordCount: 0,
+    learnedCount: 0,
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
   });
@@ -90,6 +91,17 @@ export async function deleteTopic(topicId) {
 export async function updateWordCount(topicId, delta) {
   await topicsRef().doc(topicId).update({
     wordCount: firebase.firestore.FieldValue.increment(delta),
+  });
+}
+
+/**
+ * Update the cached learnedCount on a topic doc.
+ * @param {string} topicId
+ * @param {number} delta   +1 or -1
+ */
+export async function updateLearnedCount(topicId, delta) {
+  await topicsRef().doc(topicId).update({
+    learnedCount: firebase.firestore.FieldValue.increment(delta),
   });
 }
 

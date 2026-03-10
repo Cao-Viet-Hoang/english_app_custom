@@ -6,7 +6,7 @@
 
 import { getDb } from './firebase.js';
 import { getUsername } from './router.js';
-import { updateWordCount } from './topics.js';
+import { updateWordCount, updateLearnedCount } from './topics.js';
 
 let localOrderCounter = 0;
 
@@ -126,9 +126,12 @@ export async function updateWord(topicId, wordId, data) {
  * @param {string} topicId
  * @param {string} wordId
  */
-export async function deleteWord(topicId, wordId) {
+export async function deleteWord(topicId, wordId, wasLearned = false) {
   await wordsRef(topicId).doc(wordId).delete();
   await updateWordCount(topicId, -1);
+  if (wasLearned) {
+    await updateLearnedCount(topicId, -1);
+  }
 }
 
 /**
@@ -137,6 +140,20 @@ export async function deleteWord(topicId, wordId) {
  * @param {string} wordId
  * @param {Object} insights  The structured insights object from AI
  */
+/**
+ * Toggle the learned status of a word.
+ * @param {string} topicId
+ * @param {string} wordId
+ * @param {boolean} learned
+ */
+export async function toggleWordLearned(topicId, wordId, learned) {
+  await wordsRef(topicId).doc(wordId).update({
+    learned: !!learned,
+    learnedAt: learned ? firebase.firestore.FieldValue.serverTimestamp() : null,
+  });
+  await updateLearnedCount(topicId, learned ? 1 : -1);
+}
+
 export async function saveWordInsights(topicId, wordId, insights) {
   await wordsRef(topicId).doc(wordId).update({
     aiInsights: insights,

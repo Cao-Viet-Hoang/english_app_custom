@@ -63,6 +63,12 @@
       <h2 id="detail-title" class="detail-title">
         <span id="detail-title-text">…</span>
         <span class="detail-word-badge hidden" id="detail-word-badge"></span>
+        <span class="learned-progress hidden" id="learned-progress">
+          <span class="learned-progress-bar">
+            <span class="learned-progress-fill" id="learned-progress-fill"></span>
+          </span>
+          <span class="learned-progress-text" id="learned-progress-text"></span>
+        </span>
       </h2>
       <div class="detail-actions">
         <a id="btn-practice" class="btn btn-success btn-sm" href="#">
@@ -156,6 +162,7 @@
       <div id="vocab-table-wrapper" class="vocab-table-wrapper hidden">
         <table class="vocab-table">
           <colgroup>
+            <col style="width:40px" />
             <col style="width:160px" />
             <col style="width:180px" />
             <col style="width:160px" />
@@ -165,6 +172,7 @@
           </colgroup>
           <thead>
             <tr>
+              <th></th>
               <th>English</th>
               <th>IPA</th>
               <th>Vietnamese</th>
@@ -453,7 +461,7 @@
     import { guardAuth, logout, getQueryParam, navigateTo } from './js/router.js';
     import { initFirebase } from './js/firebase.js';
     import { getTopic } from './js/topics.js';
-    import { loadWords, addWord, updateWord, deleteWord, saveWordInsights } from './js/vocabulary.js';
+    import { loadWords, addWord, updateWord, deleteWord, saveWordInsights, toggleWordLearned } from './js/vocabulary.js';
     import { loadParagraphs, saveParagraph, deleteParagraph } from './js/paragraphs.js';
     import { generateParagraph, generateWordInfo, generateBulkWordInfo, generateWordInsights } from './js/ai.js';
     import {
@@ -495,6 +503,9 @@
     const vocabTbody     = document.getElementById('vocab-tbody');
     const vocabSearch    = document.getElementById('vocab-search-input');
     const btnAddWord     = document.getElementById('btn-add-word');
+    const learnedProgressEl   = document.getElementById('learned-progress');
+    const learnedProgressFill = document.getElementById('learned-progress-fill');
+    const learnedProgressText = document.getElementById('learned-progress-text');
 
     // Paragraphs
     const paraLoading    = document.getElementById('para-loading');
@@ -960,6 +971,7 @@
         detailWordBadge.classList.remove('hidden');
 
         renderFilteredWords();
+        updateLearnedProgress();
       } catch (err) {
         console.error(err);
         vocabLoading.classList.add('hidden');
@@ -993,8 +1005,17 @@
           ? `<span class="ipa-us" title="US">${escapeHtml(ipaUS)}</span>`
             + (ipaUK ? `<span class="ipa-uk" title="UK">${escapeHtml(ipaUK)}</span>` : '')
           : '<span class="vocab-missing">—</span>';
+        const isLearned = !!w.learned;
         return `
-        <tr data-id="${w.id}" class="swipe-row">
+        <tr data-id="${w.id}" class="swipe-row${isLearned ? ' word-learned' : ''}">
+          <td style="text-align:center">
+            <button class="btn-learned${isLearned ? ' learned' : ''}" data-word-id="${w.id}" title="${isLearned ? 'Mark as not learned' : 'Mark as learned'}" type="button">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </button>
+          </td>
           <td class="vocab-english">
             <span class="vocab-english-word">${escapeHtml(w.english)}</span>
             <button class="btn-speak" data-word="${escapeHtml(w.english)}" title="Listen (US)" type="button">
@@ -1036,6 +1057,56 @@
       // Re-attach swipe handlers after re-render
       initSwipeHandlers();
     }
+
+    // ---- Learned progress display ----
+    function updateLearnedProgress() {
+      if (allWords.length === 0) {
+        learnedProgressEl.classList.add('hidden');
+        return;
+      }
+      const learnedCount = allWords.filter(w => !!w.learned).length;
+      const total = allWords.length;
+      const pct = Math.round((learnedCount / total) * 100);
+      learnedProgressFill.style.width = `${pct}%`;
+      learnedProgressText.textContent = `${learnedCount}/${total} learned`;
+      learnedProgressEl.classList.remove('hidden');
+      if (learnedCount === total) {
+        learnedProgressEl.classList.add('completed');
+      } else {
+        learnedProgressEl.classList.remove('completed');
+      }
+    }
+
+    // ---- Learned toggle handler ----
+    vocabTbody.addEventListener('click', async (e) => {
+      const btn = e.target.closest('.btn-learned');
+      if (!btn) return;
+      e.stopPropagation();
+      const wordId = btn.dataset.wordId;
+      const word = allWords.find(w => w.id === wordId);
+      if (!word) return;
+
+      const newLearned = !word.learned;
+      // Optimistic UI update
+      word.learned = newLearned;
+      btn.classList.toggle('learned', newLearned);
+      btn.title = newLearned ? 'Mark as not learned' : 'Mark as learned';
+      const row = btn.closest('tr');
+      if (row) row.classList.toggle('word-learned', newLearned);
+      updateLearnedProgress();
+
+      try {
+        await toggleWordLearned(topicId, wordId, newLearned);
+      } catch (err) {
+        console.error('Failed to toggle learned:', err);
+        // Revert
+        word.learned = !newLearned;
+        btn.classList.toggle('learned', !newLearned);
+        if (row) row.classList.toggle('word-learned', !newLearned);
+        updateLearnedProgress();
+        showToast('Failed to update word status.', 'error');
+      }
+    });
 
     // Search
     vocabSearch.addEventListener('input', renderFilteredWords);
@@ -1252,7 +1323,7 @@
       const tr = document.createElement('tr');
       tr.className = 'insights-row';
       tr.dataset.insightsFor = word.id;
-      tr.innerHTML = `<td colspan="6">${renderInsightsPanel(word)}</td>`;
+      tr.innerHTML = `<td colspan="7">${renderInsightsPanel(word)}</td>`;
       return tr;
     }
 
@@ -1260,7 +1331,7 @@
       const tr = document.createElement('tr');
       tr.className = 'insights-row';
       tr.dataset.insightsFor = wordId;
-      tr.innerHTML = `<td colspan="6">
+      tr.innerHTML = `<td colspan="7">
         <div class="insights-panel insights-loading">
           <div class="insights-skeleton"></div>
           <div class="insights-skeleton short"></div>
@@ -1356,7 +1427,7 @@
     // Row click → open edit modal
     vocabTbody.addEventListener('click', (e) => {
       // Ignore clicks on action buttons, insights rows, or delete buttons
-      if (e.target.closest('.btn-speak') || e.target.closest('.btn-ai-insights') || e.target.closest('.insights-row') || e.target.closest('.swipe-delete-btn')) return;
+      if (e.target.closest('.btn-speak') || e.target.closest('.btn-ai-insights') || e.target.closest('.btn-learned') || e.target.closest('.insights-row') || e.target.closest('.swipe-delete-btn')) return;
       // Suppress if a drag just happened
       if (swipeDragOccurred) { swipeDragOccurred = false; return; }
       const row = e.target.closest('tr[data-id]');
@@ -1402,7 +1473,7 @@
             return;
           }
           try {
-            await deleteWord(topicId, id);
+            await deleteWord(topicId, id, !!word?.learned);
             showToast('Word deleted.', 'success');
             renderVocabulary();
           } catch (err) {

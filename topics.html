@@ -190,13 +190,23 @@
     function renderTopicCards(topics) {
       gridEl.innerHTML = topics.map((t) => {
         const wc = t.wordCount || 0;
+        const lc = t.learnedCount || 0;
+        const isCompleted = wc > 0 && lc >= wc;
+        const pct = wc > 0 ? Math.round((lc / wc) * 100) : 0;
         return `
-          <div class="card topic-card card-clickable" data-action="open" data-id="${t.id}">
+          <div class="card topic-card card-clickable${isCompleted ? ' topic-completed' : ''}" data-action="open" data-id="${t.id}">
             <div class="topic-card-header">
               <span class="topic-card-title">
                 ${escapeHtml(t.name)}
               </span>
               <div class="topic-card-actions">
+                ${isCompleted ? `<span class="topic-card-completed-badge">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                       stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  Completed
+                </span>` : ''}
                 <button class="btn-icon" data-action="rename" data-id="${t.id}" data-name="${escapeHtml(t.name)}" title="Rename">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -235,6 +245,12 @@
                 ${t.createdAt ? formatDate(t.createdAt) : ''}
               </span>
             </div>
+            ${wc > 0 ? `<div class="topic-card-progress">
+              <div class="topic-card-progress-bar">
+                <div class="topic-card-progress-fill" style="width:${pct}%"></div>
+              </div>
+              <span class="topic-card-progress-label">${lc}/${wc}</span>
+            </div>` : ''}
           </div>
         `;
       }).join('');
