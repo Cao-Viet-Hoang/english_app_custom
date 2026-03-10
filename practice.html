@@ -1308,8 +1308,12 @@
           }
         }
         if (e.key === 'Enter') {
-          if (!fbAnswered) fbCheckAnswer();
-          else { fbIndex++; showFillBlank(); }
+          if (!fbAnswered) {
+            fbCheckAnswer();
+            e.preventDefault();
+          } else {
+            fbIndex++; showFillBlank();
+          }
         }
       }
     });
@@ -1345,7 +1349,7 @@
       fbFeedback.classList.remove('hidden');
       fbBtnCheck.classList.add('hidden');
       fbBtnNext.classList.remove('hidden');
-      fbBtnNext.focus();
+      setTimeout(() => fbBtnNext.focus(), 150);
     }
 
     fbBtnCheck.addEventListener('click', fbCheckAnswer);
@@ -1389,7 +1393,7 @@
     }
 
     function showSpeedTypeWord() {
-      if (stIndex >= stWords.length) stIndex = 0; // cycle
+      if (stIndex >= stWords.length) { stWords = shuffle(stWords); stIndex = 0; } // reshuffle & cycle
       const w = stWords[stIndex];
       stVietnamese.textContent = w.vietnamese;
       // Show first letter as hint + word length
@@ -1732,7 +1736,7 @@
       usFeedback.classList.remove('hidden');
       usBtnCheck.classList.add('hidden');
       usBtnNext.classList.remove('hidden');
-      usBtnNext.focus();
+      setTimeout(() => usBtnNext.focus(), 150);
 
       // Disable all tiles
       usSource.querySelectorAll('.us-tile').forEach(t => t.setAttribute('draggable', 'false'));
@@ -1758,6 +1762,7 @@
     document.addEventListener('keydown', (e) => {
       if (currentMode !== 'unscramble') return;
       if (e.key === 'Enter') {
+        e.preventDefault();
         if (!usAnswered) usCheckAnswer();
         else { usDropzone.classList.remove('us-correct-highlight', 'us-wrong-highlight'); usIndex++; showUnscramble(); }
       }
