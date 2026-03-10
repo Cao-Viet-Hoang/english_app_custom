@@ -202,7 +202,6 @@
   width: 100%;
   border-collapse: collapse;
   font-size: var(--fs-sm);
-  table-layout: fixed;
 }
 
 .vocab-table th,
@@ -354,13 +353,11 @@
   font-weight: 600;
   color: var(--color-primary-dark);
   white-space: nowrap;
+  max-width: none;
 }
 
 .vocab-english-word {
   vertical-align: middle;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: calc(100% - 42px);
   display: inline-block;
 }
 
@@ -443,6 +440,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 180px;
 }
 
 .vocab-missing {
