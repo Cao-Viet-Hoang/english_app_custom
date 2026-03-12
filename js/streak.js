@@ -207,6 +207,28 @@ export async function recordActivity() {
 }
 
 /**
+ * Decrement wordsLearned for today when a word is un-marked as learned.
+ * Only affects today's daily activity counter — does NOT roll back streak days.
+ * @returns {Promise<void>}
+ */
+export async function removeActivity() {
+  const today = getTodayDateString();
+  const docRef = dailyActivityRef().doc(today);
+  const doc = await docRef.get();
+  if (!doc.exists) return;
+
+  const current = doc.data().wordsLearned || 0;
+  if (current <= 1) {
+    await docRef.update({ wordsLearned: 0, lastActionAt: firebase.firestore.FieldValue.serverTimestamp() });
+  } else {
+    await docRef.update({
+      wordsLearned: firebase.firestore.FieldValue.increment(-1),
+      lastActionAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+  }
+}
+
+/**
  * Load activity history for the calendar/heatmap view.
  * @param {number} [days=90]  How many days to look back
  * @returns {Promise<Array<Object>>}
