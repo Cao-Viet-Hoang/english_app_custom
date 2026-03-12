@@ -353,7 +353,14 @@
   font-weight: 600;
   color: var(--color-primary-dark);
   white-space: nowrap;
-  max-width: none;
+  overflow: visible;
+}
+
+.vocab-english-inner {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: max-content;
 }
 
 .vocab-english-word {
@@ -371,10 +378,10 @@
   cursor: pointer;
   color: var(--color-text-light);
   padding: 2px;
-  margin-left: 4px;
   border-radius: var(--radius-sm);
   vertical-align: middle;
   transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
 }
 
 .btn-speak:hover {
@@ -440,7 +447,8 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 180px;
+  max-width: 0;
+  width: 100%;
 }
 
 .vocab-missing {
@@ -993,10 +1001,10 @@
   cursor: pointer;
   color: var(--color-text-light);
   padding: 2px;
-  margin-left: 2px;
   border-radius: var(--radius-sm);
   vertical-align: middle;
   transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
 }
 
 .btn-ai-insights:hover {
