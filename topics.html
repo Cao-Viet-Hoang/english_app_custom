@@ -14,6 +14,7 @@
   <!-- Styles -->
   <link rel="stylesheet" href="css/base.css" />
   <link rel="stylesheet" href="css/topics.css" />
+  <link rel="stylesheet" href="css/streak.css" />
 </head>
 <body class="topics-page">
 
@@ -48,6 +49,35 @@
     </div>
   </nav>
 
+  <!-- ===== Activity Log Modal ===== -->
+  <div id="modal-activity-log" class="modal-overlay">
+    <div class="modal activity-log-modal">
+      <div class="modal-header">
+        <h3>Activity Log</h3>
+        <button class="btn-icon" data-close-modal aria-label="Close">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div id="activity-log-stats" class="activity-log-stats"></div>
+      <div class="modal-body">
+        <div id="activity-log-body" class="activity-log-body">
+          <div class="text-center" style="padding:var(--sp-6)"><div class="spinner"></div></div>
+        </div>
+        <div class="activity-log-footer">
+          <div class="activity-legend">
+            <span class="activity-legend-item"><span class="activity-legend-swatch" style="background:var(--color-surface-alt)"></span> None</span>
+            <span class="activity-legend-item"><span class="activity-legend-swatch" style="background:rgba(130,201,161,0.3)"></span> 1</span>
+            <span class="activity-legend-item"><span class="activity-legend-swatch" style="background:rgba(130,201,161,0.6)"></span> 2-4</span>
+            <span class="activity-legend-item"><span class="activity-legend-swatch" style="background:var(--color-success)"></span> 5+</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== Main Content ===== -->
   <main class="container topics-container">
     <!-- Header -->
@@ -55,6 +85,7 @@
       <div class="topics-header-left">
         <h2 class="topics-title">My Topics</h2>
         <span id="topic-count" class="topics-count-chip"></span>
+        <div id="streak-inline" class="streak-inline" style="display:none"></div>
       </div>
       <div class="topics-header-right">
         <select id="sort-topics" class="sort-select hidden">
@@ -140,7 +171,8 @@
     import { guardAuth, logout, navigateTo, getSession } from './js/router.js';
     import { initFirebase } from './js/firebase.js';
     import { loadTopics, createTopic, renameTopic, deleteTopic } from './js/topics.js';
-    import { showModal, closeModal, setupModalClose, showToast, confirmDialog, formatDate, escapeHtml } from './js/ui.js';
+    import { showModal, closeModal, setupModalClose, showToast, confirmDialog, formatDate, escapeHtml, showMilestoneModal } from './js/ui.js';
+    import { loadStreak, loadActivityHistory, getMilestoneMessage } from './js/streak.js';
 
     // ---- Guard & Init ----
     const session = guardAuth();
@@ -162,6 +194,171 @@
     const btnSave      = document.getElementById('btn-topic-save');
 
     setupModalClose('#modal-topic');
+    setupModalClose('#modal-activity-log');
+
+    // ---- Streak rendering (compact inline) ----
+    const streakEl = document.getElementById('streak-inline');
+    const FLAME_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+      <path d="M8 16c3.314 0 6-2 6-5.5 0-1.5-.5-4-2.5-6 .25 1.5-1.25 2-1.25 2C11 4 9 .5 8 0 7.5 2 5.5 4 4.75 4.75 4.75 4.75 3.25 4.25 3.5 2.75 1.5 4.75 1 7.25 1 8.75 1 12.25 4.686 16 8 16zm0-1c-1.657 0-3-1-3-2.75 0-.75.25-2 1.25-3 .125.75 1 1.25 1 1.25S8 9 8 8c.5 1 1.5 2 2 3 .75.75 1 1.5 1 2.25C11 14 9.657 15 8 15z"/>
+    </svg>`;
+    const DAY_LABELS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+
+    function getWeekDates() {
+      const today = new Date();
+      const dayOfWeek = today.getDay(); // 0=Sun
+      const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+      const dates = [];
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(today);
+        d.setDate(today.getDate() + mondayOffset + i);
+        dates.push(d.toLocaleDateString('en-CA'));
+      }
+      return dates;
+    }
+
+    function renderStreakInline(streakData, weekActivity) {
+      const { currentStreak, isActiveToday, isStreakAtRisk } = streakData;
+      const isNew = currentStreak === 0 && !isActiveToday && (streakData.totalActiveDays || 0) === 0;
+      const today = new Date().toLocaleDateString('en-CA');
+      const weekDates = getWeekDates();
+
+      const activityMap = {};
+      if (weekActivity) weekActivity.forEach(a => { activityMap[a.date] = a; });
+
+      const flameClass = isActiveToday ? 'active' : (isStreakAtRisk ? 'at-risk' : (isNew ? 'new-user' : ''));
+
+      const weekDotsHtml = weekDates.map((dateStr, i) => {
+        const isToday = dateStr === today;
+        const isActive = !!activityMap[dateStr];
+        let dotClass = 'streak-week-dot';
+        if (isToday) dotClass += ' today';
+        if (isActive) dotClass += ' active';
+        return `<div class="streak-week-day">
+          <span class="streak-week-label">${DAY_LABELS[i]}</span>
+          <span class="${dotClass}"></span>
+        </div>`;
+      }).join('');
+
+      let tooltip = '';
+      if (isNew) tooltip = 'Start your first streak!';
+      else if (isStreakAtRisk) tooltip = "Don't lose your streak!";
+      else if (isActiveToday) tooltip = 'Great job! Keep it up!';
+
+      streakEl.innerHTML = `
+        <div class="streak-inline-flame ${flameClass}">${FLAME_SVG}</div>
+        <span class="streak-inline-count">${currentStreak}</span>
+        <div class="streak-inline-divider"></div>
+        <div class="streak-week">${weekDotsHtml}</div>
+      `;
+      streakEl.title = tooltip;
+      streakEl.style.display = '';
+      streakEl.addEventListener('click', openActivityLog);
+    }
+
+    async function openActivityLog() {
+      showModal('#modal-activity-log');
+      const bodyEl = document.getElementById('activity-log-body');
+      const statsEl = document.getElementById('activity-log-stats');
+      bodyEl.innerHTML = '<div class="text-center" style="padding:var(--sp-6)"><div class="spinner"></div></div>';
+
+      try {
+        const [history, streakData] = await Promise.all([
+          loadActivityHistory(365),
+          loadStreak(),
+        ]);
+
+        const activityMap = {};
+        history.forEach(a => { activityMap[a.date] = a; });
+
+        // Build 4 quarters (current + 3 previous), each row = 3 months
+        const today = new Date();
+        const todayStr = today.toLocaleDateString('en-CA');
+        const currentQuarterIdx = Math.floor(today.getMonth() / 3);
+        let html = '';
+
+        for (let q = 0; q < 4; q++) {
+          const totalQ = today.getFullYear() * 4 + currentQuarterIdx - q;
+          const qYear = Math.floor(totalQ / 4);
+          const qIdx = ((totalQ % 4) + 4) % 4;
+          const startMonth = qIdx * 3;
+          const quarterLabel = `Q${qIdx + 1} ${qYear}`;
+
+          let monthsHtml = '';
+          for (let mo = 0; mo < 3; mo++) {
+            const month = startMonth + mo;
+            const year = qYear;
+            const monthName = new Date(year, month, 1).toLocaleDateString('en-US', { month: 'short' });
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const firstDayOfWeek = new Date(year, month, 1).getDay();
+            const offset = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
+
+            monthsHtml += `<div class="activity-month">
+              <div class="activity-month-label">${escapeHtml(monthName)}</div>
+              <div class="activity-grid">
+                ${DAY_LABELS.map(d => `<div class="activity-grid-header">${d}</div>`).join('')}
+                ${'<div class="activity-day empty"></div>'.repeat(offset)}
+                ${Array.from({ length: daysInMonth }, (_, i) => {
+                  const dayStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i + 1).padStart(2, '0')}`;
+                  const a = activityMap[dayStr];
+                  const count = a ? (a.wordsLearned || 0) : 0;
+                  let levelClass = '';
+                  if (count >= 5) levelClass = 'level-3';
+                  else if (count >= 2) levelClass = 'level-2';
+                  else if (count >= 1) levelClass = 'level-1';
+                  const todayClass = dayStr === todayStr ? ' today' : '';
+                  const title = count > 0 ? `${dayStr}: ${count} word${count > 1 ? 's' : ''} learned` : dayStr;
+                  return `<div class="activity-day${levelClass ? ' ' + levelClass : ''}${todayClass}" title="${title}"></div>`;
+                }).join('')}
+              </div>
+            </div>`;
+          }
+
+          html += `<div class="activity-quarter">
+            <div class="activity-quarter-label">${escapeHtml(quarterLabel)}</div>
+            <div class="activity-quarter-months">${monthsHtml}</div>
+          </div>`;
+        }
+        bodyEl.innerHTML = html;
+
+        statsEl.innerHTML = `
+          <span class="activity-stat"><span class="streak-stat-value">${streakData.totalActiveDays || 0}</span> active</span>
+          <span class="activity-stat">🔥 <span class="streak-stat-value">${streakData.currentStreak || 0}</span> streak</span>
+          <span class="activity-stat">⭐ <span class="streak-stat-value">${streakData.longestStreak || 0}</span> best</span>
+        `;
+      } catch (err) {
+        console.error('Failed to load activity log:', err);
+        bodyEl.innerHTML = '<p class="text-center" style="color:var(--color-danger)">Failed to load activity log.</p>';
+      }
+    }
+
+    async function initStreak() {
+      try {
+        const [streakData, weekHistory] = await Promise.all([
+          loadStreak(),
+          loadActivityHistory(7),
+        ]);
+
+        renderStreakInline(streakData, weekHistory);
+
+        // Show broken streak toast
+        if (streakData.justBroke && streakData.previousStreak > 0) {
+          showToast(`Your ${streakData.previousStreak}-day streak ended. Start a new one today!`, 'warning', 5000);
+        }
+
+        // Check for pending milestone celebration
+        const pendingMilestone = sessionStorage.getItem('streak_milestone');
+        if (pendingMilestone) {
+          sessionStorage.removeItem('streak_milestone');
+          const ms = parseInt(pendingMilestone, 10);
+          if (ms > 0) {
+            const info = getMilestoneMessage(ms);
+            showMilestoneModal(info);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load streak:', err);
+      }
+    }
 
     // ---- State ----
     let editingTopicId = null;
@@ -380,6 +577,7 @@
     });
 
     // ---- Initial load ----
+    initStreak();
     render();
   </script>
 </body>

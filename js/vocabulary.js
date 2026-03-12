@@ -7,6 +7,7 @@
 import { getDb } from './firebase.js';
 import { getUsername } from './router.js';
 import { updateWordCount, updateLearnedCount } from './topics.js';
+import { recordActivity } from './streak.js';
 
 let localOrderCounter = 0;
 
@@ -152,6 +153,13 @@ export async function toggleWordLearned(topicId, wordId, learned) {
     learnedAt: learned ? firebase.firestore.FieldValue.serverTimestamp() : null,
   });
   await updateLearnedCount(topicId, learned ? 1 : -1);
+
+  // Track streak on positive learning actions
+  if (learned) {
+    recordActivity().then(({ milestone }) => {
+      if (milestone) sessionStorage.setItem('streak_milestone', String(milestone));
+    }).catch(err => console.warn('Streak update failed:', err));
+  }
 }
 
 export async function saveWordInsights(topicId, wordId, insights) {
