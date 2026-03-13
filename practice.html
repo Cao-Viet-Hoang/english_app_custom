@@ -240,7 +240,7 @@
         </div>
         <div class="quiz-options" id="qz-options"></div>
         <div class="quiz-next-row">
-          <button class="btn btn-primary hidden" id="qz-btn-next">Next Question →</button>
+          <button class="btn btn-primary" id="qz-btn-next" disabled>Next Question →</button>
         </div>
       </div>
 
@@ -310,7 +310,7 @@
         </div>
         <div class="quiz-options" id="ls-options"></div>
         <div class="quiz-next-row">
-          <button class="btn btn-primary hidden" id="ls-btn-next">Next Question →</button>
+          <button class="btn btn-primary" id="ls-btn-next" disabled>Next Question →</button>
         </div>
       </div>
 
@@ -366,7 +366,7 @@
               </svg>
               Check Answer
             </button>
-            <button class="btn btn-primary hidden" id="fb-btn-next">
+            <button class="btn btn-primary" id="fb-btn-next" disabled>
               Next Word
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -491,7 +491,7 @@
               </svg>
               Check Answer
             </button>
-            <button class="btn btn-primary hidden" id="us-btn-next">
+            <button class="btn btn-primary" id="us-btn-next" disabled>
               Next Word
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -887,7 +887,7 @@
       }
 
       qzAnswered = false;
-      qzBtnNext.classList.add('hidden');
+      qzBtnNext.disabled = true;
       const dir = getDirection();
       const w = qzWords[qzIndex];
 
@@ -946,7 +946,7 @@
 
       // Disable all options
       qzOptions.querySelectorAll('.quiz-option').forEach(o => o.classList.add('disabled'));
-      qzBtnNext.classList.remove('hidden');
+      qzBtnNext.disabled = false;
     });
 
     qzBtnNext.addEventListener('click', () => {
@@ -1127,7 +1127,7 @@
       }
 
       lsAnswered = false;
-      lsBtnNext.classList.add('hidden');
+      lsBtnNext.disabled = true;
       const w = lsWords[lsIndex];
       const ansType = lsAnswerType.value; // 'vi' or 'en'
 
@@ -1181,7 +1181,7 @@
       }
 
       lsOptions.querySelectorAll('.quiz-option').forEach(o => o.classList.add('disabled'));
-      lsBtnNext.classList.remove('hidden');
+      lsBtnNext.disabled = false;
     });
 
     lsBtnNext.addEventListener('click', () => {
@@ -1281,8 +1281,8 @@
       }
 
       fbAnswered = false;
-      fbBtnCheck.classList.remove('hidden');
-      fbBtnNext.classList.add('hidden');
+      fbBtnCheck.disabled = false;
+      fbBtnNext.disabled = true;
       fbFeedback.classList.add('hidden');
       fbFeedback.textContent = '';
 
@@ -1370,8 +1370,8 @@
         fbFeedback.className = 'fillblank-feedback fb-wrong';
       }
       fbFeedback.classList.remove('hidden');
-      fbBtnCheck.classList.add('hidden');
-      fbBtnNext.classList.remove('hidden');
+      fbBtnCheck.disabled = true;
+      fbBtnNext.disabled = false;
       setTimeout(() => fbBtnNext.focus(), 150);
     }
 
@@ -1575,8 +1575,8 @@
       }
 
       usAnswered = false;
-      usBtnCheck.classList.remove('hidden');
-      usBtnNext.classList.add('hidden');
+      usBtnCheck.disabled = false;
+      usBtnNext.disabled = true;
       usFeedback.classList.add('hidden');
 
       const w = usWords[usIndex];
@@ -1757,8 +1757,8 @@
       }
 
       usFeedback.classList.remove('hidden');
-      usBtnCheck.classList.add('hidden');
-      usBtnNext.classList.remove('hidden');
+      usBtnCheck.disabled = true;
+      usBtnNext.disabled = false;
       setTimeout(() => usBtnNext.focus(), 150);
 
       // Disable all tiles

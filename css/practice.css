@@ -519,6 +519,12 @@
   justify-content: center;
 }
 
+.quiz-next-row .btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 /* ============================================================
    MATCHING MODE
    ============================================================ */
