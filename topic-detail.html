@@ -718,11 +718,17 @@
     let bulkResults = [];
 
     function parseBulkInput(text) {
-      return [...new Set(
+      const raw = [...new Set(
         text.split(/[,\n]+/)
           .map(w => w.trim())
           .filter(w => w.length > 0)
       )];
+      const lowered = raw.map(w => w.toLowerCase());
+      if (raw.some((w, i) => w !== lowered[i])) {
+        bulkWordsInput.value = lowered.join(', ');
+        showToast('Converted to lowercase.', 'info');
+      }
+      return [...new Set(lowered)];
     }
 
     function updateBulkCounter() {
@@ -1634,14 +1640,20 @@
     // Word form submit
     formWord.addEventListener('submit', async (e) => {
       e.preventDefault();
+      const rawEnglish = inputEnglish.value.trim();
       const data = {
-        english:     inputEnglish.value.trim(),
+        english:     rawEnglish.toLowerCase(),
         vietnamese:  inputVietnamese.value.trim(),
         ipaUS:       inputIpaUS.value.trim(),
         ipaUK:       inputIpaUK.value.trim(),
         wordType:    inputWordType.value,
         description: inputDescription.value.trim(),
       };
+
+      if (rawEnglish !== data.english) {
+        inputEnglish.value = data.english;
+        showToast('Converted to lowercase.', 'info');
+      }
 
       if (!data.english || !data.vietnamese) {
         showToast('English and Vietnamese fields are required.', 'warning');
