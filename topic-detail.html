@@ -323,6 +323,7 @@
             <div class="form-group">
               <label class="form-label" for="input-english">English</label>
               <input class="form-input" type="text" id="input-english" placeholder="e.g. accomplish" required />
+              <p id="english-lowercase-warn" class="lowercase-warn hidden">This word will be converted to lowercase when added.</p>
               <button type="button" id="btn-ai-fill" class="btn btn-accent btn-sm word-ai-btn">
                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
                      fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -392,6 +393,7 @@
             <label class="form-label" for="bulk-words-input">Enter English words</label>
             <textarea class="form-textarea bulk-textarea" id="bulk-words-input" rows="5"
                       placeholder="Enter words separated by commas or one per line, e.g.&#10;accomplish, determine, significant&#10;or:&#10;accomplish&#10;determine&#10;significant"></textarea>
+            <p id="bulk-lowercase-warn" class="lowercase-warn hidden">Words will be converted to lowercase when added.</p>
             <p class="bulk-hint">Separate words with commas, newlines, or both. Duplicates will be removed.</p>
           </div>
         </div>
@@ -545,6 +547,14 @@
     const inputDescription = document.getElementById('input-description');
     const btnWordSave      = document.getElementById('btn-word-save');
     const btnAiFill        = document.getElementById('btn-ai-fill');
+
+    const englishLowercaseWarn = document.getElementById('english-lowercase-warn');
+    const bulkLowercaseWarn   = document.getElementById('bulk-lowercase-warn');
+
+    inputEnglish.addEventListener('input', () => {
+      const hasUpper = /[A-Z]/.test(inputEnglish.value);
+      englishLowercaseWarn.classList.toggle('hidden', !hasUpper);
+    });
 
     setupModalClose('#modal-word');
     setupModalClose('#modal-word-select');
@@ -714,6 +724,11 @@
     const btnBulkAdd          = document.getElementById('btn-bulk-add');
 
     const GENERATE_BTN_HTML = bulkBtnGenerate.innerHTML;
+
+    bulkWordsInput.addEventListener('input', () => {
+      const hasUpper = /[A-Z]/.test(bulkWordsInput.value);
+      bulkLowercaseWarn.classList.toggle('hidden', !hasUpper);
+    });
 
     let bulkResults = [];
 

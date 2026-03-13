@@ -851,6 +851,13 @@
   min-height: 100px;
 }
 
+.lowercase-warn {
+  font-size: var(--fs-xs);
+  color: var(--color-error, #e74c3c);
+  margin-top: var(--sp-1, 4px);
+  margin-bottom: 0;
+}
+
 .bulk-hint {
   font-size: var(--fs-xs);
   color: var(--color-text-light);
