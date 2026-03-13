@@ -1350,7 +1350,12 @@
           inp.classList.add('correct');
         } else {
           inp.classList.add('wrong');
-          inp.value = answer;
+          // Show what user typed (or empty marker) and reveal correct answer above
+          const wrapper = document.createElement('span');
+          wrapper.classList.add('fb-wrong-wrapper');
+          wrapper.setAttribute('data-correct', answer);
+          inp.parentNode.insertBefore(wrapper, inp);
+          wrapper.appendChild(inp);
           allCorrect = false;
         }
       });

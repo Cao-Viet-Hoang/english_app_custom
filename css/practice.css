@@ -917,6 +917,23 @@
   box-shadow: none;
 }
 
+.fb-wrong-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.fb-wrong-wrapper::after {
+  content: attr(data-correct);
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-success);
+  pointer-events: none;
+}
+
 /* -- Feedback banner -- */
 .fillblank-feedback {
   font-size: var(--fs-sm);
