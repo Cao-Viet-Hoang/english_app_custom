@@ -546,6 +546,23 @@
       const name = inputName.value.trim();
       if (!name) return;
 
+      // Check for duplicate topic name (case-insensitive)
+      const duplicate = allTopics.find(t =>
+        t.name.toLowerCase() === name.toLowerCase() && t.id !== editingTopicId
+      );
+      if (duplicate) {
+        const ok = await confirmDialog(
+          `A topic named "${duplicate.name}" already exists. Do you still want to ${editingTopicId ? 'rename' : 'create'} it?`,
+          {
+            title: 'Duplicate Topic Name',
+            confirmText: editingTopicId ? 'Rename Anyway' : 'Create Anyway',
+            cancelText: 'Cancel',
+            confirmClass: 'btn-warning',
+          }
+        );
+        if (!ok) return;
+      }
+
       btnSave.disabled = true;
 
       try {
