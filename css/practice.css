@@ -112,6 +112,7 @@
 /* ---------- Practice Area ---------- */
 .practice-area {
   flex: 1;
+  padding-bottom: var(--sp-8);
 }
 
 .practice-panel {
