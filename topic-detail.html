@@ -470,12 +470,12 @@
     import { guardAuth, logout, getQueryParam, navigateTo } from './js/router.js';
     import { initFirebase } from './js/firebase.js';
     import { getTopic } from './js/topics.js';
-    import { loadWords, addWord, updateWord, deleteWord, saveWordInsights, toggleWordLearned } from './js/vocabulary.js';
+    import { loadWords, addWord, updateWord, deleteWord, saveWordInsights, toggleWordLearned, findDuplicateWords } from './js/vocabulary.js';
     import { loadParagraphs, saveParagraph, deleteParagraph } from './js/paragraphs.js';
     import { generateParagraph, generateWordInfo, generateBulkWordInfo, generateWordInsights } from './js/ai.js';
     import {
       showModal, closeModal, setupModalClose,
-      showToast, confirmDialog, formatDate, escapeHtml
+      showToast, confirmDialog, confirmDialogHtml, formatDate, escapeHtml
     } from './js/ui.js';
     import { loadStreak } from './js/streak.js';
 
@@ -755,8 +755,11 @@
 
     const bulkCorrectionNotice = document.getElementById('bulk-correction-notice');
 
-    function renderBulkPreview(results) {
+    let bulkDuplicatesMap = new Map();
+
+    function renderBulkPreview(results, duplicatesMap = new Map()) {
       bulkResults = results;
+      bulkDuplicatesMap = duplicatesMap;
 
       // Build correction list
       const corrections = results.filter(r =>
@@ -778,10 +781,14 @@
       bulkPreviewTbody.innerHTML = results.map((r, i) => {
         const wasCorrected = r.correctedWord && r.originalWord &&
           r.correctedWord.toLowerCase() !== r.originalWord.toLowerCase();
+        const dupeLocations = duplicatesMap.get(r.english.toLowerCase());
+        const dupeHtml = dupeLocations
+          ? `<br><small class="bulk-dupe-warn" style="color:var(--color-warning,#F2D07A);">Exists in: ${dupeLocations.map(l => escapeHtml(l.topicName) + (l.isCurrent ? ' (this topic)' : '')).join(', ')}</small>`
+          : '';
         return `
-        <tr>
+        <tr${dupeLocations ? ' class="bulk-dupe-row"' : ''}>
           <td><input type="checkbox" data-index="${i}" checked /></td>
-          <td class="vocab-english">${escapeHtml(r.english)}${wasCorrected ? `<br><small style="color:var(--color-warning,#F2D07A);"><s>${escapeHtml(r.originalWord)}</s> → corrected</small>` : ''}</td>
+          <td class="vocab-english">${escapeHtml(r.english)}${wasCorrected ? `<br><small style="color:var(--color-warning,#F2D07A);"><s>${escapeHtml(r.originalWord)}</s> → corrected</small>` : ''}${dupeHtml}</td>
           <td>${escapeHtml(r.vietnamese)}</td>
           <td class="vocab-ipa">${escapeHtml(r.ipaUS)}</td>
           <td><span class="${badgeClass(r.wordType)}">${WORD_TYPE_LABELS[r.wordType] || r.wordType}</span></td>
@@ -805,6 +812,7 @@
       bulkBtnAdd.classList.add('hidden');
       bulkModalTitle.textContent = 'Bulk Add Words';
       bulkResults = [];
+      bulkDuplicatesMap = new Map();
     }
 
     btnBulkAdd.addEventListener('click', () => {
@@ -868,13 +876,22 @@
             bulkProgressCount.textContent = `${done} / ${total} words`;
           }
         }, topicName);
+        // Check for duplicates across all topics
+        bulkLoadingText.textContent = 'Checking for duplicates…';
+        let duplicatesMap = new Map();
+        try {
+          duplicatesMap = await findDuplicateWords(results.map(r => r.english), topicId);
+        } catch (dupErr) {
+          console.warn('Duplicate check failed:', dupErr);
+        }
+
         bulkLoading.classList.add('hidden');
         bulkProgressBarWrap.classList.add('hidden');
         bulkStepPreview.classList.remove('hidden');
         bulkBtnGenerate.classList.add('hidden');
         bulkBtnAdd.classList.remove('hidden');
         bulkModalTitle.textContent = `Review ${results.length} Words`;
-        renderBulkPreview(results);
+        renderBulkPreview(results, duplicatesMap);
       } catch (err) {
         console.error(err);
         showToast('AI generation failed. ' + (err.message || ''), 'error');
@@ -894,6 +911,25 @@
       if (selectedIndices.length === 0) return;
 
       const toAdd = selectedIndices.map(i => bulkResults[i]);
+
+      // Check if any selected words are duplicates
+      const selectedDupes = new Map();
+      for (const word of toAdd) {
+        const key = word.english.toLowerCase();
+        if (bulkDuplicatesMap.has(key)) {
+          selectedDupes.set(key, bulkDuplicatesMap.get(key));
+        }
+      }
+      if (selectedDupes.size > 0) {
+        const ok = await confirmDialogHtml(buildDuplicateWarningHtml(selectedDupes), {
+          title: `${selectedDupes.size} Duplicate Word${selectedDupes.size > 1 ? 's' : ''} Found`,
+          confirmText: 'Add Anyway',
+          cancelText: 'Go Back',
+          confirmClass: 'btn-warning',
+        });
+        if (!ok) return;
+      }
+
       bulkBtnAdd.disabled = true;
       bulkStepPreview.classList.add('hidden');
       bulkAdding.classList.remove('hidden');
@@ -1652,6 +1688,25 @@
       showModal(modalWordOverlay);
     });
 
+    // ---- Duplicate word warning helpers ----
+    function buildDuplicateWarningHtml(duplicatesMap) {
+      let html = '<div style="font-size:0.9rem;line-height:1.7">';
+      html += '<p style="margin-bottom:10px">The following word(s) already exist:</p>';
+      html += '<ul style="list-style:none;padding:0;margin:0 0 10px 0">';
+      for (const [word, locations] of duplicatesMap) {
+        const locs = locations.map(l => {
+          const label = l.isCurrent ? `<strong>${escapeHtml(l.topicName)}</strong> (this topic)` : `<strong>${escapeHtml(l.topicName)}</strong>`;
+          return label;
+        }).join(', ');
+        html += `<li style="padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.06)">` +
+          `<span style="color:var(--color-warning,#F2D07A);font-weight:600">${escapeHtml(word)}</span> — ${locs}</li>`;
+      }
+      html += '</ul>';
+      html += '<p style="color:var(--color-text-light)">Do you still want to add?</p>';
+      html += '</div>';
+      return html;
+    }
+
     // Word form submit
     formWord.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -1679,6 +1734,25 @@
       btnWordSave.disabled = true;
       btnWordSave.textContent = editingWordId ? 'Saving…' : 'Adding…';
       try {
+        // Check for duplicates when adding a new word (not editing)
+        if (!editingWordId) {
+          btnWordSave.textContent = 'Checking…';
+          const dupes = await findDuplicateWords([data.english], topicId);
+          if (dupes.size > 0) {
+            btnWordSave.disabled = false;
+            btnWordSave.textContent = originalSaveText;
+            const ok = await confirmDialogHtml(buildDuplicateWarningHtml(dupes), {
+              title: 'Duplicate Word Found',
+              confirmText: 'Add Anyway',
+              cancelText: 'Cancel',
+              confirmClass: 'btn-warning',
+            });
+            if (!ok) return;
+            btnWordSave.disabled = true;
+            btnWordSave.textContent = 'Adding…';
+          }
+        }
+
         if (editingWordId) {
           await updateWord(topicId, editingWordId, data);
           showToast('Word updated.', 'success');

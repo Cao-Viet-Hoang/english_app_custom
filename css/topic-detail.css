@@ -944,6 +944,14 @@
   transform: translate(-50%, -58%) rotate(45deg);
 }
 
+.bulk-dupe-row {
+  background: rgba(242, 208, 122, .08);
+}
+.bulk-dupe-warn {
+  display: inline-block;
+  margin-top: 2px;
+}
+
 /* ---------- AI Generation ---------- */
 .ai-generating {
   display: flex;

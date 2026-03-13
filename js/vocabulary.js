@@ -164,6 +164,43 @@ export async function toggleWordLearned(topicId, wordId, learned) {
   }
 }
 
+/**
+ * Search for duplicate words across all topics.
+ * @param {string[]} words  Array of English words to check
+ * @param {string} [currentTopicId]  The current topic ID (to distinguish "same topic" vs "other topic")
+ * @returns {Promise<Map<string, Array<{topicId: string, topicName: string, isCurrent: boolean}>>>}
+ */
+export async function findDuplicateWords(words, currentTopicId = null) {
+  const db = getDb();
+  const username = getUsername();
+  const normalizedWords = new Set(words.map(w => w.toLowerCase().trim()).filter(Boolean));
+  const result = new Map();
+
+  const topicsSnap = await db.collection('users').doc(username).collection('topics').get();
+
+  const topicPromises = topicsSnap.docs.map(async (topicDoc) => {
+    const topicData = topicDoc.data();
+    const tid = topicDoc.id;
+    const isCurrent = tid === currentTopicId;
+    const wordsSnap = await topicDoc.ref.collection('words').get();
+    return { tid, topicName: topicData.name, isCurrent, wordDocs: wordsSnap.docs };
+  });
+
+  const allTopicData = await Promise.all(topicPromises);
+
+  for (const { tid, topicName, isCurrent, wordDocs } of allTopicData) {
+    for (const wordDoc of wordDocs) {
+      const eng = (wordDoc.data().english || '').toLowerCase().trim();
+      if (normalizedWords.has(eng)) {
+        if (!result.has(eng)) result.set(eng, []);
+        result.get(eng).push({ topicId: tid, topicName, isCurrent });
+      }
+    }
+  }
+
+  return result;
+}
+
 export async function saveWordInsights(topicId, wordId, insights) {
   await wordsRef(topicId).doc(wordId).update({
     aiInsights: insights,

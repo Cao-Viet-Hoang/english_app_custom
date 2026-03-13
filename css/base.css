@@ -160,6 +160,12 @@ h4 { font-size: var(--fs-md); }
 }
 .btn-danger:hover { background: #d67171; }
 
+.btn-warning {
+  background: var(--color-warning);
+  color: #1a1a2e;
+}
+.btn-warning:hover { background: #e5c46e; }
+
 .btn-ghost {
   background: transparent;
   color: var(--color-text);
