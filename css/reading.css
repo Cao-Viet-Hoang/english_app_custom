@@ -414,6 +414,14 @@
   }
 }
 
+@media (max-width: 768px) {
+  .reading-page .container { max-width: 100%; }
+
+  .breadcrumb { margin-bottom: var(--sp-4); }
+  .detail-header { margin-bottom: var(--sp-4); }
+  .detail-title { font-size: var(--fs-lg); }
+}
+
 @media (max-width: 600px) {
   .mode-selector {
     grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
@@ -426,14 +434,72 @@
   }
   .mode-btn svg { width: 18px; height: 18px; }
 
-  .reading-passage-card { padding: var(--sp-4); }
-  .reading-passage-text { font-size: var(--fs-sm); }
+  .reading-passage-card {
+    padding: var(--sp-4);
+    border-radius: var(--radius-md);
+  }
+  .reading-passage-text {
+    font-size: var(--fs-sm);
+    line-height: 1.7;
+  }
+
+  .reading-question-card {
+    padding: var(--sp-4);
+  }
+  .reading-question-text {
+    font-size: var(--fs-sm);
+  }
+
+  .quiz-option {
+    padding: var(--sp-3);
+    font-size: var(--fs-xs);
+    gap: var(--sp-2);
+  }
+  .quiz-option .option-key {
+    width: 22px;
+    height: 22px;
+    font-size: 11px;
+  }
 
   .tf-statement-card {
     flex-direction: column;
     align-items: flex-start;
     gap: var(--sp-3);
+    padding: var(--sp-3) var(--sp-4);
+  }
+  .tf-statement-text {
+    font-size: var(--fs-xs);
+  }
+  .tf-toggle { align-self: flex-end; }
+  .tf-btn {
+    padding: var(--sp-1) var(--sp-2);
+    min-width: 42px;
+    font-size: 11px;
   }
 
-  .tf-toggle { align-self: flex-end; }
+  .reading-actions .btn {
+    min-width: 0;
+    width: 100%;
+    max-width: 280px;
+  }
+  .reading-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .result-details { gap: var(--sp-4); }
+  .result-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+  .result-actions .btn {
+    width: 100%;
+    max-width: 280px;
+  }
+  .practice-result {
+    padding: var(--sp-5) var(--sp-3);
+  }
+  .result-score { font-size: var(--fs-xl); }
+
+  .ai-loading { padding: var(--sp-5) var(--sp-3); }
 }

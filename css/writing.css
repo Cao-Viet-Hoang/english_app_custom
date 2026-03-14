@@ -672,6 +672,12 @@
    RESPONSIVE
    ============================================================ */
 
+@media (max-width: 768px) {
+  .breadcrumb { margin-bottom: var(--sp-4); }
+  .detail-header { margin-bottom: var(--sp-4); }
+  .detail-title { font-size: var(--fs-lg); }
+}
+
 @media (max-width: 600px) {
   .mode-selector {
     grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
@@ -684,20 +690,86 @@
   }
   .mode-btn svg { width: 18px; height: 18px; }
 
+  .writing-word-card {
+    padding: var(--sp-4);
+    border-radius: var(--radius-md);
+  }
   .writing-word-english { font-size: var(--fs-xl); }
+  .writing-word-meaning { font-size: var(--fs-sm); }
 
-  .score-badges { gap: var(--sp-2); }
+  .writing-textarea {
+    min-height: 80px;
+    font-size: var(--fs-sm);
+    padding: var(--sp-3);
+  }
+
+  .writing-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+  .writing-actions .btn {
+    min-width: 0;
+    width: 100%;
+    max-width: 280px;
+  }
+
+  .ai-feedback {
+    padding: var(--sp-4);
+  }
+
+  .score-badges {
+    gap: var(--sp-2);
+    justify-content: center;
+  }
   .score-badge { min-width: 64px; padding: var(--sp-2) var(--sp-3); }
   .score-badge-value { font-size: var(--fs-lg); }
 
+  .corrected-box { padding: var(--sp-3); }
+  .corrected-box-text { font-size: var(--fs-sm); }
+
+  .target-word-badge {
+    font-size: var(--fs-xs);
+    padding: var(--sp-1) var(--sp-2);
+  }
+
+  .translation-source-card {
+    padding: var(--sp-4);
+    border-radius: var(--radius-md);
+  }
+  .translation-source-text { font-size: var(--fs-sm); }
+
   .translation-comparison {
     grid-template-columns: 1fr;
+  }
+  .translation-col { padding: var(--sp-3); }
+  .translation-col-text { font-size: var(--fs-xs); }
+
+  .dictation-play-btn {
+    width: 80px;
+    height: 80px;
+  }
+  .dictation-play-btn svg {
+    width: 32px;
+    height: 32px;
+  }
+  .dictation-prompt-card {
+    padding: var(--sp-4);
+  }
+  .dictation-speed-control {
+    font-size: var(--fs-xs);
+  }
+  .dictation-diff {
+    font-size: var(--fs-sm);
+    padding: var(--sp-3);
   }
 
   .stats-bar {
     gap: var(--sp-2) var(--sp-3);
   }
-  .stats-bar .stat { flex: 1; }
+  .stats-bar .stat {
+    flex: 1;
+    font-size: var(--fs-xs);
+  }
   .stats-bar .stat-progress {
     order: 1;
     flex: 0 0 100%;
@@ -706,4 +778,20 @@
     flex: 1;
     width: auto;
   }
+
+  .result-details { gap: var(--sp-4); }
+  .result-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+  .result-actions .btn {
+    width: 100%;
+    max-width: 280px;
+  }
+  .practice-result {
+    padding: var(--sp-5) var(--sp-3);
+  }
+  .result-score { font-size: var(--fs-xl); }
+
+  .ai-loading { padding: var(--sp-5) var(--sp-3); }
 }

@@ -1334,6 +1334,20 @@
 }
 
 /* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+  .breadcrumb {
+    margin-bottom: var(--sp-4);
+  }
+
+  .detail-header {
+    margin-bottom: var(--sp-4);
+  }
+
+  .detail-title {
+    font-size: var(--fs-lg);
+  }
+}
+
 @media (max-width: 600px) {
   .flashcard-word,
   .quiz-prompt-word {
@@ -1341,16 +1355,41 @@
   }
 
   .flashcard {
-    min-height: 240px;
+    min-height: 220px;
+  }
+
+  .flashcard-face {
+    padding: var(--sp-4);
   }
 
   .flashcard-meaning {
     font-size: var(--fs-lg);
   }
 
+  .flashcard-desc {
+    font-size: var(--fs-xs);
+  }
+
+  .flashcard-actions {
+    flex-direction: column;
+    width: 100%;
+    max-width: 480px;
+  }
+
+  .flashcard-actions .btn {
+    min-width: 0;
+    width: 100%;
+  }
+
   .matching-grid {
     grid-template-columns: 1fr;
     gap: var(--sp-5);
+  }
+
+  .match-card {
+    padding: var(--sp-3);
+    min-height: 44px;
+    font-size: var(--fs-sm);
   }
 
   .stats-bar {
@@ -1359,6 +1398,7 @@
 
   .stats-bar .stat {
     flex: 1;
+    font-size: var(--fs-xs);
   }
 
   .stats-bar .stat-progress {
@@ -1387,17 +1427,26 @@
     height: 18px;
   }
 
+  .quiz-question-card {
+    padding: var(--sp-4);
+  }
+
+  .quiz-option {
+    padding: var(--sp-3) var(--sp-4);
+    font-size: var(--fs-sm);
+  }
+
   .fb-char, .fb-char-input {
-    width: 34px;
-    height: 42px;
+    width: 32px;
+    height: 40px;
   }
 
   .fb-char {
-    font-size: var(--fs-md);
+    font-size: var(--fs-sm);
   }
 
   .fb-char-input {
-    font-size: var(--fs-md);
+    font-size: var(--fs-sm);
   }
 
   .fb-meaning-badge {
@@ -1405,9 +1454,24 @@
     padding: var(--sp-2) var(--sp-4);
   }
 
+  .fillblank-card {
+    padding: var(--sp-4);
+  }
+
+  .fillblank-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .fillblank-actions .btn {
+    min-width: 0;
+    width: 100%;
+    max-width: 280px;
+  }
+
   .us-slot, .us-tile {
-    width: 36px;
-    height: 42px;
+    width: 34px;
+    height: 40px;
     font-size: var(--fs-base);
   }
 
@@ -1416,7 +1480,76 @@
     padding: var(--sp-2) var(--sp-4);
   }
 
+  .unscramble-card {
+    padding: var(--sp-4);
+  }
+
+  .unscramble-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .unscramble-actions .btn {
+    min-width: 0;
+    width: 100%;
+    max-width: 280px;
+  }
+
+  .listening-play-btn {
+    width: 80px;
+    height: 80px;
+  }
+
+  .listening-play-btn svg {
+    width: 32px;
+    height: 32px;
+  }
+
+  .listening-prompt-card {
+    padding: var(--sp-4);
+  }
+
   .speedtype-vietnamese {
+    font-size: var(--fs-xl);
+  }
+
+  .speedtype-prompt-card {
+    padding: var(--sp-4);
+  }
+
+  .speedtype-input {
+    font-size: var(--fs-base);
+    padding: var(--sp-3);
+  }
+
+  .speedtype-settings {
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+  }
+
+  .direction-toggle {
+    flex-wrap: wrap;
+  }
+
+  .result-details {
+    gap: var(--sp-4);
+  }
+
+  .result-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .result-actions .btn {
+    width: 100%;
+    max-width: 280px;
+  }
+
+  .practice-result {
+    padding: var(--sp-5) var(--sp-3);
+  }
+
+  .result-score {
     font-size: var(--fs-xl);
   }
 }
