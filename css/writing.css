@@ -169,6 +169,11 @@
 .sentence-container {
   max-width: 620px;
   margin: 0 auto;
+  transition: max-width 0.3s ease;
+}
+
+.sentence-container.has-feedback {
+  max-width: 960px;
 }
 
 /* Word display card */
@@ -273,8 +278,9 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: var(--sp-5);
+  padding: var(--sp-5) var(--sp-6);
   margin-bottom: var(--sp-5);
+  box-shadow: var(--shadow-sm);
 }
 
 .ai-feedback-title {
@@ -282,16 +288,18 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--color-text-light);
-  margin-bottom: var(--sp-4);
+  color: var(--color-primary-dark);
+  margin-bottom: var(--sp-5);
+  padding-bottom: var(--sp-3);
+  border-bottom: 2px solid var(--color-primary-light);
   display: flex;
   align-items: center;
   gap: var(--sp-2);
 }
 
 .ai-feedback-title svg {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   color: var(--color-primary);
 }
 
@@ -299,7 +307,7 @@
 .score-badges {
   display: flex;
   gap: var(--sp-3);
-  margin-bottom: var(--sp-4);
+  margin-bottom: var(--sp-5);
   flex-wrap: wrap;
 }
 
@@ -307,37 +315,56 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: var(--sp-1);
   padding: var(--sp-3) var(--sp-4);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface-alt);
+  border-radius: var(--radius-lg);
+  border: 2px solid var(--color-border);
+  background: var(--color-surface);
   min-width: 80px;
+  flex: 1;
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
 }
 
 .score-badge-value {
-  font-size: var(--fs-xl);
+  font-size: var(--fs-2xl);
   font-weight: 700;
+  line-height: 1;
 }
 
 .score-badge-label {
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--color-text-light);
   text-transform: uppercase;
   letter-spacing: 0.3px;
 }
 
+.score-badge.score-high {
+  border-color: rgba(122, 172, 141, 0.4);
+  background: #f0faf4;
+}
 .score-badge.score-high .score-badge-value { color: var(--color-success); }
+
+.score-badge.score-mid {
+  border-color: rgba(242, 208, 122, 0.5);
+  background: #fef8e8;
+}
 .score-badge.score-mid .score-badge-value { color: var(--color-warning); }
+
+.score-badge.score-low {
+  border-color: rgba(214, 113, 113, 0.3);
+  background: #fef5f5;
+}
 .score-badge.score-low .score-badge-value { color: var(--color-danger); }
 
 /* Corrected text box */
 .corrected-box {
-  background: #f0faf4;
+  background: linear-gradient(135deg, #f0faf4 0%, #f5faf7 100%);
   border: 1px solid rgba(122, 172, 141, 0.3);
+  border-left: 4px solid var(--color-success);
   border-radius: var(--radius-md);
-  padding: var(--sp-4);
-  margin-bottom: var(--sp-4);
+  padding: var(--sp-4) var(--sp-5);
+  margin-bottom: var(--sp-5);
 }
 
 .corrected-box-label {
@@ -347,20 +374,31 @@
   margin-bottom: var(--sp-2);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.corrected-box-label::before {
+  content: '✓';
+  font-size: var(--fs-sm);
 }
 
 .corrected-box-text {
   font-size: var(--fs-base);
   color: var(--color-text);
-  line-height: 1.6;
+  line-height: 1.7;
 }
 
 /* Feedback text */
 .ai-feedback-text {
   font-size: var(--fs-sm);
   color: var(--color-text);
-  line-height: 1.6;
-  margin-bottom: var(--sp-3);
+  line-height: 1.7;
+  margin-bottom: var(--sp-4);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-md);
 }
 
 /* Tips list */
@@ -368,16 +406,19 @@
   list-style: none;
   padding: 0;
   margin: 0;
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-md);
+  overflow: hidden;
 }
 
 .ai-tips li {
   font-size: var(--fs-sm);
   color: var(--color-text);
-  padding: var(--sp-2) 0;
+  padding: var(--sp-3) var(--sp-4);
   border-bottom: 1px solid var(--color-border);
   display: flex;
   align-items: flex-start;
-  gap: var(--sp-2);
+  gap: var(--sp-3);
 }
 
 .ai-tips li:last-child { border-bottom: none; }
@@ -400,6 +441,11 @@
 .paragraph-container {
   max-width: 660px;
   margin: 0 auto;
+  transition: max-width 0.3s ease;
+}
+
+.paragraph-container.has-feedback {
+  max-width: 960px;
 }
 
 /* Target word badges */
@@ -429,7 +475,10 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--sp-2);
-  margin-bottom: var(--sp-4);
+  margin-bottom: var(--sp-5);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-md);
 }
 
 .word-coverage-item {
@@ -438,7 +487,7 @@
   gap: var(--sp-1);
   padding: var(--sp-1) var(--sp-3);
   font-size: var(--fs-sm);
-  font-weight: 500;
+  font-weight: 600;
   border-radius: 100px;
   border: 1px solid;
 }
@@ -468,6 +517,11 @@
 .translation-container {
   max-width: 660px;
   margin: 0 auto;
+  transition: max-width 0.3s ease;
+}
+
+.translation-container.has-feedback {
+  max-width: 960px;
 }
 
 .translation-source-card {
@@ -499,13 +553,13 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--sp-4);
-  margin-bottom: var(--sp-4);
+  margin-bottom: var(--sp-5);
 }
 
 .translation-col {
-  padding: var(--sp-4);
+  padding: var(--sp-4) var(--sp-5);
   border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
+  border: 2px solid var(--color-border);
 }
 
 .translation-col-label {
@@ -515,20 +569,26 @@
   letter-spacing: 0.5px;
   color: var(--color-text-light);
   margin-bottom: var(--sp-3);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
 }
 
 .translation-col.user-col {
   background: #fafbff;
+  border-color: rgba(124, 158, 217, 0.25);
 }
 
 .translation-col.suggested-col {
   background: #f0faf4;
+  border-color: rgba(122, 172, 141, 0.3);
+  border-left: 4px solid var(--color-success);
 }
 
 .translation-col-text {
-  font-size: var(--fs-sm);
+  font-size: var(--fs-base);
   color: var(--color-text);
-  line-height: 1.6;
+  line-height: 1.7;
 }
 
 /* ============================================================
@@ -610,13 +670,14 @@
 
 /* Diff display */
 .dictation-diff {
-  padding: var(--sp-4);
+  padding: var(--sp-5);
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
   margin-bottom: var(--sp-4);
   line-height: 1.8;
   font-size: var(--fs-base);
+  box-shadow: var(--shadow-sm);
 }
 
 .diff-correct {
@@ -649,6 +710,44 @@
   text-decoration: line-through;
 }
 
+/* Dictation diff structured sections */
+.dc-diff-header {
+  font-weight: 700;
+  font-size: var(--fs-md);
+  padding-bottom: var(--sp-3);
+  margin-bottom: var(--sp-4);
+  border-bottom: 2px solid var(--color-border);
+}
+
+.dc-diff-header.dc-diff-correct { color: var(--color-success); }
+.dc-diff-header.dc-diff-wrong { color: var(--color-danger); }
+
+.dc-diff-section {
+  margin-bottom: var(--sp-4);
+}
+
+.dc-diff-section:last-child { margin-bottom: 0; }
+
+.dc-diff-label {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-light);
+  margin-bottom: var(--sp-2);
+}
+
+.dc-diff-text {
+  line-height: 1.8;
+}
+
+.dc-diff-answer {
+  padding: var(--sp-3) var(--sp-4);
+  background: linear-gradient(135deg, #f0faf4 0%, #f5faf7 100%);
+  border-left: 4px solid var(--color-success);
+  border-radius: var(--radius-sm);
+}
+
 /* ============================================================
    AI LOADING STATE
    ============================================================ */
@@ -676,6 +775,12 @@
   .breadcrumb { margin-bottom: var(--sp-4); }
   .detail-header { margin-bottom: var(--sp-4); }
   .detail-title { font-size: var(--fs-lg); }
+
+  .sentence-container.has-feedback,
+  .paragraph-container.has-feedback,
+  .translation-container.has-feedback {
+    max-width: 100%;
+  }
 }
 
 @media (max-width: 600px) {
@@ -715,6 +820,21 @@
 
   .ai-feedback {
     padding: var(--sp-4);
+    box-shadow: none;
+  }
+
+  .ai-feedback-title {
+    font-size: var(--fs-xs);
+    margin-bottom: var(--sp-3);
+    padding-bottom: var(--sp-2);
+  }
+
+  .ai-feedback-text {
+    padding: var(--sp-2) var(--sp-3);
+  }
+
+  .corrected-box {
+    padding: var(--sp-3) var(--sp-4);
   }
 
   .score-badges {
@@ -724,7 +844,6 @@
   .score-badge { min-width: 64px; padding: var(--sp-2) var(--sp-3); }
   .score-badge-value { font-size: var(--fs-lg); }
 
-  .corrected-box { padding: var(--sp-3); }
   .corrected-box-text { font-size: var(--fs-sm); }
 
   .target-word-badge {
@@ -742,7 +861,7 @@
     grid-template-columns: 1fr;
   }
   .translation-col { padding: var(--sp-3); }
-  .translation-col-text { font-size: var(--fs-xs); }
+  .translation-col-text { font-size: var(--fs-sm); }
 
   .dictation-play-btn {
     width: 80px;

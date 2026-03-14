@@ -25,6 +25,7 @@ export function initSentenceMode(allWords, ctx) {
   const container = document.getElementById('sw-container');
   const result = document.getElementById('sw-result');
   container.style.display = '';
+  container.classList.remove('has-feedback');
   result.classList.add('hidden');
 
   showSentenceWord(ctx);
@@ -65,6 +66,7 @@ function showSentenceWord(ctx) {
   document.getElementById('sw-btn-skip').style.display = '';
   document.getElementById('sw-feedback').classList.add('hidden');
   document.getElementById('sw-next-row').style.display = 'none';
+  document.getElementById('sw-container').classList.remove('has-feedback');
 
   // Enable check when user types
   input.oninput = () => {
@@ -113,6 +115,7 @@ async function handleSentenceCheck(ctx) {
     }
 
     feedbackEl.innerHTML = buildSentenceFeedback(result, ctx);
+    document.getElementById('sw-container').classList.add('has-feedback');
     document.getElementById('sw-next-row').style.display = '';
 
     // Update avg
@@ -192,6 +195,7 @@ export function initParagraphMode(allWords, ctx) {
   const container = document.getElementById('pw-container');
   const result = document.getElementById('pw-result');
   container.style.display = '';
+  container.classList.remove('has-feedback');
   result.classList.add('hidden');
 
   showParagraphPrompt(ctx);
@@ -214,6 +218,7 @@ function showParagraphPrompt(ctx) {
   checkBtn.disabled = true;
   document.getElementById('pw-feedback').classList.add('hidden');
   document.getElementById('pw-action-row').style.display = 'none';
+  document.getElementById('pw-container').classList.remove('has-feedback');
 
   input.oninput = () => {
     checkBtn.disabled = input.value.trim().length === 0;
@@ -224,6 +229,7 @@ function showParagraphPrompt(ctx) {
   document.getElementById('pw-btn-retry').onclick = () => {
     document.getElementById('pw-feedback').classList.add('hidden');
     document.getElementById('pw-action-row').style.display = 'none';
+    document.getElementById('pw-container').classList.remove('has-feedback');
     input.value = '';
     input.disabled = false;
     input.focus();
@@ -256,6 +262,7 @@ async function handleParagraphCheck(ctx) {
     }
 
     feedbackEl.innerHTML = buildParagraphFeedback(result, ctx);
+    document.getElementById('pw-container').classList.add('has-feedback');
     document.getElementById('pw-action-row').style.display = '';
   } catch (err) {
     console.error('Paragraph eval error:', err);
@@ -351,6 +358,7 @@ async function generateNewTranslation(allWords, ctx) {
     checkBtn.disabled = true;
     document.getElementById('tr-feedback').classList.add('hidden');
     document.getElementById('tr-next-row').style.display = 'none';
+    document.getElementById('tr-container').classList.remove('has-feedback');
 
     input.oninput = () => {
       checkBtn.disabled = input.value.trim().length === 0;
@@ -392,6 +400,7 @@ async function handleTranslationCheck(allWords, ctx) {
     }
 
     feedbackEl.innerHTML = buildTranslationFeedback(result, userTranslation, ctx);
+    document.getElementById('tr-container').classList.add('has-feedback');
     document.getElementById('tr-next-row').style.display = '';
   } catch (err) {
     console.error('Translation eval error:', err);
@@ -588,13 +597,17 @@ function handleDictationCheck(ctx) {
   const diffEl = document.getElementById('dc-diff');
   diffEl.classList.remove('hidden');
   diffEl.innerHTML = `
-    <div style="margin-bottom:var(--sp-3)">
-      <strong style="color:${isCorrect ? 'var(--color-success)' : 'var(--color-danger)'}">
-        ${isCorrect ? 'Correct!' : `${correctCount}/${expected.length} words correct`}
-      </strong>
+    <div class="dc-diff-header ${isCorrect ? 'dc-diff-correct' : 'dc-diff-wrong'}">
+      ${isCorrect ? '✓ Correct!' : `${correctCount}/${expected.length} words correct`}
     </div>
-    <div style="margin-bottom:var(--sp-2)"><strong>Your answer:</strong> ${diffHtml}</div>
-    <div><strong>Correct sentence:</strong> ${ctx.escapeHtml(currentSentence)}</div>
+    <div class="dc-diff-section">
+      <div class="dc-diff-label">Your answer</div>
+      <div class="dc-diff-text">${diffHtml}</div>
+    </div>
+    <div class="dc-diff-section dc-diff-answer">
+      <div class="dc-diff-label">Correct sentence</div>
+      <div class="dc-diff-text">${ctx.escapeHtml(currentSentence)}</div>
+    </div>
   `;
 
   document.getElementById('dc-score').textContent = dcScore;
