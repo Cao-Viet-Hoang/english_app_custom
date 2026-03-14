@@ -442,12 +442,12 @@
                 ${t.createdAt ? formatDate(t.createdAt) : ''}
               </span>
             </div>
-            ${wc > 0 ? `<div class="topic-card-progress">
+            <div class="topic-card-progress">
               <div class="topic-card-progress-bar">
                 <div class="topic-card-progress-fill" style="width:${pct}%"></div>
               </div>
               <span class="topic-card-progress-label">${lc}/${wc}</span>
-            </div>` : ''}
+            </div>
           </div>
         `;
       }).join('');
