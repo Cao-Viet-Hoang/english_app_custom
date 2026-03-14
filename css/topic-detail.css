@@ -502,6 +502,14 @@
 }
 
 @media (max-width: 540px) {
+  .detail-actions {
+    width: 100%;
+  }
+  .detail-actions .btn {
+    flex: 1;
+    justify-content: center;
+    min-width: 0;
+  }
   .vocab-form .form-row {
     grid-template-columns: 1fr;
   }

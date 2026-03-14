@@ -86,6 +86,21 @@
           </svg>
           Practice
         </a>
+        <a id="btn-writing" class="btn btn-primary btn-sm" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          </svg>
+          Writing
+        </a>
+        <a id="btn-reading" class="btn btn-accent btn-sm" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+          </svg>
+          Reading
+        </a>
       </div>
     </div>
 
@@ -265,6 +280,80 @@
             <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
           </svg>
           Start Practice
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Writing Word Selection Modal ===== -->
+  <div id="modal-writing-select" class="modal-overlay">
+    <div class="modal" style="max-width:520px">
+      <div class="modal-header">
+        <h3>Select Words for Writing</h3>
+        <button class="btn-icon" data-close-modal aria-label="Close">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:var(--fs-sm);color:var(--color-text-light);margin-bottom:var(--sp-3)">
+          Sentence &amp; Dictation: 1+ words. Paragraph &amp; Translation: 3+ words.
+        </p>
+        <div class="ws-toolbar">
+          <span class="ws-counter" id="wrs-counter">0 / 0 selected</span>
+          <div class="ws-toolbar-btns">
+            <button type="button" class="btn btn-ghost btn-sm" id="wrs-select-all">Select All</button>
+            <button type="button" class="btn btn-ghost btn-sm" id="wrs-deselect-all">Deselect All</button>
+          </div>
+        </div>
+        <div class="ws-list" id="wrs-list"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" data-close-modal>Cancel</button>
+        <button type="button" id="wrs-btn-start" class="btn btn-primary" disabled>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          </svg>
+          Start Writing
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Reading Word Selection Modal ===== -->
+  <div id="modal-reading-select" class="modal-overlay">
+    <div class="modal" style="max-width:520px">
+      <div class="modal-header">
+        <h3>Select Words for Reading</h3>
+        <button class="btn-icon" data-close-modal aria-label="Close">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="ws-toolbar">
+          <span class="ws-counter" id="rds-counter">0 / 0 selected</span>
+          <div class="ws-toolbar-btns">
+            <button type="button" class="btn btn-ghost btn-sm" id="rds-select-all">Select All</button>
+            <button type="button" class="btn btn-ghost btn-sm" id="rds-deselect-all">Deselect All</button>
+          </div>
+        </div>
+        <div class="ws-list" id="rds-list"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" data-close-modal>Cancel</button>
+        <button type="button" id="rds-btn-start" class="btn btn-accent" disabled>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+          </svg>
+          Start Reading
         </button>
       </div>
     </div>
@@ -510,6 +599,18 @@
       openPracticeSelectModal();
     });
 
+    // Writing button -> open writing word selection modal
+    document.getElementById('btn-writing').addEventListener('click', (e) => {
+      e.preventDefault();
+      openWritingSelectModal();
+    });
+
+    // Reading button -> open reading word selection modal
+    document.getElementById('btn-reading').addEventListener('click', (e) => {
+      e.preventDefault();
+      openReadingSelectModal();
+    });
+
     // ---- DOM Refs ----
     // Header
     const breadcrumbTopic = document.getElementById('breadcrumb-topic');
@@ -559,6 +660,8 @@
     setupModalClose('#modal-word');
     setupModalClose('#modal-word-select');
     setupModalClose('#modal-practice-select');
+    setupModalClose('#modal-writing-select');
+    setupModalClose('#modal-reading-select');
     setupModalClose('#modal-bulk-add');
 
     // ---- Word Selection Modal refs ----
@@ -651,6 +754,108 @@
       const selectedIds = Array.from(psListEl.querySelectorAll('input[type=checkbox]:checked')).map(cb => cb.value);
       const total = psListEl.querySelectorAll('input[type=checkbox]').length;
       let url = `practice.html?topicId=${topicId}`;
+      if (selectedIds.length < total) {
+        url += `&words=${selectedIds.join(',')}`;
+      }
+      navigateTo(url);
+    });
+
+    // ---- Writing Word Selection Modal ----
+    const modalWritingSelect = document.getElementById('modal-writing-select');
+    const wrsListEl          = document.getElementById('wrs-list');
+    const wrsCounter         = document.getElementById('wrs-counter');
+    const wrsBtnStart        = document.getElementById('wrs-btn-start');
+    const wrsSelectAll       = document.getElementById('wrs-select-all');
+    const wrsDeselectAll     = document.getElementById('wrs-deselect-all');
+
+    function openWritingSelectModal() {
+      if (allWords.length < 1) {
+        showToast('Add at least 1 vocabulary word to start writing practice.', 'warning');
+        return;
+      }
+      wrsListEl.innerHTML = allWords.map(w => `
+        <label class="ws-item">
+          <input type="checkbox" value="${w.id}" checked />
+          <span class="ws-word">${escapeHtml(w.english)}</span>
+          <span class="ws-word-vi">${escapeHtml(w.vietnamese)}</span>
+        </label>
+      `).join('');
+      updateWritingSelectCounter();
+      showModal(modalWritingSelect);
+    }
+
+    function updateWritingSelectCounter() {
+      const checked = wrsListEl.querySelectorAll('input[type=checkbox]:checked').length;
+      const total = wrsListEl.querySelectorAll('input[type=checkbox]').length;
+      wrsCounter.textContent = `${checked} / ${total} selected`;
+      wrsBtnStart.disabled = checked < 1;
+    }
+
+    wrsListEl.addEventListener('change', updateWritingSelectCounter);
+    wrsSelectAll.addEventListener('click', () => {
+      wrsListEl.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = true);
+      updateWritingSelectCounter();
+    });
+    wrsDeselectAll.addEventListener('click', () => {
+      wrsListEl.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = false);
+      updateWritingSelectCounter();
+    });
+
+    wrsBtnStart.addEventListener('click', () => {
+      const selectedIds = Array.from(wrsListEl.querySelectorAll('input[type=checkbox]:checked')).map(cb => cb.value);
+      const total = wrsListEl.querySelectorAll('input[type=checkbox]').length;
+      let url = `writing.html?topicId=${topicId}`;
+      if (selectedIds.length < total) {
+        url += `&words=${selectedIds.join(',')}`;
+      }
+      navigateTo(url);
+    });
+
+    // ---- Reading Word Selection Modal ----
+    const modalReadingSelect = document.getElementById('modal-reading-select');
+    const rdsListEl          = document.getElementById('rds-list');
+    const rdsCounter         = document.getElementById('rds-counter');
+    const rdsBtnStart        = document.getElementById('rds-btn-start');
+    const rdsSelectAll       = document.getElementById('rds-select-all');
+    const rdsDeselectAll     = document.getElementById('rds-deselect-all');
+
+    function openReadingSelectModal() {
+      if (allWords.length < 4) {
+        showToast('Add at least 4 vocabulary words to start reading practice.', 'warning');
+        return;
+      }
+      rdsListEl.innerHTML = allWords.map(w => `
+        <label class="ws-item">
+          <input type="checkbox" value="${w.id}" checked />
+          <span class="ws-word">${escapeHtml(w.english)}</span>
+          <span class="ws-word-vi">${escapeHtml(w.vietnamese)}</span>
+        </label>
+      `).join('');
+      updateReadingSelectCounter();
+      showModal(modalReadingSelect);
+    }
+
+    function updateReadingSelectCounter() {
+      const checked = rdsListEl.querySelectorAll('input[type=checkbox]:checked').length;
+      const total = rdsListEl.querySelectorAll('input[type=checkbox]').length;
+      rdsCounter.textContent = `${checked} / ${total} selected`;
+      rdsBtnStart.disabled = checked < 4;
+    }
+
+    rdsListEl.addEventListener('change', updateReadingSelectCounter);
+    rdsSelectAll.addEventListener('click', () => {
+      rdsListEl.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = true);
+      updateReadingSelectCounter();
+    });
+    rdsDeselectAll.addEventListener('click', () => {
+      rdsListEl.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = false);
+      updateReadingSelectCounter();
+    });
+
+    rdsBtnStart.addEventListener('click', () => {
+      const selectedIds = Array.from(rdsListEl.querySelectorAll('input[type=checkbox]:checked')).map(cb => cb.value);
+      const total = rdsListEl.querySelectorAll('input[type=checkbox]').length;
+      let url = `reading.html?topicId=${topicId}`;
       if (selectedIds.length < total) {
         url += `&words=${selectedIds.join(',')}`;
       }

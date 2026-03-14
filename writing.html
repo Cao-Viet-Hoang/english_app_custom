@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WordCraft — Writing Practice</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/writing.css" />
+  <link rel="stylesheet" href="css/streak.css" />
+</head>
+<body class="writing-page">
+
+  <!-- ===== Navbar ===== -->
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a class="navbar-brand" href="topics.html">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+        </svg>
+        WordCraft
+      </a>
+      <div class="navbar-spacer"></div>
+      <div class="navbar-right">
+        <span id="navbar-streak" class="navbar-streak" style="display:none">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M8 16c3.314 0 6-2 6-5.5 0-1.5-.5-4-2.5-6 .25 1.5-1.25 2-1.25 2C11 4 9 .5 8 0 7.5 2 5.5 4 4.75 4.75 4.75 4.75 3.25 4.25 3.5 2.75 1.5 4.75 1 7.25 1 8.75 1 12.25 4.686 16 8 16zm0-1c-1.657 0-3-1-3-2.75 0-.75.25-2 1.25-3 .125.75 1 1.25 1 1.25S8 9 8 8c.5 1 1.5 2 2 3 .75.75 1 1.5 1 2.25C11 14 9.657 15 8 15z"/>
+          </svg>
+          <span id="navbar-streak-count">0</span>
+        </span>
+        <div class="navbar-user-info">
+          <span class="navbar-avatar" id="nav-avatar"></span>
+          <span class="navbar-username" id="nav-username"></span>
+        </div>
+        <div class="navbar-vdivider"></div>
+        <button id="btn-logout" class="btn-signout">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          Sign out
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ===== Main Content ===== -->
+  <main class="container">
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+      <a href="topics.html">My Topics</a>
+      <span class="breadcrumb-separator">&rsaquo;</span>
+      <a href="#" id="breadcrumb-topic-link">Loading&hellip;</a>
+      <span class="breadcrumb-separator">&rsaquo;</span>
+      <span>Writing</span>
+    </div>
+
+    <!-- Header -->
+    <div class="detail-header">
+      <h2 class="detail-title">
+        <span>Writing Practice</span>
+        <span class="detail-word-badge" id="detail-word-badge"></span>
+      </h2>
+    </div>
+
+    <!-- Mode Selector -->
+    <div class="mode-selector">
+      <button class="mode-btn active" data-mode="sentence">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+        </svg>
+        Sentence
+      </button>
+      <button class="mode-btn" data-mode="paragraph">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+          <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/>
+        </svg>
+        Paragraph
+      </button>
+      <button class="mode-btn" data-mode="translation">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/>
+          <path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/>
+        </svg>
+        Translation
+      </button>
+      <button class="mode-btn" data-mode="dictation">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
+          <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
+        </svg>
+        Dictation
+      </button>
+    </div>
+
+    <!-- Empty state -->
+    <div id="practice-empty" class="practice-empty hidden">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+      </svg>
+      <h3>Not Enough Words</h3>
+      <p>Add at least 1 vocabulary word to start writing practice.</p>
+      <br/>
+      <a id="link-back-detail" href="#" class="btn btn-primary">Go to Topic</a>
+    </div>
+
+    <!-- Loading -->
+    <div id="practice-loading" class="text-center" style="padding:var(--sp-7)">
+      <div class="spinner spinner-lg"></div>
+    </div>
+
+    <!-- ============ SENTENCE WRITING MODE ============ -->
+    <div id="panel-sentence" class="practice-panel">
+      <div class="stats-bar">
+        <div class="stat">Word <strong id="sw-current">1</strong> of <strong id="sw-total">0</strong></div>
+        <div class="stat stat-progress">
+          <div class="progress-bar"><div class="progress-bar-fill" id="sw-progress" style="width:0%"></div></div>
+          <span id="sw-progress-text">0%</span>
+        </div>
+        <div class="stat">
+          Avg Score: <strong id="sw-avg-score">-</strong>
+        </div>
+      </div>
+
+      <div class="sentence-container" id="sw-container">
+        <div class="writing-word-card">
+          <div class="writing-word-english" id="sw-word"></div>
+          <div class="writing-word-ipa" id="sw-ipa"></div>
+          <div class="writing-word-type" id="sw-type"></div>
+          <div class="writing-word-meaning" id="sw-meaning"></div>
+        </div>
+
+        <div class="writing-input-area">
+          <textarea class="writing-textarea" id="sw-input" rows="3"
+                    placeholder="Write an English sentence using the word above..."></textarea>
+          <div class="writing-input-hint">
+            <span>Ctrl+Enter to check</span>
+          </div>
+        </div>
+
+        <div class="writing-actions">
+          <button class="btn btn-primary" id="sw-btn-check" disabled>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            Check
+          </button>
+          <button class="btn btn-ghost" id="sw-btn-skip">Skip</button>
+        </div>
+
+        <div id="sw-feedback" class="ai-feedback hidden"></div>
+
+        <div class="writing-actions" id="sw-next-row" style="display:none">
+          <button class="btn btn-primary" id="sw-btn-next">
+            Next Word
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div id="sw-result" class="practice-result hidden"></div>
+    </div>
+
+    <!-- ============ PARAGRAPH WRITING MODE ============ -->
+    <div id="panel-paragraph" class="practice-panel">
+      <div class="paragraph-container" id="pw-container">
+        <div class="target-words" id="pw-words"></div>
+
+        <div class="writing-input-area">
+          <textarea class="writing-textarea" id="pw-input" rows="6"
+                    placeholder="Write a paragraph using all the words above..."></textarea>
+          <div class="writing-input-hint">
+            <span>Ctrl+Enter to check</span>
+          </div>
+        </div>
+
+        <div class="writing-actions">
+          <button class="btn btn-primary" id="pw-btn-check" disabled>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            Check
+          </button>
+        </div>
+
+        <div id="pw-feedback" class="ai-feedback hidden"></div>
+
+        <div class="writing-actions" id="pw-action-row" style="display:none">
+          <button class="btn btn-primary" id="pw-btn-retry">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            Try Again
+          </button>
+          <button class="btn btn-ghost" id="pw-btn-new">New Words</button>
+        </div>
+      </div>
+
+      <div id="pw-result" class="practice-result hidden"></div>
+    </div>
+
+    <!-- ============ TRANSLATION MODE ============ -->
+    <div id="panel-translation" class="practice-panel">
+      <div class="translation-container" id="tr-container">
+        <div id="tr-loading" class="ai-loading">
+          <div class="spinner spinner-lg"></div>
+          <span class="ai-loading-text">Generating translation challenge...</span>
+        </div>
+
+        <div id="tr-content" style="display:none">
+          <div class="translation-source-card">
+            <div class="translation-source-label">Translate to English</div>
+            <div class="translation-source-text" id="tr-source"></div>
+          </div>
+
+          <div class="writing-input-area">
+            <textarea class="writing-textarea" id="tr-input" rows="4"
+                      placeholder="Write your English translation here..."></textarea>
+            <div class="writing-input-hint">
+              <span>Ctrl+Enter to check</span>
+            </div>
+          </div>
+
+          <div class="writing-actions">
+            <button class="btn btn-primary" id="tr-btn-check" disabled>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Check
+            </button>
+          </div>
+
+          <div id="tr-feedback" class="ai-feedback hidden"></div>
+
+          <div class="writing-actions" id="tr-next-row" style="display:none">
+            <button class="btn btn-primary" id="tr-btn-next">
+              Next Challenge
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+            <a class="btn btn-ghost" id="tr-btn-back" href="#">Back to Topic</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ DICTATION MODE ============ -->
+    <div id="panel-dictation" class="practice-panel">
+      <div class="stats-bar">
+        <div class="stat">Sentence <strong id="dc-current">1</strong> of <strong id="dc-total">0</strong></div>
+        <div class="stat stat-progress">
+          <div class="progress-bar"><div class="progress-bar-fill" id="dc-progress" style="width:0%"></div></div>
+          <span id="dc-progress-text">0%</span>
+        </div>
+        <div class="stat">
+          Score: <strong id="dc-score">0</strong>
+        </div>
+      </div>
+
+      <div class="dictation-container" id="dc-container">
+        <div id="dc-loading" class="ai-loading">
+          <div class="spinner spinner-lg"></div>
+          <span class="ai-loading-text">Generating dictation sentence...</span>
+        </div>
+
+        <div id="dc-content" style="display:none">
+          <div class="dictation-prompt-card">
+            <div class="dictation-label">Listen and type</div>
+            <button class="dictation-play-btn" id="dc-play-btn" type="button">
+              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+              </svg>
+            </button>
+            <div class="dictation-replay-hint">Click to replay (R)</div>
+            <div class="dictation-speed-control">
+              <label>Speed:</label>
+              <select id="dc-speed">
+                <option value="0.7">0.7x (Slow)</option>
+                <option value="0.85" selected>0.85x (Normal)</option>
+                <option value="1">1x (Fast)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="writing-input-area">
+            <textarea class="writing-textarea" id="dc-input" rows="3"
+                      placeholder="Type what you hear..."></textarea>
+            <div class="writing-input-hint">
+              <span>Ctrl+Enter to check</span>
+            </div>
+          </div>
+
+          <div class="writing-actions">
+            <button class="btn btn-primary" id="dc-btn-check" disabled>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Check
+            </button>
+          </div>
+
+          <div id="dc-diff" class="dictation-diff hidden"></div>
+
+          <div class="writing-actions" id="dc-next-row" style="display:none">
+            <button class="btn btn-primary" id="dc-btn-next">
+              Next Sentence
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="dc-result" class="practice-result hidden"></div>
+    </div>
+
+  </main>
+
+  <!-- ===== Firebase SDK ===== -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+  <!-- ===== App Script ===== -->
+  <script type="module" src="js/writing.js"></script>
+</body>
+</html>
