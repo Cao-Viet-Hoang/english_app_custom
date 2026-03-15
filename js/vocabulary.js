@@ -156,11 +156,18 @@ export async function toggleWordLearned(topicId, wordId, learned) {
 
   // Track streak on positive learning actions; reverse on un-learn
   if (learned) {
-    recordActivity().then(({ milestone }) => {
+    try {
+      const { milestone } = await recordActivity();
       if (milestone) sessionStorage.setItem('streak_milestone', String(milestone));
-    }).catch(err => console.warn('Streak update failed:', err));
+    } catch (err) {
+      console.warn('Streak update failed:', err);
+    }
   } else {
-    removeActivity().catch(err => console.warn('Streak remove failed:', err));
+    try {
+      await removeActivity();
+    } catch (err) {
+      console.warn('Streak remove failed:', err);
+    }
   }
 }
 

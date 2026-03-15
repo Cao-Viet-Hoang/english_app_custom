@@ -577,14 +577,19 @@
     document.getElementById('btn-logout').addEventListener('click', logout);
 
     // ---- Navbar streak badge ----
-    loadStreak().then(data => {
-      const el = document.getElementById('navbar-streak');
-      const countEl = document.getElementById('navbar-streak-count');
-      if (data.currentStreak > 0 || data.isActiveToday) {
-        countEl.textContent = data.currentStreak;
-        el.style.display = '';
-      }
-    }).catch(() => {});
+    function updateStreakBadge() {
+      loadStreak().then(data => {
+        const el = document.getElementById('navbar-streak');
+        const countEl = document.getElementById('navbar-streak-count');
+        if (data.currentStreak > 0 || data.isActiveToday) {
+          countEl.textContent = data.currentStreak;
+          el.style.display = '';
+        } else {
+          el.style.display = 'none';
+        }
+      }).catch(() => {});
+    }
+    updateStreakBadge();
 
     // ---- Topic ID from URL ----
     const topicId = getQueryParam('topicId');
@@ -1379,6 +1384,7 @@
 
       try {
         await toggleWordLearned(topicId, wordId, newLearned);
+        updateStreakBadge();
       } catch (err) {
         console.error('Failed to toggle learned:', err);
         // Revert
