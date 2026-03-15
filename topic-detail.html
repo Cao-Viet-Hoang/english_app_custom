@@ -1385,6 +1385,12 @@
       try {
         await toggleWordLearned(topicId, wordId, newLearned);
         updateStreakBadge();
+        // Show daily encouragement toast on first activity of the day
+        const encourage = sessionStorage.getItem('streak_daily_encourage');
+        if (encourage) {
+          sessionStorage.removeItem('streak_daily_encourage');
+          showToast(encourage, 'success', 3000);
+        }
       } catch (err) {
         console.error('Failed to toggle learned:', err);
         // Revert

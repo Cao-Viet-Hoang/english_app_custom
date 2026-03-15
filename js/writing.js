@@ -8,7 +8,7 @@ import { initFirebase } from './firebase.js';
 import { getTopic } from './topics.js';
 import { loadWords } from './vocabulary.js';
 import { showToast, escapeHtml, showMilestoneModal } from './ui.js';
-import { loadStreak, recordActivity, getMilestoneMessage } from './streak.js';
+import { loadStreak, recordActivity, getMilestoneMessage, getDailyEncouragement } from './streak.js';
 import {
   initSentenceMode,
   initParagraphMode,
@@ -153,10 +153,13 @@ function buildResultHtml(score, total, label) {
 // ---- Streak helper ----
 async function handleStreakRecord() {
   try {
-    const { milestone } = await recordActivity();
+    const { streakData, isNewDay, milestone } = await recordActivity();
     if (milestone) {
       const msg = getMilestoneMessage(milestone);
       await showMilestoneModal(msg);
+    } else if (isNewDay) {
+      const encourage = getDailyEncouragement(streakData.currentStreak);
+      if (encourage) showToast(encourage, 'success', 3000);
     }
     // Refresh badge
     const data = await loadStreak(true);

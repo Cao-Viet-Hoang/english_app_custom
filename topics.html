@@ -172,7 +172,7 @@
     import { initFirebase } from './js/firebase.js';
     import { loadTopics, createTopic, renameTopic, deleteTopic } from './js/topics.js';
     import { showModal, closeModal, setupModalClose, showToast, confirmDialog, formatDate, escapeHtml, showMilestoneModal } from './js/ui.js';
-    import { loadStreak, loadActivityHistory, getMilestoneMessage } from './js/streak.js';
+    import { loadStreak, loadActivityHistory, getMilestoneMessage, getDailyEncouragement } from './js/streak.js';
 
     // ---- Guard & Init ----
     const session = guardAuth();
@@ -244,11 +244,17 @@
       else if (isStreakAtRisk) tooltip = "Don't lose your streak!";
       else if (isActiveToday) tooltip = 'Great job! Keep it up!';
 
+      const encouragement = isActiveToday ? getDailyEncouragement(currentStreak) : null;
+      const encourageHtml = encouragement
+        ? `<div class="streak-inline-divider"></div><span class="streak-inline-encourage">${encouragement}</span>`
+        : '';
+
       streakEl.innerHTML = `
         <div class="streak-inline-flame ${flameClass}">${FLAME_SVG}</div>
         <span class="streak-inline-count">${currentStreak}</span>
         <div class="streak-inline-divider"></div>
         <div class="streak-week">${weekDotsHtml}</div>
+        ${encourageHtml}
       `;
       streakEl.title = tooltip;
       streakEl.style.display = '';

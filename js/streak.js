@@ -62,6 +62,38 @@ export function getMilestoneMessage(milestone) {
   return messages[milestone] || { title: `${milestone}-Day Streak!`, message: 'Amazing progress!' };
 }
 
+// ---- Daily encouragement ----
+
+const DAILY_MESSAGES = [
+  'Keep it up!',
+  'You got this!',
+  'Nice progress!',
+  'Stay curious!',
+  'One step closer!',
+  'Doing great!',
+  'Well done today!',
+  'Consistency wins!',
+  "You're on track!",
+  'Keep learning!',
+  'Small steps, big gains!',
+  'Stay sharp!',
+  'Great effort!',
+  'Keep pushing!',
+  'Never stop growing!',
+];
+
+/**
+ * Get a daily encouragement message based on streak count.
+ * Uses streak number to pick a message deterministically so it
+ * stays consistent for the same day but varies across days.
+ * Returns null for milestone days (those have their own celebration).
+ */
+export function getDailyEncouragement(streak) {
+  if (streak <= 0) return null;
+  if (MILESTONES.includes(streak)) return null;
+  return `Day ${streak} — ${DAILY_MESSAGES[streak % DAILY_MESSAGES.length]}`;
+}
+
 // ---- Default streak data ----
 
 function defaultStreakData() {
@@ -208,24 +240,43 @@ export async function recordActivity() {
 
 /**
  * Decrement wordsLearned for today when a word is un-marked as learned.
- * Only affects today's daily activity counter — does NOT roll back streak days.
+ * If wordsLearned drops to 0, rolls back streak data so the day no longer counts.
  * @returns {Promise<void>}
  */
 export async function removeActivity() {
   const today = getTodayDateString();
+  const yesterday = getYesterdayDateString();
   const docRef = dailyActivityRef().doc(today);
   const doc = await docRef.get();
   if (!doc.exists) return;
 
   const current = doc.data().wordsLearned || 0;
-  if (current <= 1) {
-    await docRef.update({ wordsLearned: 0, lastActionAt: firebase.firestore.FieldValue.serverTimestamp() });
-  } else {
+  if (current > 1) {
     await docRef.update({
       wordsLearned: firebase.firestore.FieldValue.increment(-1),
       lastActionAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
+    return;
   }
+
+  // wordsLearned is dropping to 0 — roll back streak if it was incremented today
+  await docRef.update({ wordsLearned: 0, lastActionAt: firebase.firestore.FieldValue.serverTimestamp() });
+
+  const mainDoc = await streakRef().get();
+  if (!mainDoc.exists || mainDoc.data().lastActiveDate !== today) return;
+
+  const data = mainDoc.data();
+  const yesterdayDoc = await dailyActivityRef().doc(yesterday).get();
+  const hadYesterday = yesterdayDoc.exists && (yesterdayDoc.data().wordsLearned || 0) > 0;
+
+  const rollback = {
+    currentStreak: hadYesterday ? Math.max((data.currentStreak || 1) - 1, 0) : 0,
+    lastActiveDate: hadYesterday ? yesterday : '',
+    totalActiveDays: Math.max((data.totalActiveDays || 1) - 1, 0),
+  };
+
+  await streakRef().update(rollback);
+  _cachedStreak = null;
 }
 
 /**

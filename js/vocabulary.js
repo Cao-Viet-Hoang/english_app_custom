@@ -7,7 +7,7 @@
 import { getDb } from './firebase.js';
 import { getUsername } from './router.js';
 import { updateWordCount, updateLearnedCount } from './topics.js';
-import { recordActivity, removeActivity } from './streak.js';
+import { recordActivity, removeActivity, getDailyEncouragement } from './streak.js';
 
 let localOrderCounter = 0;
 
@@ -157,8 +157,13 @@ export async function toggleWordLearned(topicId, wordId, learned) {
   // Track streak on positive learning actions; reverse on un-learn
   if (learned) {
     try {
-      const { milestone } = await recordActivity();
-      if (milestone) sessionStorage.setItem('streak_milestone', String(milestone));
+      const { streakData, isNewDay, milestone } = await recordActivity();
+      if (milestone) {
+        sessionStorage.setItem('streak_milestone', String(milestone));
+      } else if (isNewDay) {
+        const msg = getDailyEncouragement(streakData.currentStreak);
+        if (msg) sessionStorage.setItem('streak_daily_encourage', msg);
+      }
     } catch (err) {
       console.warn('Streak update failed:', err);
     }

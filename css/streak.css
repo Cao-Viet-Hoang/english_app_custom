@@ -66,6 +66,15 @@
   flex-shrink: 0;
 }
 
+.streak-inline-encourage {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--color-accent);
+  white-space: nowrap;
+  opacity: 0.85;
+  line-height: 1;
+}
+
 /* ---------- Mini Weekly Calendar ---------- */
 .streak-week {
   display: flex;
@@ -380,5 +389,9 @@
 
   .streak-inline-divider {
     height: 12px;
+  }
+
+  .streak-inline-encourage {
+    display: none;
   }
 }
