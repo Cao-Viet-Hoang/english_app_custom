@@ -89,13 +89,19 @@ Score each criterion from 0 to 10:
 - "overallScore": Average of the three scores, rounded to nearest integer.
 
 Also provide:
-- "correctedSentence": The corrected/improved version of the sentence. If the sentence is already perfect, return it unchanged.
+- "correctedSentence": The user's sentence with ALL errors fixed. Keep as close to the user's original wording as possible — only fix what is wrong. If the sentence is already perfect, return it unchanged.
+- "grammarErrors": An array of specific errors found. Each entry has:
+  - "original": The exact wrong phrase from the user's sentence.
+  - "corrected": The corrected version of that phrase.
+  - "explanation": A clear explanation in Vietnamese of why it is wrong and the grammar rule involved.
+  - "type": Error category — one of "grammar", "word_choice", "spelling", "punctuation", "word_order".
+  If there are no errors, return an empty array.
 - "feedback": A brief overall feedback message in Vietnamese (2-3 sentences).
 - "tips": An array of 1-3 short improvement tips in Vietnamese.
 
 IMPORTANT:
 - Return ONLY valid JSON, no markdown code blocks, no extra text.
-- All feedback and tips must be in Vietnamese for the learner.`;
+- All feedback, tips and explanations must be in Vietnamese for the learner.`;
 
   const userPrompt = `Vocabulary word: "${word.english}"
 User's sentence: "${sentence}"
@@ -107,6 +113,14 @@ Return JSON:
   "naturalnessScore": 0,
   "overallScore": 0,
   "correctedSentence": "...",
+  "grammarErrors": [
+    {
+      "original": "...",
+      "corrected": "...",
+      "explanation": "...",
+      "type": "grammar"
+    }
+  ],
   "feedback": "...",
   "tips": ["..."]
 }`;
@@ -116,7 +130,7 @@ Return JSON:
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
-    { temperature: 0.7, maxTokens: 800 },
+    { temperature: 0.7, maxTokens: 1200 },
   );
 
   return {
@@ -125,6 +139,7 @@ Return JSON:
     naturalnessScore: Number(parsed.naturalnessScore) || 0,
     overallScore: Number(parsed.overallScore) || 0,
     correctedSentence: parsed.correctedSentence || sentence,
+    grammarErrors: Array.isArray(parsed.grammarErrors) ? parsed.grammarErrors : [],
     feedback: parsed.feedback || '',
     tips: Array.isArray(parsed.tips) ? parsed.tips : [],
   };
@@ -156,13 +171,19 @@ Score each criterion from 0 to 10:
 
 Also provide:
 - "wordResults": An array with one entry per target word: { "word": string, "used": boolean, "usedCorrectly": boolean }
-- "correctedParagraph": The corrected/improved version of the paragraph.
+- "correctedParagraph": The user's paragraph with ALL errors fixed. Keep as close to the user's original wording as possible — only fix what is wrong.
+- "grammarErrors": An array of specific errors found. Each entry has:
+  - "original": The exact wrong phrase from the user's paragraph.
+  - "corrected": The corrected version of that phrase.
+  - "explanation": A clear explanation in Vietnamese of why it is wrong and the grammar rule involved.
+  - "type": Error category — one of "grammar", "word_choice", "spelling", "punctuation", "word_order".
+  If there are no errors, return an empty array.
 - "feedback": Brief overall feedback in Vietnamese (2-3 sentences).
 - "suggestions": Array of 1-3 specific improvement suggestions in Vietnamese.
 
 IMPORTANT:
 - Return ONLY valid JSON, no markdown code blocks, no extra text.
-- All feedback and suggestions must be in Vietnamese.`;
+- All feedback, suggestions and explanations must be in Vietnamese.`;
 
   const userPrompt = `Target words: ${wordList}
 User's paragraph: "${paragraph}"
@@ -175,6 +196,14 @@ Return JSON:
   "overallScore": 0,
   "wordResults": [],
   "correctedParagraph": "...",
+  "grammarErrors": [
+    {
+      "original": "...",
+      "corrected": "...",
+      "explanation": "...",
+      "type": "grammar"
+    }
+  ],
   "feedback": "...",
   "suggestions": []
 }`;
@@ -184,7 +213,7 @@ Return JSON:
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
-    { temperature: 0.7, maxTokens: 1200 },
+    { temperature: 0.7, maxTokens: 1800 },
   );
 
   return {
@@ -194,6 +223,7 @@ Return JSON:
     overallScore: Number(parsed.overallScore) || 0,
     wordResults: Array.isArray(parsed.wordResults) ? parsed.wordResults : [],
     correctedParagraph: parsed.correctedParagraph || paragraph,
+    grammarErrors: Array.isArray(parsed.grammarErrors) ? parsed.grammarErrors : [],
     feedback: parsed.feedback || '',
     suggestions: Array.isArray(parsed.suggestions) ? parsed.suggestions : [],
   };

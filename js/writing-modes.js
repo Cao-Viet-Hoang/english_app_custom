@@ -114,7 +114,7 @@ async function handleSentenceCheck(ctx) {
       ctx.handleStreakRecord();
     }
 
-    feedbackEl.innerHTML = buildSentenceFeedback(result, ctx);
+    feedbackEl.innerHTML = buildSentenceFeedback(result, sentence, ctx);
     document.getElementById('sw-container').classList.add('has-feedback');
     document.getElementById('sw-next-row').style.display = '';
 
@@ -132,7 +132,9 @@ async function handleSentenceCheck(ctx) {
   }
 }
 
-function buildSentenceFeedback(result, ctx) {
+function buildSentenceFeedback(result, userSentence, ctx) {
+  const diffHtml = buildInlineDiff(userSentence, result.correctedSentence, ctx);
+
   return `
     <div class="ai-feedback-title">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
@@ -144,10 +146,8 @@ function buildSentenceFeedback(result, ctx) {
       ${buildScoreBadge(result.naturalnessScore, 'Natural')}
       ${buildScoreBadge(result.overallScore, 'Overall')}
     </div>
-    <div class="corrected-box">
-      <div class="corrected-box-label">Corrected Sentence</div>
-      <div class="corrected-box-text">${ctx.escapeHtml(result.correctedSentence)}</div>
-    </div>
+    ${buildDiffComparisonHtml(diffHtml, 'Your Sentence', 'Corrected Sentence')}
+    ${buildErrorCardsHtml(result.grammarErrors, ctx)}
     <div class="ai-feedback-text">${ctx.escapeHtml(result.feedback)}</div>
     ${result.tips.length > 0 ? `
       <ul class="ai-tips">
@@ -261,7 +261,7 @@ async function handleParagraphCheck(ctx) {
       ctx.handleStreakRecord();
     }
 
-    feedbackEl.innerHTML = buildParagraphFeedback(result, ctx);
+    feedbackEl.innerHTML = buildParagraphFeedback(result, paragraph, ctx);
     document.getElementById('pw-container').classList.add('has-feedback');
     document.getElementById('pw-action-row').style.display = '';
   } catch (err) {
@@ -274,7 +274,9 @@ async function handleParagraphCheck(ctx) {
   }
 }
 
-function buildParagraphFeedback(result, ctx) {
+function buildParagraphFeedback(result, userParagraph, ctx) {
+  const diffHtml = buildInlineDiff(userParagraph, result.correctedParagraph, ctx);
+
   const wordCoverage = result.wordResults.map(wr => {
     const cls = wr.usedCorrectly ? 'used-correct' : wr.used ? 'used-wrong' : 'not-used';
     const icon = wr.usedCorrectly ? '&#10003;' : wr.used ? '&#9888;' : '&#10007;';
@@ -293,10 +295,8 @@ function buildParagraphFeedback(result, ctx) {
       ${buildScoreBadge(result.overallScore, 'Overall')}
     </div>
     <div class="word-coverage">${wordCoverage}</div>
-    <div class="corrected-box">
-      <div class="corrected-box-label">Improved Version</div>
-      <div class="corrected-box-text">${ctx.escapeHtml(result.correctedParagraph)}</div>
-    </div>
+    ${buildDiffComparisonHtml(diffHtml, 'Your Paragraph', 'Corrected Version')}
+    ${buildErrorCardsHtml(result.grammarErrors, ctx)}
     <div class="ai-feedback-text">${ctx.escapeHtml(result.feedback)}</div>
     ${result.suggestions.length > 0 ? `
       <ul class="ai-tips">
@@ -415,46 +415,6 @@ async function handleTranslationCheck(allWords, ctx) {
 function buildTranslationFeedback(result, userTranslation, ctx) {
   const corrected = result.correctedTranslation || result.suggestedTranslation;
   const diffHtml = buildInlineDiff(userTranslation, corrected, ctx);
-  const hasErrors = result.grammarErrors && result.grammarErrors.length > 0;
-
-  const errorTypeLabels = {
-    grammar: 'Grammar',
-    word_choice: 'Word Choice',
-    spelling: 'Spelling',
-    punctuation: 'Punctuation',
-    word_order: 'Word Order',
-  };
-
-  const errorsHtml = hasErrors ? `
-    <div class="tr-errors-section">
-      <div class="tr-errors-title">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        Error Details (${result.grammarErrors.length})
-      </div>
-      ${result.grammarErrors.map((err, i) => `
-        <div class="tr-error-card">
-          <div class="tr-error-header">
-            <span class="tr-error-num">${i + 1}</span>
-            <span class="tr-error-type tr-error-type--${ctx.escapeHtml(err.type || 'grammar')}">${errorTypeLabels[err.type] || 'Error'}</span>
-          </div>
-          <div class="tr-error-diff">
-            <div class="tr-error-wrong">
-              <span class="tr-error-icon">&#10007;</span>
-              <span>${ctx.escapeHtml(err.original || '')}</span>
-            </div>
-            <div class="tr-error-arrow">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
-            </div>
-            <div class="tr-error-right">
-              <span class="tr-error-icon">&#10003;</span>
-              <span>${ctx.escapeHtml(err.corrected || '')}</span>
-            </div>
-          </div>
-          <div class="tr-error-explanation">${ctx.escapeHtml(err.explanation || '')}</div>
-        </div>
-      `).join('')}
-    </div>
-  ` : '';
 
   return `
     <div class="ai-feedback-title">
@@ -466,27 +426,80 @@ function buildTranslationFeedback(result, userTranslation, ctx) {
       ${buildScoreBadge(result.grammarScore, 'Grammar')}
       ${buildScoreBadge(result.overallScore, 'Overall')}
     </div>
-    <div class="tr-diff-comparison">
-      <div class="tr-diff-col tr-diff-col--user">
-        <div class="tr-diff-col-label">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          Your Translation
-        </div>
-        <div class="tr-diff-col-text">${diffHtml.userHtml}</div>
-      </div>
-      <div class="tr-diff-col tr-diff-col--corrected">
-        <div class="tr-diff-col-label">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-          Corrected Version
-        </div>
-        <div class="tr-diff-col-text">${diffHtml.correctedHtml}</div>
-      </div>
-    </div>
-    ${errorsHtml}
+    ${buildDiffComparisonHtml(diffHtml, 'Your Translation', 'Corrected Version')}
+    ${buildErrorCardsHtml(result.grammarErrors, ctx)}
     <div class="ai-feedback-text">${ctx.escapeHtml(result.feedback)}</div>
     <div class="corrected-box">
       <div class="corrected-box-label">Suggested Translation</div>
       <div class="corrected-box-text">${ctx.escapeHtml(result.suggestedTranslation)}</div>
+    </div>
+  `;
+}
+
+// ============================================================
+// SHARED FEEDBACK HELPERS
+// ============================================================
+
+const ERROR_TYPE_LABELS = {
+  grammar: 'Grammar',
+  word_choice: 'Word Choice',
+  spelling: 'Spelling',
+  punctuation: 'Punctuation',
+  word_order: 'Word Order',
+};
+
+function buildDiffComparisonHtml(diffHtml, userLabel, correctedLabel) {
+  return `
+    <div class="fb-diff-comparison">
+      <div class="fb-diff-col fb-diff-col--user">
+        <div class="fb-diff-col-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          ${userLabel}
+        </div>
+        <div class="fb-diff-col-text">${diffHtml.userHtml}</div>
+      </div>
+      <div class="fb-diff-col fb-diff-col--corrected">
+        <div class="fb-diff-col-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          ${correctedLabel}
+        </div>
+        <div class="fb-diff-col-text">${diffHtml.correctedHtml}</div>
+      </div>
+    </div>
+  `;
+}
+
+function buildErrorCardsHtml(grammarErrors, ctx) {
+  if (!grammarErrors || grammarErrors.length === 0) return '';
+
+  return `
+    <div class="fb-errors-section">
+      <div class="fb-errors-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Error Details (${grammarErrors.length})
+      </div>
+      ${grammarErrors.map((err, i) => `
+        <div class="fb-error-card">
+          <div class="fb-error-header">
+            <span class="fb-error-num">${i + 1}</span>
+            <span class="fb-error-type fb-error-type--${ctx.escapeHtml(err.type || 'grammar')}">${ERROR_TYPE_LABELS[err.type] || 'Error'}</span>
+          </div>
+          <div class="fb-error-diff">
+            <div class="fb-error-wrong">
+              <span class="fb-error-icon">&#10007;</span>
+              <span>${ctx.escapeHtml(err.original || '')}</span>
+            </div>
+            <div class="fb-error-arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
+            </div>
+            <div class="fb-error-right">
+              <span class="fb-error-icon">&#10003;</span>
+              <span>${ctx.escapeHtml(err.corrected || '')}</span>
+            </div>
+          </div>
+          <div class="fb-error-explanation">${ctx.escapeHtml(err.explanation || '')}</div>
+        </div>
+      `).join('')}
     </div>
   `;
 }
@@ -522,21 +535,21 @@ function buildInlineDiff(userText, correctedText, ctx) {
     } else if (li < lcs.length && ci < corrTokens.length
                && corrTokens[ci].toLowerCase() === lcs[li].toLowerCase()) {
       // Word removed from user (exists in user but not in LCS at this point)
-      userParts.push(`<span class="tr-diff-del">${ctx.escapeHtml(userTokens[ui])}</span>`);
+      userParts.push(`<span class="fb-diff-del">${ctx.escapeHtml(userTokens[ui])}</span>`);
       ui++;
     } else if (li < lcs.length && ui < userTokens.length
                && userTokens[ui].toLowerCase() === lcs[li].toLowerCase()) {
       // Word added in corrected
-      corrParts.push(`<span class="tr-diff-add">${ctx.escapeHtml(corrTokens[ci])}</span>`);
+      corrParts.push(`<span class="fb-diff-add">${ctx.escapeHtml(corrTokens[ci])}</span>`);
       ci++;
     } else {
       // Both differ from LCS — treat as a change
       if (ui < userTokens.length) {
-        userParts.push(`<span class="tr-diff-del">${ctx.escapeHtml(userTokens[ui])}</span>`);
+        userParts.push(`<span class="fb-diff-del">${ctx.escapeHtml(userTokens[ui])}</span>`);
         ui++;
       }
       if (ci < corrTokens.length) {
-        corrParts.push(`<span class="tr-diff-add">${ctx.escapeHtml(corrTokens[ci])}</span>`);
+        corrParts.push(`<span class="fb-diff-add">${ctx.escapeHtml(corrTokens[ci])}</span>`);
         ci++;
       }
     }
