@@ -82,11 +82,13 @@ export async function generateReadingPassage(words, questionType) {
 Each question must have exactly 4 options and one correct answer.
 Format each question as: { "question": "...", "options": ["A", "B", "C", "D"], "correctIndex": 0, "explanation": "..." }
 - "correctIndex" is the 0-based index of the correct option.
-- "explanation" should be in Vietnamese, briefly explaining why the answer is correct.`
+- ALL questions and options MUST be written in English only.
+- "explanation" should be in English, briefly explaining why the answer is correct.`
     : `Generate 4-6 true/false statements about the passage.
 Each statement should be clearly true or false based on the passage content.
 Format each statement as: { "statement": "...", "isTrue": true/false, "explanation": "..." }
-- "explanation" should be in Vietnamese, briefly explaining why the statement is true or false.`;
+- ALL statements MUST be written in English only.
+- "explanation" should be in English, briefly explaining why the statement is true or false.`;
 
   const systemPrompt = `You are an English reading comprehension tutor for Vietnamese learners.
 Generate a reading passage (200-300 words) that naturally uses these vocabulary words: ${wordList}.
