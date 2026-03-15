@@ -413,6 +413,49 @@ async function handleTranslationCheck(allWords, ctx) {
 }
 
 function buildTranslationFeedback(result, userTranslation, ctx) {
+  const corrected = result.correctedTranslation || result.suggestedTranslation;
+  const diffHtml = buildInlineDiff(userTranslation, corrected, ctx);
+  const hasErrors = result.grammarErrors && result.grammarErrors.length > 0;
+
+  const errorTypeLabels = {
+    grammar: 'Grammar',
+    word_choice: 'Word Choice',
+    spelling: 'Spelling',
+    punctuation: 'Punctuation',
+    word_order: 'Word Order',
+  };
+
+  const errorsHtml = hasErrors ? `
+    <div class="tr-errors-section">
+      <div class="tr-errors-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Error Details (${result.grammarErrors.length})
+      </div>
+      ${result.grammarErrors.map((err, i) => `
+        <div class="tr-error-card">
+          <div class="tr-error-header">
+            <span class="tr-error-num">${i + 1}</span>
+            <span class="tr-error-type tr-error-type--${ctx.escapeHtml(err.type || 'grammar')}">${errorTypeLabels[err.type] || 'Error'}</span>
+          </div>
+          <div class="tr-error-diff">
+            <div class="tr-error-wrong">
+              <span class="tr-error-icon">&#10007;</span>
+              <span>${ctx.escapeHtml(err.original || '')}</span>
+            </div>
+            <div class="tr-error-arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
+            </div>
+            <div class="tr-error-right">
+              <span class="tr-error-icon">&#10003;</span>
+              <span>${ctx.escapeHtml(err.corrected || '')}</span>
+            </div>
+          </div>
+          <div class="tr-error-explanation">${ctx.escapeHtml(err.explanation || '')}</div>
+        </div>
+      `).join('')}
+    </div>
+  ` : '';
+
   return `
     <div class="ai-feedback-title">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
@@ -423,18 +466,114 @@ function buildTranslationFeedback(result, userTranslation, ctx) {
       ${buildScoreBadge(result.grammarScore, 'Grammar')}
       ${buildScoreBadge(result.overallScore, 'Overall')}
     </div>
-    <div class="translation-comparison">
-      <div class="translation-col user-col">
-        <div class="translation-col-label">Your Translation</div>
-        <div class="translation-col-text">${ctx.escapeHtml(userTranslation)}</div>
+    <div class="tr-diff-comparison">
+      <div class="tr-diff-col tr-diff-col--user">
+        <div class="tr-diff-col-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Your Translation
+        </div>
+        <div class="tr-diff-col-text">${diffHtml.userHtml}</div>
       </div>
-      <div class="translation-col suggested-col">
-        <div class="translation-col-label">Suggested Translation</div>
-        <div class="translation-col-text">${ctx.escapeHtml(result.suggestedTranslation)}</div>
+      <div class="tr-diff-col tr-diff-col--corrected">
+        <div class="tr-diff-col-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          Corrected Version
+        </div>
+        <div class="tr-diff-col-text">${diffHtml.correctedHtml}</div>
       </div>
     </div>
+    ${errorsHtml}
     <div class="ai-feedback-text">${ctx.escapeHtml(result.feedback)}</div>
+    <div class="corrected-box">
+      <div class="corrected-box-label">Suggested Translation</div>
+      <div class="corrected-box-text">${ctx.escapeHtml(result.suggestedTranslation)}</div>
+    </div>
   `;
+}
+
+/**
+ * Build inline diff between user text and corrected text.
+ * Uses word-level comparison to highlight additions, deletions and changes.
+ */
+function buildInlineDiff(userText, correctedText, ctx) {
+  const userWords = userText.split(/(\s+)/);
+  const corrWords = correctedText.split(/(\s+)/);
+
+  // Simple LCS-based diff on words
+  const lcs = buildLCS(
+    userWords.filter(w => w.trim()),
+    corrWords.filter(w => w.trim()),
+  );
+
+  const userTokens = userWords.filter(w => w.trim());
+  const corrTokens = corrWords.filter(w => w.trim());
+
+  let ui = 0, ci = 0, li = 0;
+  let userParts = [], corrParts = [];
+
+  while (ui < userTokens.length || ci < corrTokens.length) {
+    if (li < lcs.length && ui < userTokens.length && ci < corrTokens.length
+        && userTokens[ui].toLowerCase() === lcs[li].toLowerCase()
+        && corrTokens[ci].toLowerCase() === lcs[li].toLowerCase()) {
+      // Matching word
+      userParts.push(ctx.escapeHtml(userTokens[ui]));
+      corrParts.push(ctx.escapeHtml(corrTokens[ci]));
+      ui++; ci++; li++;
+    } else if (li < lcs.length && ci < corrTokens.length
+               && corrTokens[ci].toLowerCase() === lcs[li].toLowerCase()) {
+      // Word removed from user (exists in user but not in LCS at this point)
+      userParts.push(`<span class="tr-diff-del">${ctx.escapeHtml(userTokens[ui])}</span>`);
+      ui++;
+    } else if (li < lcs.length && ui < userTokens.length
+               && userTokens[ui].toLowerCase() === lcs[li].toLowerCase()) {
+      // Word added in corrected
+      corrParts.push(`<span class="tr-diff-add">${ctx.escapeHtml(corrTokens[ci])}</span>`);
+      ci++;
+    } else {
+      // Both differ from LCS — treat as a change
+      if (ui < userTokens.length) {
+        userParts.push(`<span class="tr-diff-del">${ctx.escapeHtml(userTokens[ui])}</span>`);
+        ui++;
+      }
+      if (ci < corrTokens.length) {
+        corrParts.push(`<span class="tr-diff-add">${ctx.escapeHtml(corrTokens[ci])}</span>`);
+        ci++;
+      }
+    }
+  }
+
+  return {
+    userHtml: userParts.join(' '),
+    correctedHtml: corrParts.join(' '),
+  };
+}
+
+/** Compute LCS of two string arrays (case-insensitive). */
+function buildLCS(a, b) {
+  const m = a.length, n = b.length;
+  const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      dp[i][j] = a[i - 1].toLowerCase() === b[j - 1].toLowerCase()
+        ? dp[i - 1][j - 1] + 1
+        : Math.max(dp[i - 1][j], dp[i][j - 1]);
+    }
+  }
+
+  const result = [];
+  let i = m, j = n;
+  while (i > 0 && j > 0) {
+    if (a[i - 1].toLowerCase() === b[j - 1].toLowerCase()) {
+      result.unshift(a[i - 1]);
+      i--; j--;
+    } else if (dp[i - 1][j] > dp[i][j - 1]) {
+      i--;
+    } else {
+      j--;
+    }
+  }
+  return result;
 }
 
 // ============================================================

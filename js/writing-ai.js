@@ -273,13 +273,22 @@ Score each criterion from 0 to 10:
 - "overallScore": Weighted average, rounded to nearest integer.
 
 Also provide:
-- "feedback": Brief evaluation in Vietnamese (2-3 sentences).
-- "suggestedTranslation": Your best suggested English translation.
+- "correctedTranslation": The user's translation with ALL errors fixed (grammar, word choice, spelling). Keep as close to the user's original wording as possible — only fix what is wrong.
+- "grammarErrors": An array of specific errors found. Each entry has:
+  - "original": The exact wrong phrase/sentence from the user's translation.
+  - "corrected": The corrected version of that phrase/sentence.
+  - "explanation": A clear explanation in Vietnamese of why it is wrong and the grammar rule involved.
+  - "type": Error category — one of "grammar", "word_choice", "spelling", "punctuation", "word_order".
+  If there are no errors, return an empty array.
+- "feedback": Brief overall evaluation in Vietnamese (2-3 sentences).
+- "suggestedTranslation": Your best suggested English translation (may differ from correctedTranslation — this is an ideal/natural version).
 
 IMPORTANT:
 - The user's translation does NOT need to be identical to the reference — accept valid alternatives.
+- "correctedTranslation" must be based on the user's original text with minimal changes.
+- "grammarErrors" should list ALL errors, not just grammar — include word choice, spelling, etc.
 - Return ONLY valid JSON, no markdown code blocks, no extra text.
-- Feedback must be in Vietnamese.`;
+- All explanations and feedback must be in Vietnamese.`;
 
   const userPrompt = `Vietnamese text: "${vietnameseText}"
 Reference translation: "${referenceTranslation}"
@@ -290,6 +299,15 @@ Return JSON:
   "accuracyScore": 0,
   "grammarScore": 0,
   "overallScore": 0,
+  "correctedTranslation": "...",
+  "grammarErrors": [
+    {
+      "original": "...",
+      "corrected": "...",
+      "explanation": "...",
+      "type": "grammar"
+    }
+  ],
   "feedback": "...",
   "suggestedTranslation": "..."
 }`;
@@ -299,13 +317,15 @@ Return JSON:
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
-    { temperature: 0.5, maxTokens: 800 },
+    { temperature: 0.5, maxTokens: 1500 },
   );
 
   return {
     accuracyScore: Number(parsed.accuracyScore) || 0,
     grammarScore: Number(parsed.grammarScore) || 0,
     overallScore: Number(parsed.overallScore) || 0,
+    correctedTranslation: parsed.correctedTranslation || parsed.suggestedTranslation || referenceTranslation,
+    grammarErrors: Array.isArray(parsed.grammarErrors) ? parsed.grammarErrors : [],
     feedback: parsed.feedback || '',
     suggestedTranslation: parsed.suggestedTranslation || referenceTranslation,
   };
