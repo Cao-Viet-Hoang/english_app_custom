@@ -637,8 +637,10 @@
   transition: background 0.2s;
 }
 
-.para-sentence:hover {
-  background: rgba(124, 158, 217, 0.08);
+@media (hover: hover) {
+  .para-sentence:hover {
+    background: rgba(124, 158, 217, 0.08);
+  }
 }
 
 .para-sentence.en-active {
