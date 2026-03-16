@@ -429,10 +429,11 @@ Return a JSON array:
 
   return englishWords.map((originalWord, i) => {
     const item = parsed[i] && typeof parsed[i] === 'object' ? parsed[i] : {};
+    const corrected = item.correctedWord || null;
     return {
-      english:       item.english       || originalWord || '',
+      english:       corrected || item.english || originalWord || '',
       originalWord:  originalWord,
-      correctedWord: item.correctedWord || null,
+      correctedWord: corrected,
       vietnamese:    item.vietnamese    || '',
       ipaUS:         item.ipaUS         || '',
       ipaUK:         item.ipaUK         || '',
