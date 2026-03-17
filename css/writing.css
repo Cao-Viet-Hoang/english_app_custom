@@ -332,7 +332,7 @@
 }
 
 .score-badge-label {
-  font-size: 11px;
+  font-size: var(--fs-xs);
   font-weight: 600;
   color: var(--color-text-light);
   text-transform: uppercase;
@@ -716,7 +716,7 @@
   justify-content: center;
   width: 22px;
   height: 22px;
-  font-size: 11px;
+  font-size: var(--fs-xs);
   font-weight: 700;
   background: var(--color-surface-alt);
   color: var(--color-text-light);
@@ -725,7 +725,7 @@
 }
 
 .fb-error-type {
-  font-size: 11px;
+  font-size: var(--fs-xs);
   font-weight: 600;
   padding: 2px var(--sp-2);
   border-radius: 100px;
@@ -1097,7 +1097,7 @@
   .fb-error-card { padding: var(--sp-3); }
   .fb-error-wrong,
   .fb-error-right { font-size: var(--fs-xs); padding: var(--sp-2); }
-  .fb-error-explanation { font-size: 11px; }
+  .fb-error-explanation { font-size: var(--fs-xs); }
 
   .dictation-play-btn {
     width: 80px;

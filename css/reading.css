@@ -242,12 +242,12 @@
   display: flex;
   align-items: center;
   gap: var(--sp-3);
-  padding: var(--sp-3) var(--sp-4);
+  padding: var(--sp-4) var(--sp-5);
   background: var(--color-surface);
   border: 2px solid var(--color-border);
   border-radius: var(--radius-md);
   cursor: pointer;
-  font-size: var(--fs-sm);
+  font-size: var(--fs-base);
   font-weight: 500;
   font-family: var(--font-sans);
   color: var(--color-text);
@@ -265,11 +265,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   border-radius: var(--radius-sm);
   background: var(--color-surface-alt);
-  font-size: var(--fs-xs);
+  font-size: var(--fs-sm);
   font-weight: 600;
   color: var(--color-text-light);
   flex-shrink: 0;
@@ -315,7 +315,7 @@
 
 .tf-statement-text {
   flex: 1;
-  font-size: var(--fs-sm);
+  font-size: var(--fs-base);
   color: var(--color-text);
   line-height: 1.5;
 }
@@ -451,14 +451,14 @@
   }
 
   .quiz-option {
-    padding: var(--sp-3);
-    font-size: var(--fs-xs);
+    padding: var(--sp-3) var(--sp-4);
+    font-size: var(--fs-sm);
     gap: var(--sp-2);
   }
   .quiz-option .option-key {
-    width: 22px;
-    height: 22px;
-    font-size: 11px;
+    width: 24px;
+    height: 24px;
+    font-size: var(--fs-xs);
   }
 
   .tf-statement-card {
@@ -468,7 +468,7 @@
     padding: var(--sp-3) var(--sp-4);
   }
   .tf-statement-text {
-    font-size: var(--fs-xs);
+    font-size: var(--fs-sm);
   }
   .tf-toggle { align-self: flex-end; }
   .tf-btn {
