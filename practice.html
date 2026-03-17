@@ -385,6 +385,7 @@
       <div class="speedtype-settings">
         <label for="st-time-select">Time limit:</label>
         <select id="st-time-select">
+          <option value="0">No Timer</option>
           <option value="30">30 seconds</option>
           <option value="60" selected>60 seconds</option>
           <option value="90">90 seconds</option>
@@ -393,8 +394,8 @@
       </div>
 
       <div class="stats-bar">
-        <div class="stat">Time: <strong id="st-timer">60</strong>s</div>
-        <div class="stat stat-progress">
+        <div class="stat" id="st-timer-stat">Time: <strong id="st-timer">60</strong>s</div>
+        <div class="stat stat-progress" id="st-progress-stat">
           <div class="progress-bar"><div class="progress-bar-fill" id="st-progress" style="width:100%"></div></div>
         </div>
         <div class="stat">Correct: <strong id="st-score">0</strong> / <strong id="st-total">0</strong></div>
@@ -411,6 +412,9 @@
         </div>
         <div class="speedtype-start-overlay" id="st-start-overlay">
           <button class="btn btn-primary btn-lg" id="st-btn-start">Start Typing!</button>
+        </div>
+        <div id="st-stop-wrapper" class="hidden" style="text-align:center;margin-top:var(--sp-4)">
+          <button class="btn btn-danger" id="st-btn-stop">⬛ Finish</button>
         </div>
       </div>
 
@@ -1382,18 +1386,23 @@
     // SPEED TYPING
     // ============================================================
     let stWords = [], stIndex = 0, stScore = 0, stTimer = null, stTimeLeft = 60, stTotalAttempted = 0;
+    let stNoTimer = false, stElapsedTime = 0, stElapsedTimer = null;
     const stContainer  = document.getElementById('st-container');
     const stResult     = document.getElementById('st-result');
     const stInput      = document.getElementById('st-input');
     const stVietnamese = document.getElementById('st-vietnamese');
     const stEnglishHint= document.getElementById('st-english-hint');
     const stTimerEl    = document.getElementById('st-timer');
+    const stTimerStat  = document.getElementById('st-timer-stat');
+    const stProgressStat = document.getElementById('st-progress-stat');
     const stScoreEl    = document.getElementById('st-score');
     const stTotalEl    = document.getElementById('st-total');
     const stProgressEl = document.getElementById('st-progress');
     const stStartOverlay = document.getElementById('st-start-overlay');
     const stBtnStart   = document.getElementById('st-btn-start');
     const stTimeSelect = document.getElementById('st-time-select');
+    const stStopWrapper = document.getElementById('st-stop-wrapper');
+    const stBtnStop    = document.getElementById('st-btn-stop');
 
     function initSpeedType() {
       stWords = shuffle(allWords);
@@ -1401,17 +1410,31 @@
       stScore = 0;
       stTotalAttempted = 0;
       if (stTimer) clearInterval(stTimer);
+      if (stElapsedTimer) clearInterval(stElapsedTimer);
       stTimer = null;
+      stElapsedTimer = null;
+      stElapsedTime = 0;
+      stNoTimer = parseInt(stTimeSelect.value) === 0;
       stContainer.classList.remove('hidden');
       stResult.classList.add('hidden');
       stStartOverlay.classList.remove('hidden');
+      stStopWrapper.classList.add('hidden');
       stInput.value = '';
       stInput.disabled = true;
-      stTimeLeft = parseInt(stTimeSelect.value);
-      stTimerEl.textContent = stTimeLeft;
+
+      if (stNoTimer) {
+        stTimerStat.innerHTML = 'Time: <strong id="st-timer">0</strong>s';
+        stProgressStat.style.display = 'none';
+      } else {
+        stTimeLeft = parseInt(stTimeSelect.value);
+        stTimerStat.innerHTML = 'Time: <strong id="st-timer">' + stTimeLeft + '</strong>s';
+        stProgressStat.style.display = '';
+        stProgressEl.style.width = '100%';
+      }
+
       stScoreEl.textContent = '0';
       stTotalEl.textContent = '0';
-      stProgressEl.style.width = '100%';
+      stTimerEl.style.color = '';
       showSpeedTypeWord();
     }
 
@@ -1428,15 +1451,30 @@
       stStartOverlay.classList.add('hidden');
       stInput.disabled = false;
       stInput.focus();
+
+      if (stNoTimer) {
+        // Count up mode — no time limit
+        stElapsedTime = 0;
+        stStopWrapper.classList.remove('hidden');
+        const timerRef = document.getElementById('st-timer');
+        stElapsedTimer = setInterval(() => {
+          stElapsedTime++;
+          timerRef.textContent = stElapsedTime;
+        }, 1000);
+        // Use a dummy stTimer flag so input handler works
+        stTimer = true;
+        return;
+      }
+
       const totalTime = stTimeLeft;
 
       stTimer = setInterval(() => {
         stTimeLeft--;
-        stTimerEl.textContent = stTimeLeft;
+        document.getElementById('st-timer').textContent = stTimeLeft;
         stProgressEl.style.width = Math.round((stTimeLeft / totalTime) * 100) + '%';
 
         if (stTimeLeft <= 10) {
-          stTimerEl.style.color = 'var(--color-danger)';
+          document.getElementById('st-timer').style.color = 'var(--color-danger)';
         }
 
         if (stTimeLeft <= 0) {
@@ -1446,12 +1484,23 @@
           stContainer.classList.add('hidden');
           stResult.classList.remove('hidden');
           stResult.innerHTML = buildSpeedTypeResultHtml(stScore, stTotalAttempted, totalTime);
-          stTimerEl.style.color = '';
+          document.getElementById('st-timer').style.color = '';
         }
       }, 1000);
     }
 
-    function buildSpeedTypeResultHtml(correct, total, timeLimit) {
+    function finishSpeedTypeNoTimer() {
+      if (stElapsedTimer) clearInterval(stElapsedTimer);
+      stElapsedTimer = null;
+      stTimer = null;
+      stInput.disabled = true;
+      stStopWrapper.classList.add('hidden');
+      stContainer.classList.add('hidden');
+      stResult.classList.remove('hidden');
+      stResult.innerHTML = buildSpeedTypeResultHtml(stScore, stTotalAttempted, stElapsedTime + 's (no limit)');
+    }
+
+    function buildSpeedTypeResultHtml(correct, total, timeDisplay) {
       const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
       let iconClass, iconSvg, label;
 
@@ -1469,6 +1518,8 @@
         label = 'Keep going! You\'ll get faster.';
       }
 
+      const timeStr = typeof timeDisplay === 'string' ? timeDisplay : timeDisplay + 's';
+
       return `
         <div class="result-icon ${iconClass}">${iconSvg}</div>
         <div class="result-score">${correct} words</div>
@@ -1483,7 +1534,7 @@
             <div class="lbl">Wrong</div>
           </div>
           <div class="result-detail-item">
-            <div class="num" style="color:var(--color-primary)">${timeLimit}s</div>
+            <div class="num" style="color:var(--color-primary)">${timeStr}</div>
             <div class="lbl">Time</div>
           </div>
         </div>
@@ -1498,6 +1549,7 @@
     }
 
     stBtnStart.addEventListener('click', startSpeedTypeTimer);
+    stBtnStop.addEventListener('click', finishSpeedTypeNoTimer);
 
     stInput.addEventListener('input', () => {
       if (!stTimer) return;
@@ -1518,7 +1570,7 @@
       }
     });
 
-    // Allow skip with Escape
+    // Allow skip with Escape or Tab
     stInput.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && stTimer) {
         stTotalAttempted++;
