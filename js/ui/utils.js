@@ -15,6 +15,18 @@ export function escapeHtml(str) {
 }
 
 /**
+ * Escape a string for safe use inside HTML attribute values (double-quoted).
+ * escapeHtml only escapes <, >, & — this also escapes " and '.
+ * @param {string} str
+ * @returns {string}
+ */
+export function escapeAttr(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+/**
  * Format a Firestore Timestamp or Date to a readable string.
  * @param {Object|Date} ts  Firestore Timestamp or JS Date
  * @returns {string}

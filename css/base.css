@@ -116,6 +116,7 @@ h4 { font-size: var(--fs-md); }
   border: none;
   border-radius: var(--radius-md);
   cursor: pointer;
+  user-select: none;
   transition: background var(--t-fast), box-shadow var(--t-fast), transform var(--t-fast);
   white-space: nowrap;
 }

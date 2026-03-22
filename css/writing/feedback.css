@@ -412,6 +412,13 @@
 .fb-error-save-btn.saved {
   opacity: 1;
   color: var(--color-primary);
+  animation: bookmark-pop 0.3s var(--ease-out);
+}
+
+@keyframes bookmark-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.35); }
+  100% { transform: scale(1); }
 }
 .fb-error-save-btn:disabled { cursor: default; }
 .fb-error-save-btn svg { width: 16px; height: 16px; }

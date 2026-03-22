@@ -172,32 +172,67 @@ async function refreshNotesCount() {
   } catch { /* silent */ }
 }
 
-// Delegate save-button clicks from error cards
+// SVG icons for save button states
+const BOOKMARK_OUTLINE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
+const BOOKMARK_FILLED = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
+
+// Delegate save-button clicks from error cards (toggle save/unsave)
 document.addEventListener('click', async (e) => {
   const btn = e.target.closest('.fb-error-save-btn');
-  if (!btn) return;
+  if (!btn || btn.dataset.busy === 'true') return;
 
-  const note = {
-    source: 'writing',
-    original: btn.dataset.original || '',
-    corrected: btn.dataset.corrected || '',
-    explanation: btn.dataset.explanation || '',
-    type: btn.dataset.type || 'grammar',
-    topicId: topicId,
-  };
+  btn.dataset.busy = 'true';
+  const isSaved = btn.classList.contains('saved');
 
-  btn.disabled = true;
-  try {
-    await saveNote(note);
-    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
+  if (isSaved) {
+    // --- Unsave: instantly untick, then delete from DB ---
+    const noteId = btn.dataset.noteId;
+    btn.classList.remove('saved');
+    btn.innerHTML = BOOKMARK_OUTLINE;
+    btn.title = 'Save to My Notes';
+
+    try {
+      await deleteNote(noteId);
+      delete btn.dataset.noteId;
+      showToast('Note removed', 'info');
+      refreshNotesCount();
+    } catch {
+      // Revert on failure
+      btn.classList.add('saved');
+      btn.innerHTML = BOOKMARK_FILLED;
+      btn.title = 'Saved!';
+      showToast('Failed to remove note', 'error');
+    }
+  } else {
+    // --- Save: instantly tick, then save to DB ---
     btn.classList.add('saved');
+    btn.innerHTML = BOOKMARK_FILLED;
     btn.title = 'Saved!';
-    showToast('Saved to My Notes', 'success');
-    refreshNotesCount();
-  } catch (err) {
-    btn.disabled = false;
-    showToast('Failed to save note', 'error');
+
+    const note = {
+      source: 'writing',
+      original: btn.dataset.original || '',
+      corrected: btn.dataset.corrected || '',
+      explanation: btn.dataset.explanation || '',
+      type: btn.dataset.type || 'grammar',
+      topicId: topicId,
+    };
+
+    try {
+      const noteId = await saveNote(note);
+      btn.dataset.noteId = noteId;
+      showToast('Saved to My Notes', 'success');
+      refreshNotesCount();
+    } catch {
+      // Revert on failure
+      btn.classList.remove('saved');
+      btn.innerHTML = BOOKMARK_OUTLINE;
+      btn.title = 'Save to My Notes';
+      showToast('Failed to save note', 'error');
+    }
   }
+
+  delete btn.dataset.busy;
 });
 
 // Notes modal
@@ -216,7 +251,6 @@ async function renderNotesModal() {
     if (_notesCache.length === 0) {
       body.innerHTML = `
         <div class="notes-empty">
-          <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--color-border)" stroke-width="1.5"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
           <p>No saved notes yet.</p>
           <p class="notes-empty-hint">Click the bookmark icon on error cards to save them here.</p>
         </div>`;

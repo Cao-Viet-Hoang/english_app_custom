@@ -5,7 +5,7 @@
    inline diff between user text and corrected text.
    ============================================================ */
 
-import { escapeHtml } from '../ui/utils.js';
+import { escapeHtml, escapeAttr } from '../ui/utils.js';
 
 // ----------------------------------------------------------------
 // Constants
@@ -128,10 +128,10 @@ export function buildErrorCardsHtml(grammarErrors) {
             <span class="fb-error-num">${i + 1}</span>
             <span class="fb-error-type fb-error-type--${escapeHtml(err.type || 'grammar')}">${ERROR_TYPE_LABELS[err.type] || 'Error'}</span>
             <button class="fb-error-save-btn" title="Save to My Notes"
-              data-original="${escapeHtml(err.original || '')}"
-              data-corrected="${escapeHtml(err.corrected || '')}"
-              data-explanation="${escapeHtml(err.explanation || '')}"
-              data-type="${escapeHtml(err.type || 'grammar')}">
+              data-original="${escapeAttr(err.original || '')}"
+              data-corrected="${escapeAttr(err.corrected || '')}"
+              data-explanation="${escapeAttr(err.explanation || '')}"
+              data-type="${escapeAttr(err.type || 'grammar')}">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
             </button>
           </div>
