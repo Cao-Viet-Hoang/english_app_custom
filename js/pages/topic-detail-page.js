@@ -189,13 +189,16 @@ function openPracticeSelectModal() {
     showToast('Add at least 4 vocabulary words to start practicing.', 'warning');
     return;
   }
-  psListEl.innerHTML = allWords.map(w => `
+  const hasLearned = allWords.some(w => w.learned);
+  psListEl.innerHTML = allWords.map(w => {
+    const isChecked = hasLearned ? !!w.learned : true;
+    return `
     <label class="ws-item">
-      <input type="checkbox" value="${w.id}" checked />
+      <input type="checkbox" value="${w.id}"${isChecked ? ' checked' : ''} />
       <span class="ws-word">${escapeHtml(w.english)}</span>
       <span class="ws-word-vi">${escapeHtml(w.vietnamese)}</span>
-    </label>
-  `).join('');
+    </label>`;
+  }).join('');
   updatePracticeSelectCounter();
   showModal(modalPracticeSelect);
 }
@@ -240,13 +243,16 @@ function openWritingSelectModal() {
     showToast('Add at least 1 vocabulary word to start writing practice.', 'warning');
     return;
   }
-  wrsListEl.innerHTML = allWords.map(w => `
+  const hasLearned = allWords.some(w => w.learned);
+  wrsListEl.innerHTML = allWords.map(w => {
+    const isChecked = hasLearned ? !!w.learned : true;
+    return `
     <label class="ws-item">
-      <input type="checkbox" value="${w.id}" checked />
+      <input type="checkbox" value="${w.id}"${isChecked ? ' checked' : ''} />
       <span class="ws-word">${escapeHtml(w.english)}</span>
       <span class="ws-word-vi">${escapeHtml(w.vietnamese)}</span>
-    </label>
-  `).join('');
+    </label>`;
+  }).join('');
   updateWritingSelectCounter();
   showModal(modalWritingSelect);
 }
@@ -291,13 +297,16 @@ function openReadingSelectModal() {
     showToast('Add at least 4 vocabulary words to start reading practice.', 'warning');
     return;
   }
-  rdsListEl.innerHTML = allWords.map(w => `
+  const hasLearned = allWords.some(w => w.learned);
+  rdsListEl.innerHTML = allWords.map(w => {
+    const isChecked = hasLearned ? !!w.learned : true;
+    return `
     <label class="ws-item">
-      <input type="checkbox" value="${w.id}" checked />
+      <input type="checkbox" value="${w.id}"${isChecked ? ' checked' : ''} />
       <span class="ws-word">${escapeHtml(w.english)}</span>
       <span class="ws-word-vi">${escapeHtml(w.vietnamese)}</span>
-    </label>
-  `).join('');
+    </label>`;
+  }).join('');
   updateReadingSelectCounter();
   showModal(modalReadingSelect);
 }
