@@ -14,10 +14,12 @@ const BULK_WORD_BATCH_SIZE = 6;
  *
  * Returns both the English paragraph and its Vietnamese translation.
  *
- * @param {string[]} englishWords  Array of English words to include
+ * @param {Array<{ word: string, wordType: string }>} wordObjects  Vocabulary words with their types
+ * @param {string} [customInstruction] Optional extra instruction for desired meaning/context
+ * @param {string} [topicName] Optional topic name for contextual paragraph generation
  * @returns {Promise<{ english: string, vietnamese: string }>}
  */
-export async function generateParagraph(englishWords) {
+export async function generateParagraph(wordObjects, customInstruction = '', topicName = '') {
   const session = getSession();
   if (!session || !session.azureOpenAI) {
     throw new Error('Azure OpenAI config not found. Please log in again.');
@@ -31,21 +33,32 @@ export async function generateParagraph(englishWords) {
   const version = apiVersion || '2024-08-01-preview';
   const url = `${baseUrl}/openai/deployments/${deploymentName}/chat/completions?api-version=${version}`;
 
-  const wordList = englishWords.join(', ');
+  const wordList = wordObjects.map(w => `${w.word} (${w.wordType})`).join(', ');
+  const trimmedInstruction = (customInstruction || '').trim();
+  const targetSentences = Math.min(Math.max(3, Math.ceil(wordObjects.length * 1.5)), 12);
 
-  const systemPrompt = `You are an English language tutor. 
-Your task is to write a coherent paragraph using the provided vocabulary words. 
-The paragraph should be natural, educational, and easy to understand for English learners.
-Then provide the Vietnamese translation of the entire paragraph.
+  const topicContext = topicName
+    ? `\nThis paragraph is for a vocabulary topic called "${topicName}". Use a scenario or context related to this topic if it represents a clear subject area (e.g. "Business English", "Travel", "Medical Terms"). If the topic name is vague or generic, ignore it.`
+    : '';
 
-IMPORTANT: 
-- Use ALL of the given words in the English paragraph.
-- The paragraph should tell a small story or describe a situation.
-- Adjust the number of sentences based on the number of vocabulary words provided: roughly 1-2 sentences per word, but keep the total between 3 and 15 sentences maximum.
-- ONLY the provided vocabulary words may be advanced or unfamiliar. All other words in the paragraph must be extremely common, basic English (A1-A2 level) so that learners can focus on the target vocabulary without being overwhelmed by additional unknown words.
+  const systemPrompt = `You are an English language tutor helping Vietnamese learners.
+Write a coherent paragraph using the provided vocabulary words.${topicContext}
+
+HARD RULES (never break these):
+- Use ALL of the given vocabulary words in the English paragraph.
+- All non-target words must use extremely basic English (A1-A2 level) so learners can focus on the target vocabulary.
 - Keep sentence structure simple and clear.
 - Return ONLY valid JSON with exactly two fields: "english" and "vietnamese".
-- Do NOT wrap the JSON in markdown code blocks.`;
+- Do NOT wrap the JSON in markdown code blocks.
+
+SOFT GUIDELINES (follow unless the user's custom instruction overrides):
+- Tell a small story or describe a real-life situation.
+- Target approximately ${targetSentences} sentences total.
+${trimmedInstruction ? `
+USER'S CUSTOM INSTRUCTION (follow closely; overrides soft guidelines):
+---
+${trimmedInstruction}
+---` : ''}`;
 
   const userPrompt = `Write a paragraph using these vocabulary words: ${wordList}
 

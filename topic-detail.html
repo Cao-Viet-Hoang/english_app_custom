@@ -379,6 +379,16 @@
             <button type="button" class="btn btn-ghost btn-sm" id="ws-deselect-all">Deselect All</button>
           </div>
         </div>
+        <div class="ws-custom-wrap">
+          <label class="form-label" for="ws-custom-instruction">Custom Meaning / Context (Optional)</label>
+          <textarea
+            class="form-textarea ws-custom-textarea"
+            id="ws-custom-instruction"
+            rows="3"
+            placeholder="e.g. Write about a student preparing for an important exam and becoming more confident."
+          ></textarea>
+          <p class="ws-custom-hint">Use this field if you want the paragraph to follow a specific meaning, situation, or tone.</p>
+        </div>
         <div class="ws-list" id="ws-list"></div>
       </div>
       <div class="modal-footer">
@@ -676,6 +686,7 @@
     const wsBtnGenerate    = document.getElementById('ws-btn-generate');
     const wsSelectAll      = document.getElementById('ws-select-all');
     const wsDeselectAll    = document.getElementById('ws-deselect-all');
+    const wsCustomInstruction = document.getElementById('ws-custom-instruction');
 
     function openWordSelectModal() {
       if (allWords.length === 0) {
@@ -689,6 +700,7 @@
           <span class="ws-word-vi">${escapeHtml(w.vietnamese)}</span>
         </label>
       `).join('');
+      wsCustomInstruction.value = '';
       updateWordSelectCounter();
       showModal(modalWordSelect);
     }
@@ -2187,19 +2199,26 @@
     wsBtnGenerate.addEventListener('click', async () => {
       const selectedWords = getSelectedWords();
       if (selectedWords.length === 0) return;
+      const customInstruction = (wsCustomInstruction.value || '').trim();
+
+      const selectedWordObjects = selectedWords.map(w => {
+        const found = allWords.find(a => a.english === w);
+        return { word: w, wordType: found?.wordType || 'other' };
+      });
 
       closeModal(modalWordSelect);
       btnGenerateAI.disabled = true;
       aiGeneratingEl.classList.remove('hidden');
 
       try {
-        const result = await generateParagraph(selectedWords);
+        const result = await generateParagraph(selectedWordObjects, customInstruction, topicName);
 
         // Save to Firestore with usedWords
         await saveParagraph(topicId, {
           englishText:    result.english,
           vietnameseText: result.vietnamese,
           usedWords:      selectedWords,
+          customInstruction,
         });
 
         showToast('Paragraph generated and saved!', 'success');

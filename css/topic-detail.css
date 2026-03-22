@@ -772,6 +772,22 @@
   background: var(--color-surface);
 }
 
+.ws-custom-wrap {
+  margin-bottom: var(--sp-3);
+}
+
+.ws-custom-textarea {
+  min-height: 84px;
+  resize: vertical;
+}
+
+.ws-custom-hint {
+  margin-top: var(--sp-1);
+  margin-bottom: 0;
+  font-size: var(--fs-xs);
+  color: var(--color-text-light);
+}
+
 .ws-item {
   display: flex;
   align-items: center;

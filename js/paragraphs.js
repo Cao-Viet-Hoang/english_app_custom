@@ -40,7 +40,7 @@ export async function loadParagraphs(topicId) {
 /**
  * Save a new paragraph.
  * @param {string} topicId
- * @param {{ englishText: string, vietnameseText: string, usedWords?: string[] }} data
+ * @param {{ englishText: string, vietnameseText: string, usedWords?: string[], customInstruction?: string }} data
  * @returns {Promise<string>}  The new paragraph ID
  */
 export async function saveParagraph(topicId, data) {
@@ -51,6 +51,9 @@ export async function saveParagraph(topicId, data) {
   };
   if (Array.isArray(data.usedWords)) {
     doc.usedWords = data.usedWords;
+  }
+  if ((data.customInstruction || '').trim()) {
+    doc.customInstruction = data.customInstruction.trim();
   }
   const docRef = await paragraphsRef(topicId).add(doc);
   return docRef.id;
