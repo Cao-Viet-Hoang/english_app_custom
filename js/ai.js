@@ -126,9 +126,11 @@ Return your response as JSON:
  * Returns { vietnamese, ipaUS, ipaUK, wordType, description }
  *
  * @param {string} englishWord  The English word to look up
+ * @param {string} [topicName]  Optional topic name for domain context
+ * @param {{ wordType?: string, vietnamese?: string }} [hints]  Optional user-provided hints to disambiguate meaning
  * @returns {Promise<{ vietnamese: string, ipaUS: string, ipaUK: string, wordType: string, description: string }>}
  */
-export async function generateWordInfo(englishWord, topicName) {
+export async function generateWordInfo(englishWord, topicName, hints = {}) {
   const session = getSession();
   if (!session || !session.azureOpenAI) {
     throw new Error('Azure OpenAI config not found. Please log in again.');
@@ -143,6 +145,12 @@ export async function generateWordInfo(englishWord, topicName) {
     ? `\nThis word is being added to a vocabulary topic called "${topicName}". First, evaluate whether this topic name represents a genuine vocabulary domain or category (e.g. "Business English", "Medical Terms", "Travel", "Phrasal Verbs"). If the topic name appears to be a placeholder, random characters, or too vague to indicate a specific vocabulary domain (e.g. "abc", "test", "my topic", single letters, numbers), ignore it and provide the most common/general meaning instead. Only use the topic context to choose the relevant meaning if the topic name clearly indicates a real subject area.`
     : '';
 
+  const hintWordType = hints.wordType && VALID_WORD_TYPES.includes(hints.wordType) ? hints.wordType : '';
+  const hintVietnamese = (hints.vietnamese || '').trim();
+  const hintsContext = (hintWordType || hintVietnamese)
+    ? `\nThe user has provided the following hints to identify the correct meaning — treat these as strong signals:${hintWordType ? `\n- Intended word type: ${hintWordType}` : ''}${hintVietnamese ? `\n- Intended Vietnamese meaning (approximate): "${hintVietnamese}"` : ''}`
+    : '';
+
   const systemPrompt = `You are an English-Vietnamese dictionary assistant.
 Given an English word or phrase, return a JSON object with these fields:
 - "correctedWord": if the input word is misspelled, provide the correct English spelling here; if spelling is correct, set to null
@@ -151,7 +159,7 @@ Given an English word or phrase, return a JSON object with these fields:
 - "ipaUK": the IPA pronunciation for British English (e.g. /əˈkʌm.plɪʃ/)
 - "wordType": one of exactly: noun, verb, adj, adv, phrase, other
 - "description": a brief Vietnamese description or usage note (1-2 short sentences)
-${topicContext}
+${topicContext}${hintsContext}
 IMPORTANT:
 - If the input word appears to be misspelled (e.g. "acomplish", "beutiful"), detect the most likely intended English word, provide all field values for that corrected word, and set "correctedWord" to the corrected spelling.
 - If the spelling is correct, set "correctedWord" to null.

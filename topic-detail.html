@@ -897,7 +897,10 @@
         Generating…
       `;
       try {
-        const info = await generateWordInfo(word, topicName);
+        const info = await generateWordInfo(word, topicName, {
+          wordType:   inputWordType.value,
+          vietnamese: inputVietnamese.value.trim(),
+        });
         inputVietnamese.value  = info.vietnamese;
         inputIpaUS.value       = info.ipaUS;
         inputIpaUK.value       = info.ipaUK;
