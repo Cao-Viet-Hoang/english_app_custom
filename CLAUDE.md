@@ -14,53 +14,124 @@ Users provide their own Firebase + Azure OpenAI credentials via JSON — no sign
 ## File Structure
 
 ```
-├── index.html              # Login page (JSON credentials input)
-├── topics.html             # Topics hub (grid of topics)
-├── topic-detail.html       # Topic detail (word list, add/edit/delete)
-├── practice.html           # Practice (7 interactive modes)
-├── reading.html            # Reading (2 AI modes)
-├── writing.html            # Writing (4 AI modes)
+├── index.html                          # Login page (JSON credentials input)
+├── topics.html                         # Topics hub (grid of topics)
+├── topic-detail.html                   # Topic detail (word list, add/edit/delete)
+├── practice.html                       # Practice (7 interactive modes)
+├── reading.html                        # Reading (2 AI modes)
+├── writing.html                        # Writing (4 AI modes)
+│
 ├── css/
-│   ├── base.css            # CSS vars, resets, shared components (modals, toasts, buttons)
-│   ├── login.css           # Login page
-│   ├── topics.css          # Topics grid
-│   ├── topic-detail.css    # Word list, forms
-│   ├── practice.css        # Practice modes
-│   ├── reading.css         # Reading page
-│   ├── writing.css         # Writing page
-│   └── streak.css          # Streak dashboard, heatmap
+│   ├── base.css                        # CSS vars, resets, shared components
+│   ├── login.css                       # Login page
+│   ├── topics.css                      # Topics grid
+│   ├── streak.css                      # Streak dashboard, heatmap
+│   ├── chat.css                        # Chat widget
+│   ├── reading.css                     # Reading page
+│   ├── topic-detail/                   # Topic detail page
+│   │   ├── layout.css                  # Breadcrumb, header, learned progress
+│   │   ├── vocabulary.css              # Vocab table, swipe-delete, learned toggle
+│   │   ├── forms.css                   # Word form modal, bulk add, word selection
+│   │   ├── paragraphs.css              # Paragraph cards, sentence interaction, badges
+│   │   └── insights.css                # AI insights panel, tags, examples
+│   ├── practice/                       # Practice page
+│   │   ├── layout.css                  # Mode selector, stats bar, empty state
+│   │   ├── flashcard.css
+│   │   ├── quiz.css
+│   │   ├── matching.css
+│   │   ├── listening.css
+│   │   ├── fill-blank.css
+│   │   ├── speed-type.css
+│   │   ├── unscramble.css
+│   │   └── results.css                 # Shared result overlay
+│   └── writing/                        # Writing page
+│       ├── layout.css                  # Mode selector, stats, result, AI loading
+│       ├── feedback.css                # Score badges, error cards, notes modal
+│       ├── sentence.css
+│       ├── paragraph.css
+│       ├── translation.css
+│       └── dictation.css
+│
 └── js/
-    ├── config.js            # DEV_MODE flag, test credentials
-    ├── firebase.js          # Firebase init, Firestore CRUD helpers, collection refs, notes CRUD
-    ├── auth.js              # Login/logout, session management, guardAuth()
-    ├── ai.js                # Azure OpenAI: word info, paragraphs, insights
-    ├── reading-ai.js        # AI for reading modes (passage + questions)
-    ├── writing-ai.js        # AI for writing modes (evaluation, dictation)
-    ├── topics.js            # Topics CRUD, word management, bulk operations
-    ├── vocabulary.js        # Word add/edit/delete, AI fill, duplicate detection
-    ├── paragraphs.js        # Paragraph generation and management
-    ├── ui.js                # Modals, toasts, escapeHtml(), loading states
-    ├── router.js            # Query param routing, page init dispatch
-    ├── streak.js            # Daily streak tracking, milestones, heatmap
-    ├── reading.js           # Reading page logic, mode switching
-    ├── reading-modes.js     # Comprehension & True/False mode implementations
-    ├── writing.js           # Writing page logic, mode switching
-    └── writing-modes.js     # Sentence, Paragraph, Translation, Dictation modes
+    ├── core/                           # Foundation — no business logic
+    │   ├── config.js                   # DEV_MODE flag, test credentials
+    │   ├── router.js                   # Query param routing, guardAuth(), navigateTo()
+    │   ├── firebase.js                 # Firebase init, Firestore CRUD, collection refs
+    │   └── ai-client.js               # Shared Azure OpenAI HTTP client
+    │
+    ├── ui/                             # UI utilities (split from old ui.js)
+    │   ├── toast.js                    # showToast()
+    │   ├── modal.js                    # showModal(), closeModal(), setupModalClose()
+    │   ├── confirm.js                  # confirmDialog(), confirmDialogHtml()
+    │   ├── milestone.js                # showMilestoneModal()
+    │   ├── utils.js                    # escapeHtml(), formatDate()
+    │   └── index.js                    # Barrel re-export of all ui/*
+    │
+    ├── shared/                         # Shared utilities (deduplicated)
+    │   ├── page-init.js                # initProtectedPage() — auth, navbar, streak
+    │   ├── shuffle.js                  # Fisher-Yates shuffle
+    │   ├── tts.js                      # speakText() — Web Speech API
+    │   ├── result-builder.js           # buildResultHtml() — shared result screen
+    │   └── streak-handler.js           # handleStreakRecord() — milestone/encouragement
+    │
+    ├── features/                       # Business logic — data layer
+    │   ├── auth.js                     # Login/logout, session management
+    │   ├── topics.js                   # Topics CRUD, word management
+    │   ├── vocabulary.js               # Word add/edit/delete, AI fill, duplicates
+    │   ├── paragraphs.js               # Paragraph generation and management
+    │   └── streak.js                   # Daily streak tracking, milestones, heatmap
+    │
+    ├── ai/                             # AI integration layer
+    │   ├── word-ai.js                  # Word info, bulk info, insights, paragraph gen
+    │   ├── reading-ai.js               # Reading passage generation
+    │   ├── writing-ai.js               # Writing evaluators, dictation
+    │   ├── chat-ai.js                  # Chat streaming + 2-layer cache
+    │   └── feedback-builder.js         # Score badges, error cards, diff HTML builders
+    │
+    ├── chat/                           # Chat widget (split from old chat-ui.js)
+    │   ├── chat-state.js               # Shared state, DOM refs, suggestions data
+    │   ├── chat-renderer.js            # Markdown rendering, messages, typing indicator
+    │   ├── chat-input.js               # Send flow, auto-resize, clear conversation
+    │   └── chat-ui.js                  # Widget builder, event wiring, initChatWidget()
+    │
+    └── pages/                          # Page controllers
+        ├── topics-page.js              # Topics grid page
+        ├── topic-detail-page.js        # Topic detail page (vocab, paragraphs, insights)
+        ├── practice-page.js            # Practice page (7 modes)
+        ├── reading-page.js             # Reading page controller
+        ├── writing-page.js             # Writing page controller
+        ├── reading-modes/
+        │   ├── comprehension.js
+        │   └── truefalse.js
+        └── writing-modes/
+            ├── sentence.js
+            ├── paragraph.js
+            ├── translation.js
+            └── dictation.js
 ```
+
+## Folder Conventions
+
+| Folder | Purpose | Rules |
+|--------|---------|-------|
+| `core/` | Foundation modules | No business logic, no UI |
+| `ui/` | UI utilities | Import via `ui/index.js` barrel |
+| `shared/` | Deduplicated helpers | Used across 2+ pages |
+| `features/` | Data/business logic | Firestore CRUD, auth, streak |
+| `ai/` | AI integration | Azure OpenAI calls, prompt builders |
+| `chat/` | Chat widget | State, renderer, input, orchestrator |
+| `pages/` | Page controllers | One per HTML page, import from other folders |
 
 ## Module Dependency Graph
 
 ```
-auth.js ← firebase.js, config.js, ui.js
-topics.js ← firebase.js, auth.js, vocabulary.js, paragraphs.js, ui.js, streak.js
-vocabulary.js ← firebase.js, ai.js, ui.js
-paragraphs.js ← firebase.js, ai.js, ui.js
-reading.js ← auth.js, firebase.js, reading-modes.js, ui.js
-reading-modes.js ← reading-ai.js, ui.js
-writing.js ← auth.js, firebase.js, writing-modes.js, ui.js
-writing-modes.js ← writing-ai.js, ui.js
-router.js ← (imports page init functions)
-streak.js ← firebase.js, ui.js
+pages/* ← core/router, core/firebase, features/*, ai/*, ui/index, shared/*, chat/chat-ui
+features/* ← core/firebase, ui/index
+ai/* ← core/ai-client
+chat/* ← chat/chat-state, ai/chat-ai, ui/index
+shared/* ← features/streak, ui/index
+ui/index ← ui/toast, ui/modal, ui/confirm, ui/milestone, ui/utils
+core/ai-client ← core/router (session)
 ```
 
 ## Firestore Schema
@@ -92,7 +163,7 @@ users/{username}/
 
 ## AI Integration
 
-All AI calls use Azure OpenAI Chat Completions REST API.
+All AI calls use Azure OpenAI Chat Completions REST API via `js/core/ai-client.js`.
 
 ### API pattern
 
@@ -104,18 +175,18 @@ Body: { messages, temperature, max_tokens, response_format: { type: "json_object
 
 ### AI functions
 
-| Function                         | File          | Purpose                                                     |
-| -------------------------------- | ------------- | ----------------------------------------------------------- |
-| `generateWordInfo()`             | ai.js         | Auto-fill word details (vietnamese, IPA, type, description) |
-| `generateBulkWordInfo()`         | ai.js         | Same, batched for multiple words (max ~6)                   |
-| `generateParagraph()`            | ai.js         | Create paragraph from vocabulary words                      |
-| `generateWordInsights()`         | ai.js         | Synonyms, antonyms, collocations, examples                  |
-| `generateReadingPassage()`       | reading-ai.js | Passage + MCQ or T/F questions                              |
-| `evaluateSentence()`             | writing-ai.js | Score grammar/usage/naturalness                             |
-| `evaluateParagraph()`            | writing-ai.js | Score grammar/coherence                                     |
-| `generateTranslationChallenge()` | writing-ai.js | Vietnamese→English exercise                                 |
-| `evaluateTranslation()`          | writing-ai.js | Evaluate translation accuracy                               |
-| `generateDictationSentence()`    | writing-ai.js | Create listening exercises                                  |
+| Function                         | File              | Purpose                                                     |
+| -------------------------------- | ----------------- | ----------------------------------------------------------- |
+| `generateWordInfo()`             | ai/word-ai.js     | Auto-fill word details (vietnamese, IPA, type, description) |
+| `generateBulkWordInfo()`         | ai/word-ai.js     | Same, batched for multiple words (max ~6)                   |
+| `generateParagraph()`            | ai/word-ai.js     | Create paragraph from vocabulary words                      |
+| `generateWordInsights()`         | ai/word-ai.js     | Synonyms, antonyms, collocations, examples                  |
+| `generateReadingPassage()`       | ai/reading-ai.js  | Passage + MCQ or T/F questions                              |
+| `evaluateSentence()`             | ai/writing-ai.js  | Score grammar/usage/naturalness                             |
+| `evaluateParagraph()`            | ai/writing-ai.js  | Score grammar/coherence                                     |
+| `generateTranslationChallenge()` | ai/writing-ai.js  | Vietnamese→English exercise                                 |
+| `evaluateTranslation()`          | ai/writing-ai.js  | Evaluate translation accuracy                               |
+| `generateDictationSentence()`    | ai/writing-ai.js  | Create listening exercises                                  |
 
 ### AI rules
 
@@ -145,7 +216,7 @@ Body: { messages, temperature, max_tokens, response_format: { type: "json_object
 
 - ES modules with `import`/`export`
 - `async/await` + try-catch for all async ops
-- `escapeHtml()` from `ui.js` on ALL user/AI content before DOM insertion (XSS)
+- `escapeHtml()` from `ui/index.js` on ALL user/AI content before DOM insertion (XSS)
 - CSS variables for theming (`--primary`, `--sp-1` to `--sp-8`) — never hardcode
 - Modals: destroy and rebuild on each open
 - Toast notifications: `showToast(message, 'success'|'error'|'info')`
@@ -155,15 +226,15 @@ Body: { messages, temperature, max_tokens, response_format: { type: "json_object
 
 ## Common Tasks
 
-| Task              | Files to edit                                                              |
-| ----------------- | -------------------------------------------------------------------------- |
-| New practice mode | `practice.html`, `js/router.js`, `css/practice.css`                        |
-| New writing mode  | `js/writing-modes.js`, `js/writing.js`, `writing.html`, `js/writing-ai.js` |
-| New reading mode  | `js/reading-modes.js`, `js/reading.js`, `reading.html`, `js/reading-ai.js` |
-| New AI feature    | `js/ai.js` or `js/reading-ai.js` or `js/writing-ai.js`                     |
-| Change UI shared  | `js/ui.js`, `css/base.css`                                                 |
-| Change auth flow  | `js/auth.js`, `index.html`                                                 |
-| Change DB schema  | `js/firebase.js` + form + display logic                                    |
+| Task              | Files to edit                                                                        |
+| ----------------- | ------------------------------------------------------------------------------------ |
+| New practice mode | `practice.html`, `js/pages/practice-page.js`, `css/practice/`                        |
+| New writing mode  | `js/pages/writing-modes/`, `js/pages/writing-page.js`, `writing.html`, `js/ai/writing-ai.js` |
+| New reading mode  | `js/pages/reading-modes/`, `js/pages/reading-page.js`, `reading.html`, `js/ai/reading-ai.js` |
+| New AI feature    | `js/ai/word-ai.js` or `js/ai/reading-ai.js` or `js/ai/writing-ai.js`                |
+| Change UI shared  | `js/ui/` (toast/modal/confirm/utils), `css/base.css`                                 |
+| Change auth flow  | `js/features/auth.js`, `js/core/router.js`, `index.html`                             |
+| Change DB schema  | `js/core/firebase.js` + form + display logic                                         |
 
 ## Keyboard Shortcuts
 

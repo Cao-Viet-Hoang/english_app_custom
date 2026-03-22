@@ -1,0 +1,269 @@
+/* ============================================================
+   PRACTICE — Unscramble Mode
+   ============================================================ */
+
+.unscramble-container {
+  max-width: 620px;
+  margin: 0 auto;
+}
+
+.unscramble-card {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 2px solid var(--color-border);
+  box-shadow: var(--shadow-md);
+  padding: var(--sp-6) var(--sp-6) var(--sp-5);
+  text-align: center;
+}
+
+/* -- Top hint row -- */
+.us-hint-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-4);
+}
+
+.us-hint-icon {
+  color: var(--color-primary);
+  display: flex;
+}
+
+.unscramble-label {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-text-light);
+}
+
+/* -- Meaning section -- */
+.us-meaning-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+}
+
+.us-meaning-badge {
+  display: inline-block;
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  background: linear-gradient(135deg, #eef2ff 0%, #f5f0ff 100%);
+  padding: var(--sp-2) var(--sp-5);
+  border-radius: 100px;
+  border: 1px solid rgba(124, 158, 217, 0.2);
+}
+
+.us-word-type {
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  padding: 2px var(--sp-3);
+  border-radius: 100px;
+  background: var(--color-surface-alt);
+  color: var(--color-text-light);
+  border: 1px solid var(--color-border);
+}
+
+/* -- Divider -- */
+.us-divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: 0 var(--sp-4) var(--sp-4);
+}
+
+/* -- Zone labels -- */
+.us-zone-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-1);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-light);
+  margin-bottom: var(--sp-2);
+  opacity: 0.7;
+}
+
+/* -- Drop zone -- */
+.unscramble-drop-zone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 68px;
+  padding: var(--sp-3) var(--sp-4);
+  margin-bottom: var(--sp-4);
+  border: 2px dashed var(--color-primary-light);
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, #fafbff 0%, #f8f9fc 100%);
+  transition: border-color var(--t-fast), background var(--t-fast);
+}
+
+.unscramble-drop-zone.us-correct-highlight {
+  border-color: var(--color-success);
+  background: #e8f8ef;
+}
+
+.unscramble-drop-zone.us-wrong-highlight {
+  border-color: var(--color-danger);
+  background: #fef0f0;
+}
+
+.us-slot {
+  width: 44px;
+  height: 50px;
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.6);
+  transition: border-color var(--t-fast), background var(--t-fast);
+}
+
+.us-slot.drag-over {
+  border-color: var(--color-primary);
+  background: #e8efff;
+}
+
+.us-slot.filled {
+  border-color: transparent;
+  background: transparent;
+}
+
+.us-space-slot {
+  width: 20px;
+  border: none;
+  background: transparent;
+  position: relative;
+}
+
+.us-space-slot::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  left: 2px;
+  right: 2px;
+  height: 2px;
+  background: var(--color-border);
+  border-radius: 1px;
+}
+
+/* -- Source tiles area -- */
+.unscramble-source {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 60px;
+  padding: var(--sp-3) var(--sp-4);
+  margin-bottom: var(--sp-4);
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+}
+
+.us-tile {
+  width: 44px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  font-family: var(--font-mono);
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+  border: 2px solid var(--color-primary-dark);
+  border-radius: var(--radius-sm);
+  cursor: grab;
+  user-select: none;
+  transition: transform var(--t-fast), box-shadow var(--t-fast), opacity var(--t-fast);
+}
+
+.us-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.us-tile:active {
+  cursor: grabbing;
+}
+
+.us-tile.dragging {
+  opacity: 0.4;
+}
+
+/* -- Feedback banner -- */
+.unscramble-feedback {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--sp-4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+}
+
+.unscramble-feedback.us-correct {
+  color: var(--color-success);
+  background: #e8f8ef;
+  border: 1px solid rgba(122, 172, 141, 0.3);
+}
+
+.unscramble-feedback.us-wrong {
+  color: var(--color-danger);
+  background: #fef0f0;
+  border: 1px solid rgba(214, 113, 113, 0.3);
+}
+
+/* -- Actions -- */
+.unscramble-actions {
+  display: flex;
+  gap: var(--sp-3);
+  justify-content: center;
+}
+
+.unscramble-actions .btn {
+  gap: var(--sp-2);
+  min-width: 120px;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 600px) {
+  .us-slot, .us-tile {
+    width: 34px;
+    height: 40px;
+    font-size: var(--fs-base);
+  }
+
+  .us-meaning-badge {
+    font-size: var(--fs-base);
+    padding: var(--sp-2) var(--sp-4);
+  }
+
+  .unscramble-card {
+    padding: var(--sp-4);
+  }
+
+  .unscramble-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .unscramble-actions .btn {
+    min-width: 0;
+    width: 100%;
+    max-width: 280px;
+  }
+}

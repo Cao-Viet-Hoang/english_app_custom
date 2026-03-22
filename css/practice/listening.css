@@ -1,0 +1,109 @@
+/* ============================================================
+   PRACTICE — Listening Mode
+   ============================================================ */
+
+.listening-container {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.listening-prompt-card {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 2px solid var(--color-border);
+  box-shadow: var(--shadow-md);
+  padding: var(--sp-6);
+  margin-bottom: var(--sp-5);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.listening-prompt-label {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-text-light);
+}
+
+.listening-play-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  border: none;
+  border-radius: 50%;
+  width: 100px;
+  height: 100px;
+  cursor: pointer;
+  color: var(--color-text-inverse);
+  transition: transform var(--t-fast), box-shadow var(--t-fast);
+  box-shadow: 0 4px 15px rgba(124, 158, 217, 0.4);
+}
+
+.listening-play-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(124, 158, 217, 0.5);
+}
+
+.listening-play-btn:active {
+  transform: scale(0.97);
+}
+
+.listening-play-btn span {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  font-family: var(--font-sans);
+  display: none;
+}
+
+.listening-replay-hint {
+  font-size: var(--fs-xs);
+  color: var(--color-text-light);
+  opacity: 0.6;
+}
+
+/* ---------- Direction toggle ---------- */
+.direction-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+  font-size: var(--fs-sm);
+  color: var(--color-text-light);
+}
+
+.direction-toggle select {
+  padding: var(--sp-2) var(--sp-3);
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 600px) {
+  .listening-play-btn {
+    width: 80px;
+    height: 80px;
+  }
+
+  .listening-play-btn svg {
+    width: 32px;
+    height: 32px;
+  }
+
+  .listening-prompt-card {
+    padding: var(--sp-4);
+  }
+
+  .direction-toggle {
+    flex-wrap: wrap;
+  }
+}
