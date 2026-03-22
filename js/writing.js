@@ -15,6 +15,7 @@ import {
   initTranslationMode,
   initDictationMode,
 } from './writing-modes.js';
+import { initChatWidget } from './chat-ui.js';
 
 // ---- Auth & Firebase ----
 const session = guardAuth();
@@ -52,10 +53,14 @@ const wordBadge = document.getElementById('detail-word-badge');
 
 // ---- State ----
 let allWords = [];
+let _topicName = '';
 const WORD_TYPE_LABELS = {
   noun: 'Noun', verb: 'Verb', adj: 'Adjective',
   adv: 'Adverb', phrase: 'Phrase', other: 'Other',
 };
+
+// ---- Chat widget (context read lazily when panel opens) ----
+initChatWidget(() => ({ topic: _topicName, page: 'Writing', words: allWords }));
 
 // ---- Utility ----
 function shuffle(arr) {
@@ -249,6 +254,7 @@ window._restartMode = () => startMode(currentMode);
 
     // Update UI
     bcLink.textContent = topic.name;
+    _topicName = topic.name;
     wordBadge.textContent = `${allWords.length} word${allWords.length !== 1 ? 's' : ''}`;
     practiceLoading.classList.add('hidden');
 

@@ -13,6 +13,7 @@ import {
   initComprehensionMode,
   initTrueFalseMode,
 } from './reading-modes.js';
+import { initChatWidget } from './chat-ui.js';
 
 // ---- Auth & Firebase ----
 const session = guardAuth();
@@ -50,6 +51,10 @@ const wordBadge = document.getElementById('detail-word-badge');
 
 // ---- State ----
 let allWords = [];
+let _topicName = '';
+
+// ---- Chat widget (context read lazily when panel opens) ----
+initChatWidget(() => ({ topic: _topicName, page: 'Reading', words: allWords }));
 
 // ---- Utility ----
 function shuffle(arr) {
@@ -183,6 +188,7 @@ window._restartMode = () => {
     }
 
     bcLink.textContent = topic.name;
+    _topicName = topic.name;
     wordBadge.textContent = `${allWords.length} word${allWords.length !== 1 ? 's' : ''}`;
     practiceLoading.classList.add('hidden');
 

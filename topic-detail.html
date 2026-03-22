@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="css/base.css" />
   <link rel="stylesheet" href="css/topic-detail.css" />
   <link rel="stylesheet" href="css/streak.css" />
+  <link rel="stylesheet" href="css/chat.css" />
 </head>
 <body class="detail-page">
 
@@ -577,6 +578,7 @@
       showToast, confirmDialog, confirmDialogHtml, formatDate, escapeHtml
     } from './js/ui.js';
     import { loadStreak } from './js/streak.js';
+    import { initChatWidget } from './js/chat-ui.js';
 
     // ---- Auth & Firebase ----
     const session = guardAuth();
@@ -585,6 +587,18 @@
     document.getElementById('nav-username').textContent = session.username;
     document.getElementById('nav-avatar').textContent = session.username.charAt(0).toUpperCase();
     document.getElementById('btn-logout').addEventListener('click', logout);
+
+    // ---- Chat widget ----
+    // chatFocusWord is updated whenever the user interacts with a word (row click / insights)
+    let chatFocusWord = null;
+    initChatWidget(() => ({
+      word:        chatFocusWord?.english    || null,
+      wordType:    chatFocusWord?.wordType   || null,
+      vietnamese:  chatFocusWord?.vietnamese || null,
+      topic:       topicName,
+      page:        'Topic Detail',
+      words:       allWords,
+    }));
 
     // ---- Navbar streak badge ----
     function updateStreakBadge() {
@@ -1660,6 +1674,9 @@
       const word = allWords.find(w => w.id === wordId);
       if (!word) return;
 
+      // Update chat context to reflect the word the user is inspecting
+      chatFocusWord = word;
+
       // Toggle off if already open and not forcing refresh
       const existing = vocabTbody.querySelector(`.insights-row[data-insights-for="${wordId}"]`);
       if (existing && !forceRefresh) {
@@ -1746,6 +1763,7 @@
       const id = row.dataset.id;
       const word = allWords.find((w) => w.id === id);
       if (!word) return;
+      chatFocusWord = word;
       editingWordId = id;
       modalWordTitle.textContent = 'Edit Word';
       btnWordSave.textContent = 'Save';

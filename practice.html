@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="css/base.css" />
   <link rel="stylesheet" href="css/practice.css" />
   <link rel="stylesheet" href="css/streak.css" />
+  <link rel="stylesheet" href="css/chat.css" />
 </head>
 <body class="practice-page">
 
@@ -530,6 +531,7 @@
     import { loadWords } from './js/vocabulary.js';
     import { showToast, escapeHtml } from './js/ui.js';
     import { loadStreak } from './js/streak.js';
+    import { initChatWidget } from './js/chat-ui.js';
 
     // ---- Auth & Firebase ----
     const session = guardAuth();
@@ -538,6 +540,19 @@
     document.getElementById('nav-username').textContent = session.username;
     document.getElementById('nav-avatar').textContent = session.username.charAt(0).toUpperCase();
     document.getElementById('btn-logout').addEventListener('click', logout);
+
+    // ---- Chat widget ----
+    // chatPracticeWord is updated as the user navigates through practice cards
+    let chatPracticeWord = null;
+    let chatPracticeTopicName = '';
+    initChatWidget(() => ({
+      word:       chatPracticeWord?.english    || null,
+      wordType:   chatPracticeWord?.wordType   || null,
+      vietnamese: chatPracticeWord?.vietnamese || null,
+      topic:      chatPracticeTopicName,
+      page:       'Practice',
+      words:      allWords,
+    }));
 
     // ---- Navbar streak badge ----
     loadStreak().then(data => {
@@ -777,6 +792,7 @@
       }
 
       const w = fcWords[fcIndex];
+      chatPracticeWord = w; // update chat context to current flashcard
       const isReview = fcRetryCount.has(w.id) && fcRetryCount.get(w.id) > 0;
 
       fcCard.classList.remove('flipped');
@@ -1869,6 +1885,7 @@
         }
 
         bcLink.textContent = topic.name;
+        chatPracticeTopicName = topic.name;
         document.title = `WordCraft — Practice: ${topic.name}`;
 
         const selectedWordIds = getQueryParam('words');

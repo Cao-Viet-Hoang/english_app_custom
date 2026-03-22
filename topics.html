@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="css/base.css" />
   <link rel="stylesheet" href="css/topics.css" />
   <link rel="stylesheet" href="css/streak.css" />
+  <link rel="stylesheet" href="css/chat.css" />
 </head>
 <body class="topics-page">
 
@@ -173,6 +174,7 @@
     import { loadTopics, createTopic, renameTopic, deleteTopic } from './js/topics.js';
     import { showModal, closeModal, setupModalClose, showToast, confirmDialog, formatDate, escapeHtml, showMilestoneModal } from './js/ui.js';
     import { loadStreak, loadActivityHistory, getMilestoneMessage, getDailyEncouragement } from './js/streak.js';
+    import { initChatWidget } from './js/chat-ui.js';
 
     // ---- Guard & Init ----
     const session = guardAuth();
@@ -181,6 +183,9 @@
     document.getElementById('nav-username').textContent = session.username;
     document.getElementById('nav-avatar').textContent = session.username.charAt(0).toUpperCase();
     document.getElementById('btn-logout').addEventListener('click', logout);
+
+    // ---- Chat widget ----
+    initChatWidget(() => ({ page: 'Topics' }));
 
     // ---- DOM refs ----
     const loadingEl    = document.getElementById('topics-loading');
