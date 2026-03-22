@@ -83,6 +83,23 @@ function showSentenceWord(ctx) {
     showSentenceWord(ctx);
   };
 
+  // Rewrite handler — re-enable textarea to edit and resubmit
+  document.getElementById('sw-btn-rewrite').onclick = () => {
+    input.disabled = false;
+    input.focus();
+    checkBtn.disabled = input.value.trim().length === 0;
+    document.getElementById('sw-btn-skip').style.display = '';
+    document.getElementById('sw-feedback').classList.add('hidden');
+    document.getElementById('sw-next-row').style.display = 'none';
+    document.getElementById('sw-container').classList.remove('has-feedback');
+    // Remove last score since user is rewriting
+    swScores.pop();
+    const avg = swScores.length > 0
+      ? (swScores.reduce((a, b) => a + b, 0) / swScores.length).toFixed(1)
+      : '-';
+    document.getElementById('sw-avg-score').textContent = avg;
+  };
+
   // Next handler
   document.getElementById('sw-btn-next').onclick = () => {
     swIndex++;
@@ -226,6 +243,16 @@ function showParagraphPrompt(ctx) {
 
   checkBtn.onclick = () => handleParagraphCheck(ctx);
 
+  // Rewrite — keep current text for editing and resubmit
+  document.getElementById('pw-btn-rewrite').onclick = () => {
+    document.getElementById('pw-feedback').classList.add('hidden');
+    document.getElementById('pw-action-row').style.display = 'none';
+    document.getElementById('pw-container').classList.remove('has-feedback');
+    input.disabled = false;
+    input.focus();
+    checkBtn.disabled = input.value.trim().length === 0;
+  };
+
   document.getElementById('pw-btn-retry').onclick = () => {
     document.getElementById('pw-feedback').classList.add('hidden');
     document.getElementById('pw-action-row').style.display = 'none';
@@ -365,6 +392,17 @@ async function generateNewTranslation(allWords, ctx) {
     };
 
     checkBtn.onclick = () => handleTranslationCheck(allWords, ctx);
+
+    // Rewrite — keep current text for editing and resubmit
+    document.getElementById('tr-btn-rewrite').onclick = () => {
+      input.disabled = false;
+      input.focus();
+      checkBtn.disabled = input.value.trim().length === 0;
+      document.getElementById('tr-feedback').classList.add('hidden');
+      document.getElementById('tr-next-row').style.display = 'none';
+      document.getElementById('tr-container').classList.remove('has-feedback');
+    };
+
     document.getElementById('tr-btn-next').onclick = () => generateNewTranslation(allWords, ctx);
 
   } catch (err) {
@@ -469,20 +507,51 @@ function buildDiffComparisonHtml(diffHtml, userLabel, correctedLabel) {
   `;
 }
 
+/**
+ * Deduplicate grammar errors that share the same original+corrected text.
+ * Merges their explanations into one entry.
+ */
+function deduplicateErrors(errors) {
+  if (!errors || errors.length === 0) return [];
+  const map = new Map();
+  for (const err of errors) {
+    const key = (err.original || '').toLowerCase().trim() + '||' + (err.corrected || '').toLowerCase().trim();
+    if (map.has(key)) {
+      const existing = map.get(key);
+      // Append unique explanation
+      const newExpl = (err.explanation || '').trim();
+      if (newExpl && !existing.explanation.includes(newExpl)) {
+        existing.explanation += '\n' + newExpl;
+      }
+    } else {
+      map.set(key, { ...err, explanation: (err.explanation || '').trim() });
+    }
+  }
+  return [...map.values()];
+}
+
 function buildErrorCardsHtml(grammarErrors, ctx) {
-  if (!grammarErrors || grammarErrors.length === 0) return '';
+  const errors = deduplicateErrors(grammarErrors);
+  if (errors.length === 0) return '';
 
   return `
     <div class="fb-errors-section">
       <div class="fb-errors-title">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        Error Details (${grammarErrors.length})
+        Error Details (${errors.length})
       </div>
-      ${grammarErrors.map((err, i) => `
+      ${errors.map((err, i) => `
         <div class="fb-error-card">
           <div class="fb-error-header">
             <span class="fb-error-num">${i + 1}</span>
             <span class="fb-error-type fb-error-type--${ctx.escapeHtml(err.type || 'grammar')}">${ERROR_TYPE_LABELS[err.type] || 'Error'}</span>
+            <button class="fb-error-save-btn" title="Save to My Notes"
+              data-original="${ctx.escapeHtml(err.original || '')}"
+              data-corrected="${ctx.escapeHtml(err.corrected || '')}"
+              data-explanation="${ctx.escapeHtml(err.explanation || '')}"
+              data-type="${ctx.escapeHtml(err.type || 'grammar')}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+            </button>
           </div>
           <div class="fb-error-diff">
             <div class="fb-error-wrong">
@@ -497,7 +566,7 @@ function buildErrorCardsHtml(grammarErrors, ctx) {
               <span>${ctx.escapeHtml(err.corrected || '')}</span>
             </div>
           </div>
-          <div class="fb-error-explanation">${ctx.escapeHtml(err.explanation || '')}</div>
+          <div class="fb-error-explanation">${ctx.escapeHtml(err.explanation || '').replace(/\n/g, '<br>')}</div>
         </div>
       `).join('')}
     </div>

@@ -816,6 +816,134 @@
   border-left: 3px solid var(--color-primary-light);
 }
 
+/* ---------- Error Card Save Button ---------- */
+.fb-error-save-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-light);
+  opacity: 0.5;
+  padding: var(--sp-1);
+  border-radius: var(--radius-sm);
+  transition: all var(--t-fast);
+  display: inline-flex;
+  align-items: center;
+}
+.fb-error-save-btn:hover {
+  opacity: 1;
+  color: var(--color-primary);
+  background: var(--color-surface-alt);
+}
+.fb-error-save-btn.saved {
+  opacity: 1;
+  color: var(--color-primary);
+}
+.fb-error-save-btn:disabled { cursor: default; }
+.fb-error-save-btn svg { width: 16px; height: 16px; }
+
+/* ---------- Notes Count Badge ---------- */
+.notes-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+  border-radius: 100px;
+  padding: 0 5px;
+  line-height: 1;
+}
+
+/* ---------- Notes Modal ---------- */
+#notes-modal .modal {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#notes-modal .modal-header { flex-shrink: 0; }
+#notes-modal .modal-body {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 0;
+}
+
+.modal-header h3 svg { flex-shrink: 0; }
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  font-size: var(--fs-xl);
+  cursor: pointer;
+  color: var(--color-text-light);
+  padding: var(--sp-1) var(--sp-2);
+  border-radius: var(--radius-sm);
+  line-height: 1;
+}
+.modal-close-btn:hover { background: var(--color-surface-alt); color: var(--color-text); }
+
+.notes-empty {
+  text-align: center;
+  padding: var(--sp-6) var(--sp-4);
+  color: var(--color-text-light);
+}
+.notes-empty svg { margin-bottom: var(--sp-3); }
+.notes-empty p { margin-bottom: var(--sp-1); }
+.notes-empty-hint { font-size: var(--fs-xs); opacity: 0.7; }
+
+.notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.note-card {
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--sp-3) var(--sp-4);
+  transition: all 0.3s ease;
+}
+.note-card:hover { box-shadow: var(--shadow-sm); }
+
+.note-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-2);
+}
+
+.note-card .fb-error-diff { margin-bottom: var(--sp-2); }
+.note-card .fb-error-wrong,
+.note-card .fb-error-right {
+  padding: var(--sp-1) var(--sp-2);
+  font-size: var(--fs-xs);
+}
+.note-card .fb-error-arrow { padding: 0; }
+.note-card .fb-error-arrow svg { width: 12px; height: 12px; }
+.note-card .fb-error-explanation {
+  font-size: var(--fs-xs);
+  padding: var(--sp-2);
+}
+
+.note-delete-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-light);
+  opacity: 0.4;
+  padding: var(--sp-1);
+  border-radius: var(--radius-sm);
+  transition: all var(--t-fast);
+  display: inline-flex;
+}
+.note-delete-btn:hover { opacity: 1; color: var(--color-danger); background: #fef5f5; }
+.note-delete-btn svg { width: 15px; height: 15px; }
+
 /* ============================================================
    DICTATION MODE
    ============================================================ */
@@ -1006,6 +1134,15 @@
   .translation-container.has-feedback {
     max-width: 100%;
   }
+
+  /* Notes modal */
+  #notes-modal .modal {
+    width: 95%;
+    max-width: none;
+    max-height: 90vh;
+    padding: var(--sp-4);
+  }
+  #notes-modal .modal-header { margin-bottom: var(--sp-3); }
 }
 
 @media (max-width: 600px) {
@@ -1149,4 +1286,17 @@
   .result-score { font-size: var(--fs-xl); }
 
   .ai-loading { padding: var(--sp-5) var(--sp-3); }
+
+  /* Notes modal — mobile */
+  .notes-list { gap: var(--sp-2); }
+  .note-card { padding: var(--sp-2) var(--sp-3); }
+  .note-card-header { margin-bottom: var(--sp-1); }
+  .note-card .fb-error-wrong,
+  .note-card .fb-error-right { padding: var(--sp-1); font-size: 11px; }
+  .note-card .fb-error-explanation { font-size: 11px; padding: var(--sp-1) var(--sp-2); }
+  .note-delete-btn svg { width: 14px; height: 14px; }
+
+  /* Notes button in header */
+  #btn-open-notes { font-size: var(--fs-xs); padding: var(--sp-1) var(--sp-2); }
+  .notes-count-badge { min-width: 16px; height: 16px; font-size: 10px; }
 }
