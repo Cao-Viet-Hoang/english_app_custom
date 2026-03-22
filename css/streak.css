@@ -1,0 +1,397 @@
+/* ============================================================
+   STREAK COMPONENTS
+   Compact inline streak, mini-calendar, milestone modal,
+   navbar badge, activity log modal
+   ============================================================ */
+
+/* ---------- Compact Inline Streak (in topics header) ---------- */
+.streak-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 4px 12px 4px 8px;
+  background: rgba(232, 168, 124, 0.1);
+  border: 1px solid rgba(232, 168, 124, 0.2);
+  border-radius: 100px;
+  cursor: pointer;
+  transition: all var(--t-fast);
+  user-select: none;
+}
+
+.streak-inline:hover {
+  background: rgba(232, 168, 124, 0.18);
+  border-color: rgba(232, 168, 124, 0.35);
+}
+
+.streak-inline-flame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.streak-inline-flame svg {
+  width: 16px;
+  height: 16px;
+  color: var(--color-accent);
+  transition: filter var(--t-normal), opacity var(--t-normal);
+}
+
+.streak-inline-flame.active svg {
+  filter: drop-shadow(0 0 4px rgba(232, 168, 124, 0.5));
+  animation: streakGlow 2s ease-in-out infinite;
+}
+
+.streak-inline-flame.at-risk svg {
+  opacity: 0.5;
+  animation: streakPulse 2s ease-in-out infinite;
+}
+
+.streak-inline-flame.new-user svg {
+  opacity: 0.4;
+}
+
+.streak-inline-count {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--color-accent);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.streak-inline-divider {
+  width: 1px;
+  height: 16px;
+  background: rgba(232, 168, 124, 0.25);
+  flex-shrink: 0;
+}
+
+.streak-inline-encourage {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--color-accent);
+  white-space: nowrap;
+  opacity: 0.85;
+  line-height: 1;
+}
+
+/* ---------- Mini Weekly Calendar ---------- */
+.streak-week {
+  display: flex;
+  gap: 6px;
+}
+
+.streak-week-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.streak-week-label {
+  font-size: 0.55rem;
+  font-weight: 500;
+  color: var(--color-text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  line-height: 1;
+}
+
+.streak-week-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-border);
+  background: transparent;
+  transition: all var(--t-fast);
+}
+
+.streak-week-dot.active {
+  background: var(--color-success);
+  border-color: var(--color-success);
+}
+
+.streak-week-dot.today {
+  border-color: var(--color-accent);
+  border-style: dashed;
+}
+
+.streak-week-dot.today.active {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  border-style: solid;
+}
+
+.streak-week-dot.today:not(.active) {
+  animation: streakPulse 2s ease-in-out infinite;
+}
+
+/* ---------- Streak Stats (used in activity log) ---------- */
+.streak-stat-value {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* ---------- Navbar Streak Badge ---------- */
+.navbar-streak {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: rgba(232, 168, 124, 0.12);
+  border-radius: 100px;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--color-accent);
+  cursor: default;
+  transition: background var(--t-fast);
+  font-variant-numeric: tabular-nums;
+}
+
+.navbar-streak svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* ---------- Activity Log Modal ---------- */
+.activity-log-modal {
+  width: min(90vw, 580px);
+  padding: var(--sp-5);
+}
+
+.activity-log-modal .modal-header {
+  margin-bottom: var(--sp-3);
+}
+
+.activity-log-modal .modal-body {
+  margin-bottom: var(--sp-4);
+}
+
+.activity-log-body {
+  padding: var(--sp-2) 0;
+}
+
+.activity-quarter {
+  margin-bottom: var(--sp-4);
+}
+
+.activity-quarter:last-child {
+  margin-bottom: 0;
+}
+
+.activity-quarter:first-child {
+  padding-bottom: var(--sp-4);
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--sp-4);
+}
+
+.activity-quarter-label {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: var(--sp-2);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.activity-quarter-months {
+  display: flex;
+  gap: var(--sp-4);
+}
+
+.activity-month {
+  flex: 1;
+  min-width: 0;
+}
+
+.activity-month-label {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--color-text-light);
+  margin-bottom: var(--sp-2);
+}
+
+.activity-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.activity-grid-header {
+  font-size: 0.5rem;
+  font-weight: 500;
+  color: var(--color-text-light);
+  text-align: center;
+  text-transform: uppercase;
+  padding-bottom: 2px;
+}
+
+.activity-day {
+  aspect-ratio: 1;
+  border-radius: 3px;
+  background: var(--color-surface-alt);
+  position: relative;
+}
+
+.activity-day.empty {
+  background: transparent;
+}
+
+.activity-day.level-1 {
+  background: rgba(130, 201, 161, 0.3);
+}
+
+.activity-day.level-2 {
+  background: rgba(130, 201, 161, 0.6);
+}
+
+.activity-day.level-3 {
+  background: var(--color-success);
+}
+
+.activity-day.today {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -1px;
+}
+
+.activity-day[title] {
+  cursor: default;
+}
+
+.activity-log-footer {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px var(--sp-2);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--color-border);
+  font-size: 0.65rem;
+  color: var(--color-text-light);
+}
+
+.activity-legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.activity-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.activity-legend-swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+.activity-log-stats {
+  display: flex;
+  gap: 8px;
+  margin-bottom: var(--sp-4);
+}
+
+.activity-log-stats .activity-stat {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 10px;
+  background: var(--color-surface-alt);
+  border-radius: 100px;
+  font-size: var(--fs-xs);
+  color: var(--color-text-light);
+  white-space: nowrap;
+}
+
+.activity-log-stats .streak-stat-value {
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+/* ---------- Milestone Celebration Modal ---------- */
+.milestone-content {
+  text-align: center;
+  padding: var(--sp-5) var(--sp-4);
+}
+
+.milestone-icon {
+  width: 68px;
+  height: 68px;
+  margin: 0 auto var(--sp-4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(242, 208, 122, 0.18);
+  animation: milestoneBounce 0.5s ease-out;
+}
+
+.milestone-icon svg {
+  width: 36px;
+  height: 36px;
+  color: #c6970a;
+}
+
+.milestone-title {
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: var(--sp-2);
+}
+
+.milestone-message {
+  font-size: var(--fs-sm);
+  color: var(--color-text-light);
+  margin-bottom: var(--sp-5);
+  line-height: 1.5;
+}
+
+/* ---------- Animations ---------- */
+@keyframes streakPulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50%      { opacity: 1;   transform: scale(1.08); }
+}
+
+@keyframes streakGlow {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(232, 168, 124, 0.3)); }
+  50%      { filter: drop-shadow(0 0 10px rgba(232, 168, 124, 0.6)); }
+}
+
+@keyframes milestoneBounce {
+  0%   { transform: scale(0.4); opacity: 0; }
+  60%  { transform: scale(1.12); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 640px) {
+  .streak-inline {
+    padding: 3px 8px 3px 6px;
+    gap: var(--sp-1);
+  }
+
+  .streak-week {
+    gap: 4px;
+  }
+
+  .streak-week-label {
+    display: none;
+  }
+
+  .streak-week-dot {
+    width: 8px;
+    height: 8px;
+  }
+
+  .streak-inline-divider {
+    height: 12px;
+  }
+
+  .streak-inline-encourage {
+    display: none;
+  }
+}
