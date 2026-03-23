@@ -1,0 +1,232 @@
+/* ============================================================
+   PRACTICE — Fill in the Blank Mode
+   ============================================================ */
+
+.fillblank-container {
+  max-width: 580px;
+  margin: 0 auto;
+}
+
+.fillblank-card {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 2px solid var(--color-border);
+  box-shadow: var(--shadow-md);
+  padding: var(--sp-6) var(--sp-6) var(--sp-5);
+  text-align: center;
+}
+
+/* -- Top hint row -- */
+.fb-hint-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-4);
+}
+
+.fb-hint-icon {
+  color: var(--color-primary);
+  display: flex;
+}
+
+.fillblank-label {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-text-light);
+}
+
+/* -- Meaning section -- */
+.fb-meaning-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+}
+
+.fb-meaning-badge {
+  display: inline-block;
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  background: linear-gradient(135deg, #eef2ff 0%, #f5f0ff 100%);
+  padding: var(--sp-2) var(--sp-5);
+  border-radius: 100px;
+  border: 1px solid rgba(124, 158, 217, 0.2);
+}
+
+.fb-word-type {
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  padding: 2px var(--sp-3);
+  border-radius: 100px;
+  background: var(--color-surface-alt);
+  color: var(--color-text-light);
+  border: 1px solid var(--color-border);
+}
+
+/* -- Divider -- */
+.fb-divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: 0 var(--sp-4) var(--sp-5);
+}
+
+/* -- Word with blanks -- */
+.fillblank-word {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: var(--sp-5);
+  font-family: var(--font-mono);
+}
+
+.fb-char {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 50px;
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  color: var(--color-text);
+  background: var(--color-surface-alt);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.fb-space {
+  width: 16px;
+}
+
+.fb-char-input {
+  width: 42px;
+  height: 50px;
+  text-align: center;
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  font-family: var(--font-mono);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  color: var(--color-text);
+  outline: none;
+  transition: border-color var(--t-fast), background var(--t-fast), box-shadow var(--t-fast);
+  box-shadow: 0 2px 4px rgba(124, 158, 217, 0.1);
+}
+
+.fb-char-input:focus {
+  border-color: var(--color-primary);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(124, 158, 217, 0.2), 0 2px 8px rgba(124, 158, 217, 0.15);
+  transform: translateY(-1px);
+}
+
+.fb-char-input.correct {
+  border-color: var(--color-success);
+  background: #e8f8ef;
+  color: var(--color-success);
+  box-shadow: none;
+}
+
+.fb-char-input.wrong {
+  border-color: var(--color-danger);
+  background: #fef0f0;
+  color: var(--color-danger);
+  box-shadow: none;
+}
+
+.fb-wrong-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.fb-wrong-wrapper::after {
+  content: attr(data-correct);
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-success);
+  pointer-events: none;
+}
+
+/* -- Feedback banner -- */
+.fillblank-feedback {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--sp-4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+}
+
+.fillblank-feedback.fb-correct {
+  color: var(--color-success);
+  background: #e8f8ef;
+  border: 1px solid rgba(122, 172, 141, 0.3);
+}
+
+.fillblank-feedback.fb-wrong {
+  color: var(--color-danger);
+  background: #fef0f0;
+  border: 1px solid rgba(214, 113, 113, 0.3);
+}
+
+/* -- Actions -- */
+.fillblank-actions {
+  display: flex;
+  gap: var(--sp-3);
+  justify-content: center;
+}
+
+.fillblank-actions .btn {
+  gap: var(--sp-2);
+  min-width: 140px;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 600px) {
+  .fb-char, .fb-char-input {
+    width: 32px;
+    height: 40px;
+  }
+
+  .fb-char {
+    font-size: var(--fs-sm);
+  }
+
+  .fb-char-input {
+    font-size: var(--fs-sm);
+  }
+
+  .fb-meaning-badge {
+    font-size: var(--fs-base);
+    padding: var(--sp-2) var(--sp-4);
+  }
+
+  .fillblank-card {
+    padding: var(--sp-4);
+  }
+
+  .fillblank-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .fillblank-actions .btn {
+    min-width: 0;
+    width: 100%;
+    max-width: 280px;
+  }
+}

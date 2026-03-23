@@ -1,0 +1,364 @@
+/* ============================================================
+   TOPIC DETAIL — Vocabulary Tab
+   Table, swipe-delete, learned toggle, speak button, IPA
+   ============================================================ */
+
+/* ---------- Tab Icons ---------- */
+.tab-btn svg {
+  display: inline;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.vocab-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--sp-4);
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+
+.vocab-search-group {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.vocab-search {
+  position: relative;
+  max-width: 240px;
+  width: 100%;
+}
+
+.vocab-search .form-input {
+  padding-left: 36px;
+  font-size: var(--fs-sm);
+}
+
+.vocab-search svg {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 15px;
+  height: 15px;
+  color: var(--color-text-light);
+  pointer-events: none;
+}
+
+.sort-select {
+  appearance: none;
+  height: 36px;
+  padding: 0 28px 0 10px;
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237A7A7A' d='M6 8.825a.5.5 0 0 1-.354-.146l-3.5-3.5a.5.5 0 1 1 .708-.708L6 7.618l3.146-3.147a.5.5 0 1 1 .708.708l-3.5 3.5A.5.5 0 0 1 6 8.825z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  flex-shrink: 0;
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+}
+
+.sort-select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(124, 158, 217, .2);
+}
+
+/* ---------- Vocabulary Table ---------- */
+.vocab-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.vocab-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+}
+
+.vocab-table th,
+.vocab-table td {
+  padding: var(--sp-3) var(--sp-4);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+.vocab-table th {
+  background: var(--color-surface-alt);
+  font-weight: 600;
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-light);
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.vocab-table tbody tr:hover td:not(.swipe-delete-cell) {
+  background-color: #f5f7fa;
+}
+
+.vocab-table tbody tr {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.vocab-table tbody tr td:not(.swipe-delete-cell) {
+  transition: transform 0.25s ease;
+  position: relative;
+  z-index: 1;
+  background-color: var(--color-surface);
+}
+
+.vocab-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ---- Swipe-to-delete ---- */
+.swipe-delete-th {
+  width: 0 !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+}
+
+.swipe-delete-cell {
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  border-bottom: none !important;
+  overflow: visible;
+  position: relative;
+  z-index: 0;
+  background: transparent !important;
+}
+
+.swipe-delete-btn {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: #e57373;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 0;
+  border: none;
+  outline: none;
+  pointer-events: none;
+}
+
+.swipe-delete-btn:hover {
+  background: #ef5350;
+}
+
+.swipe-delete-btn svg {
+  pointer-events: none;
+}
+
+.swipe-row.swiped .swipe-delete-btn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ---- Learned toggle button ---- */
+.btn-learned {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  background: none;
+  border: 1.8px solid var(--color-border);
+  border-radius: 50%;
+  cursor: pointer;
+  color: transparent;
+  transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast), transform var(--t-fast);
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.btn-learned:hover {
+  border-color: var(--color-success);
+  color: rgba(130, 201, 161, 0.5);
+}
+
+.btn-learned.learned {
+  background: var(--color-success);
+  border-color: var(--color-success);
+  color: #fff;
+}
+
+.btn-learned.learned:hover {
+  background: #6ab88d;
+  border-color: #6ab88d;
+  color: #fff;
+}
+
+.btn-learned:active {
+  transform: scale(0.88);
+}
+
+.btn-learned svg {
+  pointer-events: none;
+}
+
+.vocab-english {
+  font-weight: 600;
+  color: var(--color-primary-dark);
+  white-space: nowrap;
+  overflow: visible;
+}
+
+.vocab-english-inner {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: max-content;
+}
+
+.vocab-english-word {
+  vertical-align: middle;
+  display: inline-block;
+}
+
+/* Speak / TTS button */
+.btn-speak {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-light);
+  padding: 2px;
+  border-radius: var(--radius-sm);
+  vertical-align: middle;
+  transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+
+.btn-speak:hover {
+  color: var(--color-primary);
+  background: rgba(124, 158, 217, .1);
+}
+
+.vocab-ipa {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--color-text-light);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.6;
+}
+
+.ipa-us {
+  display: block;
+  white-space: nowrap;
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.ipa-us::before {
+  content: 'US ';
+  font-family: var(--font-base);
+  font-size: 0.7em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-primary);
+  margin-right: 2px;
+}
+
+.ipa-uk {
+  display: block;
+  white-space: nowrap;
+  color: var(--color-text-light);
+  font-weight: 400;
+  font-size: 0.92em;
+  margin-top: 1px;
+}
+
+.ipa-uk::before {
+  content: 'UK ';
+  font-family: var(--font-base);
+  font-size: 0.7em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-light);
+  margin-right: 2px;
+}
+
+.vocab-vietnamese {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.vocab-desc {
+  font-size: var(--fs-xs);
+  color: var(--color-text-light);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 0;
+  width: 100%;
+}
+
+.vocab-missing {
+  color: var(--color-border);
+  font-style: normal;
+  font-weight: 400;
+}
+
+/* ---------- Vocab Toolbar Buttons ---------- */
+.vocab-toolbar-btns {
+  display: flex;
+  gap: var(--sp-2);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 540px) {
+  .vocab-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .vocab-search {
+    max-width: 100%;
+  }
+  .vocab-toolbar-btns {
+    flex-direction: column;
+    width: 100%;
+  }
+  .vocab-toolbar-btns .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

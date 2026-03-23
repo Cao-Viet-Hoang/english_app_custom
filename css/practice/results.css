@@ -1,0 +1,107 @@
+/* ============================================================
+   PRACTICE — Results Overlay (shared across modes)
+   ============================================================ */
+
+.practice-result {
+  text-align: center;
+  padding: var(--sp-7) var(--sp-5);
+}
+
+.result-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto var(--sp-5);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.result-icon.great {
+  background: #e8f8ef;
+  color: var(--color-success);
+}
+
+.result-icon.good {
+  background: #fef8e8;
+  color: var(--color-warning);
+}
+
+.result-icon.needs-work {
+  background: #fef0f0;
+  color: var(--color-danger);
+}
+
+.result-icon svg {
+  width: 40px;
+  height: 40px;
+}
+
+.result-score {
+  font-size: var(--fs-2xl);
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: var(--sp-2);
+}
+
+.result-label {
+  font-size: var(--fs-md);
+  color: var(--color-text-light);
+  margin-bottom: var(--sp-5);
+}
+
+.result-details {
+  display: flex;
+  justify-content: center;
+  gap: var(--sp-6);
+  margin-bottom: var(--sp-6);
+}
+
+.result-detail-item {
+  text-align: center;
+}
+
+.result-detail-item .num {
+  font-size: var(--fs-xl);
+  font-weight: 700;
+}
+
+.result-detail-item .num.green { color: var(--color-success); }
+.result-detail-item .num.red { color: var(--color-danger); }
+
+.result-detail-item .lbl {
+  font-size: var(--fs-xs);
+  color: var(--color-text-light);
+}
+
+.result-actions {
+  display: flex;
+  gap: var(--sp-3);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 600px) {
+  .result-details {
+    gap: var(--sp-4);
+  }
+
+  .result-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .result-actions .btn {
+    width: 100%;
+    max-width: 280px;
+  }
+
+  .practice-result {
+    padding: var(--sp-5) var(--sp-3);
+  }
+
+  .result-score {
+    font-size: var(--fs-xl);
+  }
+}

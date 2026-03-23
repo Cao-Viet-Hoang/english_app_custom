@@ -1,0 +1,251 @@
+/* ============================================================
+   PRACTICE — Flashcard Mode
+   ============================================================ */
+
+.flashcard-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-5);
+}
+
+.flashcard-wrapper {
+  perspective: 1000px;
+  width: 100%;
+  max-width: 480px;
+}
+
+.flashcard {
+  position: relative;
+  width: 100%;
+  min-height: 280px;
+  cursor: pointer;
+  transform-style: preserve-3d;
+  transition: transform 0.5s ease;
+  user-select: none;
+}
+
+.flashcard.flipped {
+  transform: rotateY(180deg);
+}
+
+.flashcard-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-6);
+  border-radius: var(--radius-lg);
+  border: 2px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+  text-align: center;
+}
+
+.flashcard-front {
+  z-index: 2;
+}
+
+.flashcard-back {
+  transform: rotateY(180deg);
+  background: linear-gradient(135deg, #f0f4ff 0%, #fff 50%, #fef7f0 100%);
+}
+
+.flashcard-label {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-text-light);
+  margin-bottom: var(--sp-3);
+}
+
+.flashcard-word {
+  font-size: var(--fs-2xl);
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: var(--sp-2);
+  word-break: break-word;
+}
+
+.flashcard-ipa {
+  font-size: var(--fs-sm);
+  color: var(--color-primary-dark);
+  font-family: var(--font-mono);
+  margin-bottom: var(--sp-2);
+}
+
+.flashcard-type {
+  display: inline-block;
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  padding: 2px var(--sp-3);
+  border-radius: 100px;
+  background: var(--color-surface-alt);
+  color: var(--color-text-light);
+  margin-bottom: var(--sp-3);
+}
+
+.flashcard-meaning {
+  font-size: var(--fs-xl);
+  font-weight: 600;
+  color: var(--color-primary-dark);
+  margin-bottom: var(--sp-2);
+}
+
+.flashcard-desc {
+  font-size: var(--fs-sm);
+  color: var(--color-text-light);
+  max-width: 360px;
+}
+
+.flashcard-hint {
+  font-size: var(--fs-xs);
+  color: var(--color-text-light);
+  margin-top: var(--sp-3);
+  opacity: 0.6;
+}
+
+.flashcard-speak-btn {
+  position: absolute;
+  top: var(--sp-3);
+  right: var(--sp-3);
+  padding: var(--sp-2);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--color-text-light);
+  transition: color var(--t-fast), background var(--t-fast);
+}
+
+.flashcard-speak-btn:hover {
+  color: var(--color-primary);
+  background: var(--color-surface-alt);
+}
+
+.flashcard-actions {
+  display: flex;
+  gap: var(--sp-4);
+}
+
+.flashcard-actions .btn {
+  min-width: 120px;
+  gap: var(--sp-2);
+}
+
+.btn-know {
+  background: var(--color-success);
+  color: var(--color-text-inverse);
+}
+
+.btn-know:hover {
+  background: #6ab88d;
+}
+
+.btn-dont-know {
+  background: var(--color-danger);
+  color: var(--color-text-inverse);
+}
+
+.btn-dont-know:hover {
+  background: #d67171;
+}
+
+/* ---------- Review Badge ---------- */
+.fc-review-badge {
+  position: absolute;
+  top: var(--sp-3);
+  left: var(--sp-3);
+  z-index: 3;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 10px;
+  border-radius: 100px;
+  background: var(--color-warning, #f0ad4e);
+  color: #fff;
+}
+
+/* ---------- Words to Review List ---------- */
+.fc-review-list {
+  margin-top: var(--sp-5);
+  text-align: left;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.fc-review-list-title {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--sp-3);
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.fc-review-list-items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.fc-review-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius-sm);
+  background: #fef0f0;
+  border: 1px solid #f5d5d5;
+}
+
+.fc-review-item-word {
+  font-weight: 600;
+  color: var(--color-text);
+  font-size: var(--fs-sm);
+}
+
+.fc-review-item-meaning {
+  color: var(--color-text-light);
+  font-size: var(--fs-sm);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 600px) {
+  .flashcard-word {
+    font-size: var(--fs-xl);
+  }
+
+  .flashcard {
+    min-height: 220px;
+  }
+
+  .flashcard-face {
+    padding: var(--sp-4);
+  }
+
+  .flashcard-meaning {
+    font-size: var(--fs-lg);
+  }
+
+  .flashcard-desc {
+    font-size: var(--fs-xs);
+  }
+
+  .flashcard-actions {
+    flex-direction: column;
+    width: 100%;
+    max-width: 480px;
+  }
+
+  .flashcard-actions .btn {
+    min-width: 0;
+    width: 100%;
+  }
+}

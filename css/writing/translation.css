@@ -1,0 +1,102 @@
+/* ============================================================
+   WRITING — Translation Mode
+   Source card, side-by-side comparison
+   ============================================================ */
+
+.translation-container {
+  max-width: 660px;
+  margin: 0 auto;
+  transition: max-width 0.3s ease;
+}
+
+.translation-container.has-feedback {
+  max-width: 960px;
+}
+
+.translation-source-card {
+  background: linear-gradient(135deg, #fef7f0 0%, #fff 50%, #f0f4ff 100%);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: var(--sp-5) var(--sp-6);
+  margin-bottom: var(--sp-5);
+}
+
+.translation-source-label {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-text-light);
+  margin-bottom: var(--sp-3);
+}
+
+.translation-source-text {
+  font-size: var(--fs-md);
+  color: var(--color-text);
+  line-height: 1.8;
+}
+
+/* Side-by-side comparison */
+.translation-comparison {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-5);
+}
+
+.translation-col {
+  padding: var(--sp-4) var(--sp-5);
+  border-radius: var(--radius-md);
+  border: 2px solid var(--color-border);
+}
+
+.translation-col-label {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-light);
+  margin-bottom: var(--sp-3);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.translation-col.user-col {
+  background: #fafbff;
+  border-color: rgba(124, 158, 217, 0.25);
+}
+
+.translation-col.suggested-col {
+  background: #f0faf4;
+  border-color: rgba(122, 172, 141, 0.3);
+  border-left: 4px solid var(--color-success);
+}
+
+.translation-col-text {
+  font-size: var(--fs-base);
+  color: var(--color-text);
+  line-height: 1.7;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+  .translation-container.has-feedback {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .translation-source-card {
+    padding: var(--sp-4);
+    border-radius: var(--radius-md);
+  }
+  .translation-source-text { font-size: var(--fs-sm); }
+
+  .translation-comparison {
+    grid-template-columns: 1fr;
+  }
+  .translation-col { padding: var(--sp-3); }
+  .translation-col-text { font-size: var(--fs-sm); }
+}
