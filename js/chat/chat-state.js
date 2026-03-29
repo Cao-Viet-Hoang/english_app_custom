@@ -12,6 +12,7 @@ export const state = {
   unreadCount: 0,
   generation: 0,
   initialized: false,
+  viewMode: 'bubble', // 'bubble' | 'modal'
 };
 
 // DOM refs — populated by buildWidget()
@@ -25,6 +26,8 @@ export const dom = {
   suggestionsEl: null,
   contextBarEl: null,
   badgeEl: null,
+  backdropEl: null,
+  modeBtnEl: null,
 };
 
 // ----------------------------------------------------------------

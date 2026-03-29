@@ -52,6 +52,22 @@ function buildWidget() {
         <div class="chat-panel-header-sub" id="chat-header-sub">Ask anything about English</div>
       </div>
       <div class="chat-panel-header-actions">
+        <button class="chat-header-btn" id="chat-mode-btn" title="Expand to modal">
+          <svg class="icon-expand" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 3 21 3 21 9"/>
+            <polyline points="9 21 3 21 3 15"/>
+            <line x1="21" y1="3" x2="14" y2="10"/>
+            <line x1="3" y1="21" x2="10" y2="14"/>
+          </svg>
+          <svg class="icon-collapse" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="4 14 10 14 10 20"/>
+            <polyline points="20 10 14 10 14 4"/>
+            <line x1="14" y1="10" x2="21" y2="3"/>
+            <line x1="3" y1="21" x2="10" y2="14"/>
+          </svg>
+        </button>
         <button class="chat-header-btn" id="chat-clear-btn" title="Clear conversation">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -100,6 +116,11 @@ function buildWidget() {
     </div>
   `;
 
+  // Backdrop overlay (used by modal mode)
+  dom.backdropEl = document.createElement('div');
+  dom.backdropEl.className = 'chat-backdrop';
+
+  document.body.appendChild(dom.backdropEl);
   document.body.appendChild(dom.bubble);
   document.body.appendChild(dom.panel);
 
@@ -110,6 +131,7 @@ function buildWidget() {
   dom.suggestionsEl = dom.panel.querySelector('#chat-suggestions');
   dom.contextBarEl  = dom.panel.querySelector('#chat-context-bar');
   dom.badgeEl       = dom.bubble.querySelector('.chat-unread-badge');
+  dom.modeBtnEl     = dom.panel.querySelector('#chat-mode-btn');
 }
 
 // ----------------------------------------------------------------
@@ -132,10 +154,44 @@ function closePanel() {
   state.isOpen = false;
   dom.bubble.classList.remove('panel-open');
   dom.panel.classList.remove('open');
+  // If in modal mode, revert to bubble on close
+  if (state.viewMode === 'modal') {
+    switchToBubble();
+  }
 }
 
 function togglePanel() {
   state.isOpen ? closePanel() : openPanel();
+}
+
+// ----------------------------------------------------------------
+// View mode switching (bubble <-> modal)
+// ----------------------------------------------------------------
+
+function switchToModal() {
+  state.viewMode = 'modal';
+  dom.panel.classList.add('chat-panel--modal');
+  dom.backdropEl.classList.add('visible');
+  dom.bubble.classList.add('hidden');
+  dom.modeBtnEl.title = 'Collapse to bubble';
+  // If panel wasn't open, open it
+  if (!state.isOpen) openPanel();
+}
+
+function switchToBubble() {
+  state.viewMode = 'bubble';
+  dom.panel.classList.remove('chat-panel--modal');
+  dom.backdropEl.classList.remove('visible');
+  dom.bubble.classList.remove('hidden');
+  dom.modeBtnEl.title = 'Expand to modal';
+}
+
+function toggleViewMode() {
+  if (state.viewMode === 'bubble') {
+    switchToModal();
+  } else {
+    switchToBubble();
+  }
 }
 
 // ----------------------------------------------------------------
@@ -199,6 +255,12 @@ function wireEvents() {
 
   // Clear button
   dom.panel.querySelector('#chat-clear-btn').addEventListener('click', clearConversation);
+
+  // Mode toggle button (bubble <-> modal)
+  dom.modeBtnEl.addEventListener('click', toggleViewMode);
+
+  // Backdrop click closes panel (modal mode)
+  dom.backdropEl.addEventListener('click', closePanel);
 
   // Suggestion chip clicks (event delegation)
   dom.suggestionsEl.addEventListener('click', (e) => {

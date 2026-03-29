@@ -517,6 +517,64 @@
 }
 
 /* ----------------------------------------------------------------
+   Backdrop overlay (modal mode)
+   ---------------------------------------------------------------- */
+
+.chat-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 898;
+  background: rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--t-normal);
+}
+
+.chat-backdrop.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ----------------------------------------------------------------
+   Modal mode — centered panel
+   ---------------------------------------------------------------- */
+
+.chat-panel--modal {
+  bottom: 50%;
+  right: 50%;
+  transform: translate(50%, 50%) scale(0.97);
+  transform-origin: center center;
+  width: 520px;
+  height: 620px;
+  max-width: calc(100vw - var(--sp-8));
+  max-height: calc(100vh - var(--sp-8));
+  border-radius: var(--radius-xl);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+}
+
+.chat-panel--modal.open {
+  transform: translate(50%, 50%) scale(1);
+}
+
+/* Hide bubble when in modal mode */
+.chat-bubble-btn.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0);
+  transition: opacity var(--t-fast), transform var(--t-fast);
+}
+
+/* ----------------------------------------------------------------
+   Mode toggle — icon swap (scoped to #chat-mode-btn only)
+   ---------------------------------------------------------------- */
+
+#chat-mode-btn .icon-collapse { display: none; }
+#chat-mode-btn .icon-expand   { display: block; }
+
+.chat-panel--modal #chat-mode-btn .icon-collapse { display: block; }
+.chat-panel--modal #chat-mode-btn .icon-expand   { display: none; }
+
+/* ----------------------------------------------------------------
    Mobile responsive
    ---------------------------------------------------------------- */
 
@@ -532,5 +590,14 @@
   .chat-bubble-btn {
     bottom: var(--sp-4);
     right: var(--sp-4);
+  }
+
+  /* Modal mode on mobile — near full-screen */
+  .chat-panel--modal {
+    width: calc(100vw - var(--sp-4));
+    height: calc(100vh - var(--sp-4));
+    max-width: none;
+    max-height: none;
+    border-radius: var(--radius-lg);
   }
 }
