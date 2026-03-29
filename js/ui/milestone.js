@@ -42,7 +42,6 @@ export function showMilestoneModal({ title, message }) {
     };
 
     overlay.querySelector('[data-action="dismiss"]').addEventListener('click', cleanup);
-    overlay.addEventListener('click', (e) => { if (e.target === overlay) cleanup(); });
     document.addEventListener('keydown', function handler(e) {
       if (e.key === 'Escape') {
         document.removeEventListener('keydown', handler);

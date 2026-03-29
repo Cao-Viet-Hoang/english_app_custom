@@ -1653,7 +1653,12 @@ wsBtnGenerate.addEventListener('click', async () => {
 
   const selectedWordObjects = selectedWords.map(w => {
     const found = allWords.find(a => a.english === w);
-    return { word: w, wordType: found?.wordType || 'other' };
+    return {
+      word: w,
+      wordType: found?.wordType || 'other',
+      vietnamese: found?.vietnamese || '',
+      description: found?.description || '',
+    };
   });
 
   closeModal(modalWordSelect);

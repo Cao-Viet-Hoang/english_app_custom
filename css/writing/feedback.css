@@ -390,9 +390,59 @@
   border-left: 3px solid var(--color-primary-light);
 }
 
+/* ---------- Error Vietnamese Translation ---------- */
+.fb-error-vi {
+  font-size: var(--fs-xs);
+  color: var(--color-text-light);
+  font-style: italic;
+  padding: var(--sp-1) var(--sp-3) var(--sp-1) calc(var(--sp-3) + 18px);
+  line-height: 1.5;
+}
+.fb-error-vi::before {
+  content: 'VI:';
+  font-weight: 600;
+  font-style: normal;
+  color: var(--color-primary);
+  margin-right: var(--sp-1);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.fb-error-vi--correct {
+  color: #1e8449;
+}
+.fb-error-vi--correct::before {
+  color: var(--color-success);
+}
+
+/* ---------- Error Card Explain with AI Button ---------- */
+.fb-error-explain-btn {
+  margin-left: auto;
+  background: none;
+  border: 1px solid var(--color-primary-light);
+  cursor: pointer;
+  color: var(--color-primary);
+  opacity: 0.7;
+  padding: 2px var(--sp-2);
+  border-radius: 100px;
+  transition: all var(--t-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+}
+.fb-error-explain-btn:hover {
+  opacity: 1;
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+}
+.fb-error-explain-btn svg { width: 13px; height: 13px; }
+
 /* ---------- Error Card Save Button ---------- */
 .fb-error-save-btn {
-  margin-left: auto;
+  margin-left: var(--sp-1);
   background: none;
   border: none;
   cursor: pointer;
@@ -525,6 +575,80 @@
 .note-delete-btn:hover { opacity: 1; color: var(--color-danger); background: #fef5f5; }
 .note-delete-btn svg { width: 15px; height: 15px; }
 
+/* ---------- Word Choice Suggestions ---------- */
+.fb-wordchoice-section {
+  margin-bottom: var(--sp-5);
+}
+
+.fb-wordchoice-title {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: #8a6d1b;
+  margin-bottom: var(--sp-4);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.fb-wordchoice-title svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.fb-wordchoice-card {
+  background: #fef8e8;
+  border: 1px solid rgba(242, 208, 122, 0.4);
+  border-radius: var(--radius-md);
+  padding: var(--sp-3) var(--sp-4);
+  margin-bottom: var(--sp-2);
+}
+
+.fb-wordchoice-card:last-child {
+  margin-bottom: 0;
+}
+
+.fb-wordchoice-swap {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+.fb-wordchoice-swap svg {
+  color: #8a6d1b;
+  flex-shrink: 0;
+}
+
+.fb-wordchoice-user {
+  font-weight: 500;
+  color: #c0392b;
+  background: #fde8e8;
+  padding: 1px var(--sp-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
+  text-decoration: line-through;
+  text-decoration-color: rgba(192, 57, 43, 0.4);
+}
+
+.fb-wordchoice-suggested {
+  font-weight: 600;
+  color: #1e8449;
+  background: #d5f5e3;
+  padding: 1px var(--sp-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
+}
+
+.fb-wordchoice-reason {
+  font-size: var(--fs-xs);
+  color: var(--color-text);
+  line-height: 1.5;
+  padding-left: var(--sp-2);
+  border-left: 2px solid rgba(242, 208, 122, 0.5);
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 768px) {
   #notes-modal .modal {
@@ -574,7 +698,13 @@
   .fb-error-card { padding: var(--sp-3); }
   .fb-error-wrong,
   .fb-error-right { font-size: var(--fs-xs); padding: var(--sp-2); }
+  .fb-error-vi { font-size: 11px; padding-left: calc(var(--sp-2) + 18px); }
   .fb-error-explanation { font-size: var(--fs-xs); }
+  .fb-error-explain-btn { font-size: 10px; padding: 1px var(--sp-1); }
+  .fb-wordchoice-card { padding: var(--sp-2) var(--sp-3); }
+  .fb-wordchoice-user,
+  .fb-wordchoice-suggested { font-size: var(--fs-xs); }
+  .fb-wordchoice-reason { font-size: 11px; }
 
   /* Notes modal — mobile */
   .notes-list { gap: var(--sp-2); }

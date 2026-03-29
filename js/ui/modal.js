@@ -29,7 +29,6 @@ export function closeModal(modal) {
 
 /**
  * Wire up standard close behaviours for a modal overlay:
- *  - click on overlay backdrop
  *  - click on any [data-close-modal] element
  *  - Escape key
  * @param {string} selector  CSS selector for the .modal-overlay
@@ -37,10 +36,6 @@ export function closeModal(modal) {
 export function setupModalClose(selector) {
   const overlay = document.querySelector(selector);
   if (!overlay) return;
-
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) closeModal(overlay);
-  });
 
   overlay.querySelectorAll('[data-close-modal]').forEach((btn) => {
     btn.addEventListener('click', () => closeModal(overlay));

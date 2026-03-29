@@ -13,15 +13,20 @@ import {
   buildScoreBadge,
   buildDiffComparisonHtml,
   buildErrorCardsHtml,
+  buildWordChoiceHtml,
   buildInlineDiff,
 } from '../../ai/feedback-builder.js';
 
 let swWords = [], swIndex = 0, swScores = [];
+let swTopicName = '';
+let swAllWords = [];
 
-export function initSentenceMode(allWords, topicId) {
+export function initSentenceMode(allWords, topicId, topicName = '') {
   swWords = shuffle(allWords);
   swIndex = 0;
   swScores = [];
+  swTopicName = topicName;
+  swAllWords = allWords;
 
   const container = document.getElementById('sw-container');
   const result = document.getElementById('sw-result');
@@ -124,7 +129,7 @@ async function handleSentenceCheck(topicId) {
   feedbackEl.innerHTML = '<div class="ai-loading"><div class="spinner"></div><span class="ai-loading-text">Evaluating...</span></div>';
 
   try {
-    const result = await evaluateSentence(w, sentence);
+    const result = await evaluateSentence(w, sentence, swTopicName, swAllWords);
     swScores.push(result.overallScore);
 
     // Record streak for good scores
@@ -166,6 +171,7 @@ function buildSentenceFeedback(result, userSentence) {
     </div>
     ${buildDiffComparisonHtml(diffHtml, 'Your Sentence', 'Corrected Sentence')}
     ${buildErrorCardsHtml(result.grammarErrors)}
+    ${buildWordChoiceHtml(result.wordChoiceSuggestions)}
     <div class="ai-feedback-text">${escapeHtml(result.feedback)}</div>
     ${result.tips.length > 0 ? `
       <ul class="ai-tips">

@@ -10,7 +10,7 @@ import { handleStreakRecord } from '../../shared/streak-handler.js';
 let tfData = null;
 let tfAnswers = {};
 
-export function initTrueFalseMode(allWords, topicId) {
+export function initTrueFalseMode(allWords, topicId, topicName = '') {
   tfData = null;
   tfAnswers = {};
 
@@ -27,17 +27,17 @@ export function initTrueFalseMode(allWords, topicId) {
       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
       Start
     </button>`;
-  document.getElementById('tf-start-btn').onclick = () => generateTrueFalsePassage(allWords, topicId);
+  document.getElementById('tf-start-btn').onclick = () => generateTrueFalsePassage(allWords, topicId, topicName);
 }
 
-async function generateTrueFalsePassage(allWords, topicId) {
+async function generateTrueFalsePassage(allWords, topicId, topicName = '') {
   document.getElementById('tf-content').style.display = 'none';
   document.getElementById('tf-loading').style.display = '';
   document.getElementById('tf-loading').innerHTML =
     '<div class="spinner spinner-lg"></div><span class="ai-loading-text">Generating reading passage...</span>';
 
   try {
-    tfData = await generateReadingPassage(allWords, 'truefalse');
+    tfData = await generateReadingPassage(allWords, 'truefalse', topicName);
     tfAnswers = {};
 
     // Display passage
@@ -59,7 +59,7 @@ async function generateTrueFalsePassage(allWords, topicId) {
     checkBtn.onclick = () => handleTrueFalseCheck();
 
     // New passage button
-    document.getElementById('tf-btn-new').onclick = () => generateTrueFalsePassage(allWords, topicId);
+    document.getElementById('tf-btn-new').onclick = () => generateTrueFalsePassage(allWords, topicId, topicName);
 
     document.getElementById('tf-action-row').style.display = '';
     document.getElementById('tf-done-row').style.display = 'none';
@@ -72,7 +72,7 @@ async function generateTrueFalsePassage(allWords, topicId) {
     document.getElementById('tf-loading').innerHTML =
       `<span class="ai-loading-text" style="color:var(--color-danger)">Failed to generate passage.</span>
        <button class="btn btn-primary btn-sm" id="tf-retry-btn">Retry</button>`;
-    document.getElementById('tf-retry-btn').onclick = () => generateTrueFalsePassage(allWords, topicId);
+    document.getElementById('tf-retry-btn').onclick = () => generateTrueFalsePassage(allWords, topicId, topicName);
     showToast('Failed to generate reading passage.', 'error');
   }
 }

@@ -11,14 +11,17 @@ import {
   buildScoreBadge,
   buildDiffComparisonHtml,
   buildErrorCardsHtml,
+  buildWordChoiceHtml,
   buildInlineDiff,
 } from '../../ai/feedback-builder.js';
 
 let pwWords = [];
 let pwAllWords = [];
+let pwTopicName = '';
 
-export function initParagraphMode(allWords, topicId) {
+export function initParagraphMode(allWords, topicId, topicName = '') {
   pwAllWords = allWords;
+  pwTopicName = topicName;
   pwWords = shuffle(allWords).slice(0, Math.min(5, allWords.length));
 
   const container = document.getElementById('pw-container');
@@ -94,7 +97,7 @@ async function handleParagraphCheck(topicId) {
   feedbackEl.innerHTML = '<div class="ai-loading"><div class="spinner"></div><span class="ai-loading-text">Evaluating...</span></div>';
 
   try {
-    const result = await evaluateParagraph(pwWords, paragraph);
+    const result = await evaluateParagraph(pwWords, paragraph, pwTopicName, pwAllWords);
 
     if (result.overallScore >= 6) {
       handleStreakRecord();
@@ -136,6 +139,7 @@ function buildParagraphFeedback(result, userParagraph) {
     <div class="word-coverage">${wordCoverage}</div>
     ${buildDiffComparisonHtml(diffHtml, 'Your Paragraph', 'Corrected Version')}
     ${buildErrorCardsHtml(result.grammarErrors)}
+    ${buildWordChoiceHtml(result.wordChoiceSuggestions)}
     <div class="ai-feedback-text">${escapeHtml(result.feedback)}</div>
     ${result.suggestions.length > 0 ? `
       <ul class="ai-tips">

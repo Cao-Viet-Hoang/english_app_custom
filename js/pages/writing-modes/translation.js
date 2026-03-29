@@ -13,12 +13,15 @@ import {
   buildScoreBadge,
   buildDiffComparisonHtml,
   buildErrorCardsHtml,
+  buildWordChoiceHtml,
   buildInlineDiff,
 } from '../../ai/feedback-builder.js';
 
 let trChallenge = null;
+let trTopicName = '';
 
-export function initTranslationMode(allWords, topicId) {
+export function initTranslationMode(allWords, topicId, topicName = '') {
+  trTopicName = topicName;
   document.getElementById('tr-content').style.display = 'none';
   document.getElementById('tr-loading').style.display = '';
   document.getElementById('tr-feedback').classList.add('hidden');
@@ -48,7 +51,7 @@ async function generateNewTranslation(allWords, topicId) {
     '<div class="spinner spinner-lg"></div><span class="ai-loading-text">Generating translation challenge...</span>';
 
   try {
-    trChallenge = await generateTranslationChallenge(allWords);
+    trChallenge = await generateTranslationChallenge(allWords, trTopicName);
 
     document.getElementById('tr-source').textContent = trChallenge.vietnameseText;
     document.getElementById('tr-loading').style.display = 'none';
@@ -110,6 +113,8 @@ async function handleTranslationCheck(allWords, topicId) {
       trChallenge.vietnameseText,
       userTranslation,
       trChallenge.referenceEnglish,
+      trTopicName,
+      allWords,
     );
 
     if (result.overallScore >= 6) {
@@ -145,6 +150,7 @@ function buildTranslationFeedback(result, userTranslation) {
     </div>
     ${buildDiffComparisonHtml(diffHtml, 'Your Translation', 'Corrected Version')}
     ${buildErrorCardsHtml(result.grammarErrors)}
+    ${buildWordChoiceHtml(result.wordChoiceSuggestions)}
     <div class="ai-feedback-text">${escapeHtml(result.feedback)}</div>
     <div class="corrected-box">
       <div class="corrected-box-label">Suggested Translation</div>

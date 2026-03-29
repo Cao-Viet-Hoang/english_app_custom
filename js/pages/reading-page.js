@@ -76,8 +76,8 @@ document.querySelectorAll('.mode-btn').forEach(btn => {
 
 function startMode(mode) {
   modeInitialized[mode] = true;
-  if (mode === 'comprehension') initComprehensionMode(allWords, topicId);
-  else if (mode === 'truefalse') initTrueFalseMode(allWords, topicId);
+  if (mode === 'comprehension') initComprehensionMode(allWords, topicId, _topicName);
+  else if (mode === 'truefalse') initTrueFalseMode(allWords, topicId, _topicName);
 }
 
 window._restartMode = () => {
