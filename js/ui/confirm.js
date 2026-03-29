@@ -49,7 +49,6 @@ export function confirmDialog(message, options = {}) {
 
     overlay.querySelector('[data-action="cancel"]').addEventListener('click', () => cleanup(false));
     overlay.querySelector('[data-action="confirm"]').addEventListener('click', () => cleanup(true));
-    overlay.addEventListener('click', (e) => { if (e.target === overlay) cleanup(false); });
     document.addEventListener('keydown', function handler(e) {
       if (e.key === 'Escape') {
         document.removeEventListener('keydown', handler);
@@ -102,7 +101,6 @@ export function confirmDialogHtml(bodyHtml, options = {}) {
 
     overlay.querySelector('[data-action="cancel"]').addEventListener('click', () => cleanup(false));
     overlay.querySelector('[data-action="confirm"]').addEventListener('click', () => cleanup(true));
-    overlay.addEventListener('click', (e) => { if (e.target === overlay) cleanup(false); });
     document.addEventListener('keydown', function handler(e) {
       if (e.key === 'Escape') {
         document.removeEventListener('keydown', handler);

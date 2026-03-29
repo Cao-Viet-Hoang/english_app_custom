@@ -564,6 +564,10 @@
   transition: opacity var(--t-fast), transform var(--t-fast);
 }
 
+/* ---- Close button — only visible in modal mode ---- */
+.chat-close-btn { display: none; }
+.chat-panel--modal .chat-close-btn { display: flex; }
+
 /* ----------------------------------------------------------------
    Mode toggle — icon swap (scoped to #chat-mode-btn only)
    ---------------------------------------------------------------- */

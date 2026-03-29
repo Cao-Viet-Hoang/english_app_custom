@@ -28,6 +28,7 @@ export const dom = {
   badgeEl: null,
   backdropEl: null,
   modeBtnEl: null,
+  closeBtnEl: null,
 };
 
 // ----------------------------------------------------------------
