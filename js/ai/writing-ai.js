@@ -60,9 +60,16 @@ Also provide:
 - "grammarErrors": An array of specific errors found. Each entry has:
   - "original": The exact wrong phrase from the user's sentence.
   - "corrected": The corrected version of that phrase.
+  - "vietnameseOriginal": The Vietnamese meaning of the original (wrong) phrase — what the user actually said in English.
+  - "vietnameseCorrected": The Vietnamese meaning of the corrected phrase — what the user intended to say.
   - "explanation": A clear explanation in Vietnamese of why it is wrong and the grammar rule involved.
   - "type": Error category — one of "grammar", "word_choice", "spelling", "punctuation", "word_order".
   If there are no errors, return an empty array.
+- "wordChoiceSuggestions": An array of word choice suggestions. For any word/phrase the user used that does not fit the intended Vietnamese meaning well, suggest a better alternative. Each entry has:
+  - "userWord": The English word/phrase the user used.
+  - "suggestedWord": A more precise/natural English word/phrase.
+  - "reason": Brief reason in Vietnamese why the suggested word is better.
+  If all word choices are fine, return an empty array.
 - "feedback": A brief overall feedback message in Vietnamese (2-3 sentences).
 - "tips": An array of 1-3 short improvement tips in Vietnamese.
 ${encourageContext}
@@ -84,8 +91,17 @@ Return JSON:
     {
       "original": "...",
       "corrected": "...",
+      "vietnameseOriginal": "...",
+      "vietnameseCorrected": "...",
       "explanation": "...",
       "type": "grammar"
+    }
+  ],
+  "wordChoiceSuggestions": [
+    {
+      "userWord": "...",
+      "suggestedWord": "...",
+      "reason": "..."
     }
   ],
   "feedback": "...",
@@ -107,6 +123,7 @@ Return JSON:
     overallScore: Number(parsed.overallScore) || 0,
     correctedSentence: parsed.correctedSentence || sentence,
     grammarErrors: Array.isArray(parsed.grammarErrors) ? parsed.grammarErrors : [],
+    wordChoiceSuggestions: Array.isArray(parsed.wordChoiceSuggestions) ? parsed.wordChoiceSuggestions : [],
     feedback: parsed.feedback || '',
     tips: Array.isArray(parsed.tips) ? parsed.tips : [],
   };
@@ -170,9 +187,16 @@ Also provide:
 - "grammarErrors": An array of specific errors found. Each entry has:
   - "original": The exact wrong phrase from the user's paragraph.
   - "corrected": The corrected version of that phrase.
+  - "vietnameseOriginal": The Vietnamese meaning of the original (wrong) phrase — what the user actually said in English.
+  - "vietnameseCorrected": The Vietnamese meaning of the corrected phrase — what the user intended to say.
   - "explanation": A clear explanation in Vietnamese of why it is wrong and the grammar rule involved.
   - "type": Error category — one of "grammar", "word_choice", "spelling", "punctuation", "word_order".
   If there are no errors, return an empty array.
+- "wordChoiceSuggestions": An array of word choice suggestions. For any word/phrase the user used that does not fit the intended Vietnamese meaning well, suggest a better alternative. Each entry has:
+  - "userWord": The English word/phrase the user used.
+  - "suggestedWord": A more precise/natural English word/phrase.
+  - "reason": Brief reason in Vietnamese why the suggested word is better.
+  If all word choices are fine, return an empty array.
 - "feedback": Brief overall feedback in Vietnamese (2-3 sentences).
 - "suggestions": Array of 1-3 specific improvement suggestions in Vietnamese.
 ${encourageContext}
@@ -197,8 +221,17 @@ Return JSON:
     {
       "original": "...",
       "corrected": "...",
+      "vietnameseOriginal": "...",
+      "vietnameseCorrected": "...",
       "explanation": "...",
       "type": "grammar"
+    }
+  ],
+  "wordChoiceSuggestions": [
+    {
+      "userWord": "...",
+      "suggestedWord": "...",
+      "reason": "..."
     }
   ],
   "feedback": "...",
@@ -221,6 +254,7 @@ Return JSON:
     wordResults: Array.isArray(parsed.wordResults) ? parsed.wordResults : [],
     correctedParagraph: parsed.correctedParagraph || paragraph,
     grammarErrors: Array.isArray(parsed.grammarErrors) ? parsed.grammarErrors : [],
+    wordChoiceSuggestions: Array.isArray(parsed.wordChoiceSuggestions) ? parsed.wordChoiceSuggestions : [],
     feedback: parsed.feedback || '',
     suggestions: Array.isArray(parsed.suggestions) ? parsed.suggestions : [],
   };
@@ -333,9 +367,16 @@ Also provide:
 - "grammarErrors": An array of specific errors found. Each entry has:
   - "original": The exact wrong phrase/sentence from the user's translation.
   - "corrected": The corrected version of that phrase/sentence.
+  - "vietnameseOriginal": The Vietnamese meaning of the original (wrong) phrase — what the user actually said in English.
+  - "vietnameseCorrected": The Vietnamese meaning of the corrected phrase — what the user intended to say.
   - "explanation": A clear explanation in Vietnamese of why it is wrong and the grammar rule involved.
   - "type": Error category — one of "grammar", "word_choice", "spelling", "punctuation", "word_order".
   If there are no errors, return an empty array.
+- "wordChoiceSuggestions": An array of word choice suggestions. For any English word/phrase the user used that does not accurately convey the Vietnamese meaning, suggest a better alternative. Each entry has:
+  - "userWord": The English word/phrase the user used.
+  - "suggestedWord": A more precise/natural English word/phrase.
+  - "reason": Brief reason in Vietnamese why the suggested word better conveys the Vietnamese meaning.
+  If all word choices are fine, return an empty array.
 - "feedback": Brief overall evaluation in Vietnamese (2-3 sentences).
 - "suggestedTranslation": Your best suggested English translation (may differ from correctedTranslation — this is an ideal/natural version).
 ${encourageContext}
@@ -343,6 +384,7 @@ IMPORTANT:
 - The user's translation does NOT need to be identical to the reference — accept valid alternatives.
 - "correctedTranslation" must be based on the user's original text with minimal changes.
 - "grammarErrors" should list ALL errors, not just grammar — include word choice, spelling, etc.
+- For "wordChoiceSuggestions", focus on words that don't accurately match the Vietnamese source text meaning.
 - Return ONLY valid JSON, no markdown code blocks, no extra text.
 - All explanations and feedback must be in Vietnamese.`;
 
@@ -360,8 +402,17 @@ Return JSON:
     {
       "original": "...",
       "corrected": "...",
+      "vietnameseOriginal": "...",
+      "vietnameseCorrected": "...",
       "explanation": "...",
       "type": "grammar"
+    }
+  ],
+  "wordChoiceSuggestions": [
+    {
+      "userWord": "...",
+      "suggestedWord": "...",
+      "reason": "..."
     }
   ],
   "feedback": "...",
@@ -382,6 +433,7 @@ Return JSON:
     overallScore: Number(parsed.overallScore) || 0,
     correctedTranslation: parsed.correctedTranslation || parsed.suggestedTranslation || referenceTranslation,
     grammarErrors: Array.isArray(parsed.grammarErrors) ? parsed.grammarErrors : [],
+    wordChoiceSuggestions: Array.isArray(parsed.wordChoiceSuggestions) ? parsed.wordChoiceSuggestions : [],
     feedback: parsed.feedback || '',
     suggestedTranslation: parsed.suggestedTranslation || referenceTranslation,
   };

@@ -13,6 +13,7 @@ import {
   buildScoreBadge,
   buildDiffComparisonHtml,
   buildErrorCardsHtml,
+  buildWordChoiceHtml,
   buildInlineDiff,
 } from '../../ai/feedback-builder.js';
 
@@ -170,6 +171,7 @@ function buildSentenceFeedback(result, userSentence) {
     </div>
     ${buildDiffComparisonHtml(diffHtml, 'Your Sentence', 'Corrected Sentence')}
     ${buildErrorCardsHtml(result.grammarErrors)}
+    ${buildWordChoiceHtml(result.wordChoiceSuggestions)}
     <div class="ai-feedback-text">${escapeHtml(result.feedback)}</div>
     ${result.tips.length > 0 ? `
       <ul class="ai-tips">

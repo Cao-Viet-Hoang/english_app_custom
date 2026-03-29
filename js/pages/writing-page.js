@@ -14,7 +14,7 @@ import { initParagraphMode } from './writing-modes/paragraph.js';
 import { initTranslationMode } from './writing-modes/translation.js';
 import { initDictationMode } from './writing-modes/dictation.js';
 import { ERROR_TYPE_LABELS } from '../ai/feedback-builder.js';
-import { initChatWidget } from '../chat/chat-ui.js';
+import { initChatWidget, sendToChat } from '../chat/chat-ui.js';
 
 // ---- Auth & Firebase ----
 const session = guardAuth();
@@ -233,6 +233,25 @@ document.addEventListener('click', async (e) => {
   }
 
   delete btn.dataset.busy;
+});
+
+// Delegate "Explain with AI" button clicks from error cards
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.fb-error-explain-btn');
+  if (!btn) return;
+
+  const original = btn.dataset.original || '';
+  const corrected = btn.dataset.corrected || '';
+  const explanation = btn.dataset.explanation || '';
+  const type = ERROR_TYPE_LABELS[btn.dataset.type] || 'Error';
+
+  const message = `Giải thích chi tiết lỗi "${type}" sau:\n` +
+    `Sai: "${original}"\n` +
+    `Đúng: "${corrected}"\n` +
+    (explanation ? `Giải thích ngắn: ${explanation}\n` : '') +
+    `\nHãy giải thích kỹ hơn tại sao cách viết này sai, quy tắc ngữ pháp liên quan, và cho thêm ví dụ minh họa.`;
+
+  sendToChat(message);
 });
 
 // Notes modal

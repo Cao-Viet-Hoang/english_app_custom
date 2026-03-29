@@ -127,6 +127,14 @@ export function buildErrorCardsHtml(grammarErrors) {
           <div class="fb-error-header">
             <span class="fb-error-num">${i + 1}</span>
             <span class="fb-error-type fb-error-type--${escapeHtml(err.type || 'grammar')}">${ERROR_TYPE_LABELS[err.type] || 'Error'}</span>
+            <button class="fb-error-explain-btn" title="Explain with AI"
+              data-original="${escapeAttr(err.original || '')}"
+              data-corrected="${escapeAttr(err.corrected || '')}"
+              data-explanation="${escapeAttr(err.explanation || '')}"
+              data-type="${escapeAttr(err.type || 'grammar')}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              AI
+            </button>
             <button class="fb-error-save-btn" title="Save to My Notes"
               data-original="${escapeAttr(err.original || '')}"
               data-corrected="${escapeAttr(err.corrected || '')}"
@@ -140,6 +148,7 @@ export function buildErrorCardsHtml(grammarErrors) {
               <span class="fb-error-icon">&#10007;</span>
               <span>${escapeHtml(err.original || '')}</span>
             </div>
+            ${err.vietnameseOriginal ? `<div class="fb-error-vi">${escapeHtml(err.vietnameseOriginal)}</div>` : ''}
             <div class="fb-error-arrow">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
             </div>
@@ -147,8 +156,41 @@ export function buildErrorCardsHtml(grammarErrors) {
               <span class="fb-error-icon">&#10003;</span>
               <span>${escapeHtml(err.corrected || '')}</span>
             </div>
+            ${err.vietnameseCorrected ? `<div class="fb-error-vi fb-error-vi--correct">${escapeHtml(err.vietnameseCorrected)}</div>` : ''}
           </div>
           <div class="fb-error-explanation">${escapeHtml(err.explanation || '').replace(/\n/g, '<br>')}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// ----------------------------------------------------------------
+// Word choice suggestions
+// ----------------------------------------------------------------
+
+/**
+ * Build word choice suggestion cards HTML.
+ * @param {Array<{ userWord: string, suggestedWord: string, reason: string }>} suggestions
+ * @returns {string} HTML
+ */
+export function buildWordChoiceHtml(suggestions) {
+  if (!suggestions || suggestions.length === 0) return '';
+
+  return `
+    <div class="fb-wordchoice-section">
+      <div class="fb-wordchoice-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        Word Choice Suggestions
+      </div>
+      ${suggestions.map(s => `
+        <div class="fb-wordchoice-card">
+          <div class="fb-wordchoice-swap">
+            <span class="fb-wordchoice-user">${escapeHtml(s.userWord || '')}</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            <span class="fb-wordchoice-suggested">${escapeHtml(s.suggestedWord || '')}</span>
+          </div>
+          <div class="fb-wordchoice-reason">${escapeHtml(s.reason || '')}</div>
         </div>
       `).join('')}
     </div>

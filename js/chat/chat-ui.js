@@ -237,3 +237,27 @@ export function initChatWidget(getContextFn) {
   buildWidget();
   wireEvents();
 }
+
+/**
+ * Open the chat panel and pre-fill the input with a message.
+ * Does NOT auto-send — waits for user to press Enter / Send.
+ *
+ * @param {string} message  Text to place in the chat input
+ */
+export function sendToChat(message) {
+  if (!state.initialized) return;
+
+  // Open panel if closed
+  if (!state.isOpen) {
+    openPanel();
+  }
+
+  // Pre-fill input
+  dom.inputEl.value = message;
+  autoResizeInput();
+  updateSendBtn();
+  dom.inputEl.focus();
+
+  // Scroll input into view
+  dom.inputEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}

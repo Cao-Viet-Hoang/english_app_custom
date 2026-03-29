@@ -13,6 +13,7 @@ import {
   buildScoreBadge,
   buildDiffComparisonHtml,
   buildErrorCardsHtml,
+  buildWordChoiceHtml,
   buildInlineDiff,
 } from '../../ai/feedback-builder.js';
 
@@ -149,6 +150,7 @@ function buildTranslationFeedback(result, userTranslation) {
     </div>
     ${buildDiffComparisonHtml(diffHtml, 'Your Translation', 'Corrected Version')}
     ${buildErrorCardsHtml(result.grammarErrors)}
+    ${buildWordChoiceHtml(result.wordChoiceSuggestions)}
     <div class="ai-feedback-text">${escapeHtml(result.feedback)}</div>
     <div class="corrected-box">
       <div class="corrected-box-label">Suggested Translation</div>
