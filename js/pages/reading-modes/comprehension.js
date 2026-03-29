@@ -10,7 +10,7 @@ import { handleStreakRecord } from '../../shared/streak-handler.js';
 let rcData = null;
 let rcAnswers = {};
 
-export function initComprehensionMode(allWords, topicId) {
+export function initComprehensionMode(allWords, topicId, topicName = '') {
   rcData = null;
   rcAnswers = {};
 
@@ -28,17 +28,17 @@ export function initComprehensionMode(allWords, topicId) {
       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
       Start
     </button>`;
-  document.getElementById('rc-start-btn').onclick = () => generateComprehensionPassage(allWords, topicId);
+  document.getElementById('rc-start-btn').onclick = () => generateComprehensionPassage(allWords, topicId, topicName);
 }
 
-async function generateComprehensionPassage(allWords, topicId) {
+async function generateComprehensionPassage(allWords, topicId, topicName = '') {
   document.getElementById('rc-content').style.display = 'none';
   document.getElementById('rc-loading').style.display = '';
   document.getElementById('rc-loading').innerHTML =
     '<div class="spinner spinner-lg"></div><span class="ai-loading-text">Generating reading passage...</span>';
 
   try {
-    rcData = await generateReadingPassage(allWords, 'mcq');
+    rcData = await generateReadingPassage(allWords, 'mcq', topicName);
     rcAnswers = {};
 
     // Display passage with highlighted vocab
@@ -60,7 +60,7 @@ async function generateComprehensionPassage(allWords, topicId) {
     checkBtn.onclick = () => handleComprehensionCheck();
 
     // New passage button
-    document.getElementById('rc-btn-new').onclick = () => generateComprehensionPassage(allWords, topicId);
+    document.getElementById('rc-btn-new').onclick = () => generateComprehensionPassage(allWords, topicId, topicName);
 
     document.getElementById('rc-action-row').style.display = '';
     document.getElementById('rc-done-row').style.display = 'none';
@@ -73,7 +73,7 @@ async function generateComprehensionPassage(allWords, topicId) {
     document.getElementById('rc-loading').innerHTML =
       `<span class="ai-loading-text" style="color:var(--color-danger)">Failed to generate passage.</span>
        <button class="btn btn-primary btn-sm" id="rc-retry-btn">Retry</button>`;
-    document.getElementById('rc-retry-btn').onclick = () => generateComprehensionPassage(allWords, topicId);
+    document.getElementById('rc-retry-btn').onclick = () => generateComprehensionPassage(allWords, topicId, topicName);
     showToast('Failed to generate reading passage.', 'error');
   }
 }

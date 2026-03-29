@@ -11,9 +11,11 @@ import { speakText } from '../../shared/tts.js';
 
 let dcWords = [], dcIndex = 0, dcScore = 0, dcTotal = 5;
 let dcSentences = [];
+let dcTopicName = '';
 
-export function initDictationMode(allWords, topicId) {
+export function initDictationMode(allWords, topicId, topicName = '') {
   dcWords = allWords;
+  dcTopicName = topicName;
   dcIndex = 0;
   dcScore = 0;
   dcTotal = Math.min(5, allWords.length);
@@ -54,7 +56,7 @@ async function generateAllDictation(topicId) {
 
   try {
     for (let i = 0; i < dcTotal; i++) {
-      const result = await generateDictationSentence(dcWords);
+      const result = await generateDictationSentence(dcWords, dcTopicName);
       dcSentences.push(result.sentence);
       const progressEl = document.getElementById('dc-gen-progress');
       if (progressEl) progressEl.textContent = `${i + 1} / ${dcTotal}`;

@@ -98,10 +98,10 @@ document.querySelectorAll('.mode-btn').forEach(btn => {
 });
 
 function startMode(mode) {
-  if (mode === 'sentence') initSentenceMode(allWords, topicId);
-  else if (mode === 'paragraph') initParagraphMode(allWords, topicId);
-  else if (mode === 'translation') initTranslationMode(allWords, topicId);
-  else if (mode === 'dictation') initDictationMode(allWords, topicId);
+  if (mode === 'sentence') initSentenceMode(allWords, topicId, _topicName);
+  else if (mode === 'paragraph') initParagraphMode(allWords, topicId, _topicName);
+  else if (mode === 'translation') initTranslationMode(allWords, topicId, _topicName);
+  else if (mode === 'dictation') initDictationMode(allWords, topicId, _topicName);
 }
 
 window._restartMode = () => startMode(currentMode);

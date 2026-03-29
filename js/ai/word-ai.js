@@ -15,15 +15,19 @@ const BULK_WORD_BATCH_SIZE = 6;
  *
  * Returns both the English paragraph and its Vietnamese translation.
  *
- * @param {Array<{ word: string, wordType: string }>} wordObjects
+ * @param {Array<{ word: string, wordType: string, vietnamese?: string, description?: string }>} wordObjects
  * @param {string} [customInstruction]
  * @param {string} [topicName]
  * @returns {Promise<{ english: string, vietnamese: string }>}
  */
 export async function generateParagraph(wordObjects, customInstruction = '', topicName = '') {
-  const wordList = wordObjects.map(w => `${w.word} (${w.wordType})`).join(', ');
+  const wordList = wordObjects.map(w => {
+    const parts = [w.word, `(${w.wordType})`];
+    if (w.vietnamese) parts.push(`- ${w.vietnamese}`);
+    if (w.description) parts.push(`[${w.description}]`);
+    return parts.join(' ');
+  }).join('\n  • ');
   const trimmedInstruction = (customInstruction || '').trim();
-  const targetSentences = Math.min(Math.max(3, Math.ceil(wordObjects.length * 1.5)), 12);
 
   const topicContext = topicName
     ? `\nThis paragraph is for a vocabulary topic called "${topicName}". Use a scenario or context related to this topic if it represents a clear subject area (e.g. "Business English", "Travel", "Medical Terms"). If the topic name is vague or generic, ignore it.`
@@ -34,6 +38,7 @@ Write a coherent paragraph using the provided vocabulary words.${topicContext}
 
 HARD RULES (never break these):
 - Use ALL of the given vocabulary words in the English paragraph.
+- The paragraph must be NO LONGER THAN 30 words total. Keep it concise.
 - All non-target words must use extremely basic English (A1-A2 level) so learners can focus on the target vocabulary.
 - Keep sentence structure simple and clear.
 - Return ONLY valid JSON with exactly two fields: "english" and "vietnamese".
@@ -41,14 +46,17 @@ HARD RULES (never break these):
 
 SOFT GUIDELINES (follow unless the user's custom instruction overrides):
 - Tell a small story or describe a real-life situation.
-- Target approximately ${targetSentences} sentences total.
+- Use 2-4 short sentences to stay within the 30-word limit.
 ${trimmedInstruction ? `
 USER'S CUSTOM INSTRUCTION (follow closely; overrides soft guidelines):
 ---
 ${trimmedInstruction}
 ---` : ''}`;
 
-  const userPrompt = `Write a paragraph using these vocabulary words: ${wordList}
+  const userPrompt = `Write a paragraph (max 30 words) using these vocabulary words:
+  • ${wordList}
+
+Use the Vietnamese meanings and descriptions above to understand each word's intended meaning, then write the paragraph in English.
 
 Return your response as JSON:
 {
