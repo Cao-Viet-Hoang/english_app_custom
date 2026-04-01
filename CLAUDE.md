@@ -217,7 +217,13 @@ Body: { messages, temperature, max_tokens, response_format: { type: "json_object
 - ES modules with `import`/`export`
 - `async/await` + try-catch for all async ops
 - `escapeHtml()` from `ui/index.js` on ALL user/AI content before DOM insertion (XSS)
-- CSS variables for theming (`--primary`, `--sp-1` to `--sp-8`) — never hardcode
+- CSS variables for theming — never hardcode:
+  - Colors: `--color-primary`, `--color-primary-light`, `--color-primary-dark`, `--color-accent`, `--color-success`, `--color-danger`, `--color-warning`, `--color-bg`, `--color-surface`, `--color-surface-alt`, `--color-text`, `--color-text-light`, `--color-text-inverse`, `--color-border`
+  - Font sizes: `--fs-xs` (0.75rem) through `--fs-2xl` (2.25rem) — never hardcode px/rem
+  - Font stack: `var(--font-sans)` for body, `var(--font-mono)` for code
+  - Spacing: `--sp-1` (4px) through `--sp-8` (64px)
+  - Radius: `--radius-sm/md/lg/xl`, Shadows: `--shadow-sm/md/lg`
+- Prefer CSS classes over inline `style="..."` in both HTML and JS
 - Modals: destroy and rebuild on each open
 - Toast notifications: `showToast(message, 'success'|'error'|'info')`
 - Firebase Compat SDK: `firebase.firestore()` — NOT modular `getFirestore()`
@@ -250,3 +256,49 @@ Body: { messages, temperature, max_tokens, response_format: { type: "json_object
 - Do NOT insert user/AI content into DOM without `escapeHtml()`
 - Do NOT hardcode colors/spacing — use CSS variables
 - Do NOT exceed ~6 words per AI batch call
+
+## Using Sub-Agents and Skills
+
+This project has specialized sub-agents and skills configured in `.claude/`. **Use them proactively** — they carry domain-specific context and produce better, faster results than doing everything inline.
+
+### Sub-agents (via Agent tool)
+
+| Agent                | When to use                                                                  |
+| -------------------- | ---------------------------------------------------------------------------- |
+| `wordcraft-ui`       | Styling, layout, colors, spacing, animations, responsive, modals, toasts     |
+| `wordcraft-ai`       | AI prompts, evaluation logic, scoring, Azure OpenAI calls, response parsing  |
+| `wordcraft-feature`  | New practice/writing/reading modes, new pages, cross-cutting features        |
+| `wordcraft-firebase` | Firestore schema, queries, auth flow, streak data, data migration            |
+
+**Guidelines:**
+- For tasks that span UI + data + AI, **spawn multiple agents in parallel** (e.g., `wordcraft-ui` for CSS + `wordcraft-firebase` for schema)
+- For single-domain tasks, spawn the matching agent — it has full context of its files
+- Each agent knows the current file structure, naming conventions, and design system
+
+### Skills (via Skill tool)
+
+| Skill                    | When to use                                        |
+| ------------------------ | -------------------------------------------------- |
+| `wordcraft-add-feature`  | Step-by-step guide for adding a new mode or page   |
+| `wordcraft-ai-prompt`    | Template and rules for writing Azure OpenAI prompts |
+| `wordcraft-firestore`    | CRUD patterns, batch operations, timestamp handling |
+
+### Rules (auto-loaded)
+
+Rules in `.claude/rules/` are loaded automatically when editing matching file paths:
+- `css.md` → any `css/**/*.css` file
+- `javascript.md` → any `js/**/*.js` file
+- `ai-modules.md` → any `js/ai/*.js` file
+- `style-consistency.md` → CSS, JS, and HTML files
+- `keep-docs-in-sync.md` → all files (reminder to update docs)
+
+## Keeping Docs in Sync
+
+After any structural change (new files, renamed modules, new CSS variables, schema changes, new modes), update the relevant docs so they stay accurate. Stale docs cause agents to generate wrong code.
+
+- **This file (`CLAUDE.md`)**: File Structure, Firestore Schema, Common Tasks, Code Patterns
+- **`.claude/rules/`**: css.md, javascript.md, ai-modules.md, style-consistency.md
+- **`.claude/agents/`**: wordcraft-ui.md, wordcraft-ai.md, wordcraft-feature.md, wordcraft-firebase.md
+- **`.claude/skills/`**: wordcraft-add-feature, wordcraft-ai-prompt, wordcraft-firestore
+
+See `.claude/rules/keep-docs-in-sync.md` for the full mapping of what to update when.

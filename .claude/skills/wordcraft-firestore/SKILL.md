@@ -6,14 +6,17 @@ user-invocable: false
 
 # Firestore Operations in WordCraft
 
-## Collection Reference Functions (js/firebase.js)
+## Collection Reference Functions (js/core/firebase.js)
 
 ```js
-topicsRef(); // users/{username}/topics
-wordsRef(topicId); // users/{username}/topics/{topicId}/words
-paragraphsRef(topicId); // users/{username}/topics/{topicId}/paragraphs
-streakRef(); // users/{username}/streak/main
-dailyActivityRef(date); // users/{username}/streak/main/dailyActivity/{date}
+import { getDb, topicsRef, wordsRef, paragraphsRef, streakRef, dailyActivityRef, notesRef } from '../core/firebase.js';
+
+topicsRef();                // users/{username}/topics
+wordsRef(topicId);          // users/{username}/topics/{topicId}/words
+paragraphsRef(topicId);     // users/{username}/topics/{topicId}/paragraphs
+streakRef();                // users/{username}/streak/main
+dailyActivityRef(date);     // users/{username}/streak/main/dailyActivity/{date}
+notesRef();                 // users/{username}/notes
 ```
 
 ## CRUD Patterns
@@ -45,6 +48,7 @@ await wordsRef(topicId).doc(wordId).delete();
 ## Batch Delete Topic
 
 ```js
+const db = getDb();
 const batch = db.batch();
 const [wordsSnap, parasSnap] = await Promise.all([
   wordsRef(topicId).get(),
@@ -63,8 +67,19 @@ await topicsRef().doc(topicId).delete();
 const date = ts?.toDate?.() || new Date(ts);
 ```
 
+## Feature Files Using Firebase
+
+| File                       | Purpose                              |
+| -------------------------- | ------------------------------------ |
+| `js/features/auth.js`     | Login/logout, session management     |
+| `js/features/topics.js`   | Topics CRUD, word management         |
+| `js/features/vocabulary.js`| Word add/edit/delete, AI fill       |
+| `js/features/paragraphs.js`| Paragraph generation & management  |
+| `js/features/streak.js`   | Streak tracking, milestones          |
+
 ## Gotchas
 
 - Use `firebase.firestore()` NOT `getFirestore()`
 - `orderKey` (not `createdAt`) for word ordering
 - Username from `sessionStorage`, not Firebase Auth
+- Batch limit: 500 operations per batch (Firestore limit)

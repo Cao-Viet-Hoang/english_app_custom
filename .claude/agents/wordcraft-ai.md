@@ -11,26 +11,35 @@ Full project context is in CLAUDE.md at the repo root.
 
 ## Your Files
 
-| File             | Functions                                                                                                                   |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| js/ai.js         | generateWordInfo(), generateBulkWordInfo(), generateParagraph(), generateWordInsights()                                     |
-| js/reading-ai.js | generateReadingPassage()                                                                                                    |
-| js/writing-ai.js | evaluateSentence(), evaluateParagraph(), generateTranslationChallenge(), evaluateTranslation(), generateDictationSentence() |
+| File                       | Functions                                                                                                                   |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `js/ai/word-ai.js`        | generateWordInfo(), generateBulkWordInfo(), generateParagraph(), generateWordInsights()                                     |
+| `js/ai/reading-ai.js`     | generateReadingPassage()                                                                                                    |
+| `js/ai/writing-ai.js`     | evaluateSentence(), evaluateParagraph(), generateTranslationChallenge(), evaluateTranslation(), generateDictationSentence() |
+| `js/ai/chat-ai.js`        | Chat streaming + 2-layer cache (L1 memory Map + L2 sessionStorage)                                                         |
+| `js/ai/feedback-builder.js`| Score badges, error cards, diff HTML builders                                                                              |
+| `js/core/ai-client.js`    | Shared HTTP client: callAzureOpenAI(), streamAzureOpenAI()                                                                  |
 
 ## AI Call Pattern
 
-Credentials from session -> build system/user messages -> POST Azure OpenAI -> parse JSON response.
+All AI calls go through the shared client in `js/core/ai-client.js`:
 
 ```js
-const session = JSON.parse(sessionStorage.getItem("wordcraft_session"));
-const { endpoint, apiKey, deploymentName, apiVersion } = session.azureOpenAI;
+import { callAzureOpenAI } from '../core/ai-client.js';
+
+const result = await callAzureOpenAI({
+  messages: [{ role: 'system', content: '...' }, { role: 'user', content: '...' }],
+  temperature: 0.5,
+  max_tokens: 1000,
+  response_format: { type: 'json_object' }
+});
 ```
 
 ## Rules
 
-- Always use response_format: { type: "json_object" }
+- Always use `response_format: { type: "json_object" }`
 - All feedback text MUST be in Vietnamese
 - Temperature: 0.5 deterministic, 0.7-0.9 creative
 - Batch limit: ~6 words per AI call
-- escapeHtml() on AI text before DOM insertion
+- `escapeHtml()` on AI text before DOM insertion
 - Wrap JSON parse in try-catch; toast on failure
