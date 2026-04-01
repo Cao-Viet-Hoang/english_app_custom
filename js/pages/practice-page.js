@@ -382,7 +382,7 @@ document.addEventListener('keydown', (e) => {
 // ============================================================
 // MATCHING
 // ============================================================
-const MATCH_COUNT = 6;
+let mtMatchCount = 6;
 let mtWords = [], mtSelected = null, mtMatched = 0, mtAttempts = 0;
 const mtContainer = document.getElementById('mt-container');
 const mtResult    = document.getElementById('mt-result');
@@ -392,9 +392,28 @@ const mtMatchedEl = document.getElementById('mt-matched');
 const mtTotalEl   = document.getElementById('mt-total');
 const mtAttemptsEl= document.getElementById('mt-attempts');
 const mtProgress  = document.getElementById('mt-progress');
+const mtCountOpts = document.getElementById('mt-count-options');
+
+// Count selector
+mtCountOpts.addEventListener('click', (e) => {
+  const btn = e.target.closest('.mt-count-btn');
+  if (!btn || btn.classList.contains('disabled')) return;
+  mtCountOpts.querySelectorAll('.mt-count-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  mtMatchCount = btn.dataset.count === 'all' ? Infinity : Number(btn.dataset.count);
+  initMatching();
+});
+
+function updateCountBtnStates() {
+  mtCountOpts.querySelectorAll('.mt-count-btn').forEach(btn => {
+    const val = btn.dataset.count === 'all' ? 0 : Number(btn.dataset.count);
+    btn.classList.toggle('disabled', val > allWords.length && val !== 0);
+  });
+}
 
 function initMatching() {
-  const count = Math.min(MATCH_COUNT, allWords.length);
+  updateCountBtnStates();
+  const count = Math.min(mtMatchCount, allWords.length);
   mtWords = shuffle(allWords).slice(0, count);
   mtMatched = 0;
   mtAttempts = 0;

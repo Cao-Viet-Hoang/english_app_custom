@@ -2,6 +2,61 @@
    PRACTICE — Matching Mode
    ============================================================ */
 
+/* ---------- Count Selector ---------- */
+.mt-count-selector {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+}
+
+.mt-count-label {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--color-text-light);
+  white-space: nowrap;
+}
+
+.mt-count-options {
+  display: flex;
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-md);
+  padding: 3px;
+  gap: 2px;
+}
+
+.mt-count-btn {
+  padding: var(--sp-1) var(--sp-3);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-light);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--t-fast) var(--ease-out);
+  min-width: 36px;
+  text-align: center;
+}
+
+.mt-count-btn:hover {
+  color: var(--color-text);
+}
+
+.mt-count-btn.active {
+  background: var(--color-surface);
+  color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+  font-weight: 600;
+}
+
+.mt-count-btn.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ---------- Container ---------- */
 .matching-container {
   max-width: 700px;
   margin: 0 auto;
@@ -87,6 +142,14 @@
 
 /* ---------- Responsive ---------- */
 @media (max-width: 600px) {
+  .mt-count-selector {
+    flex-wrap: wrap;
+  }
+
+  .mt-count-options {
+    flex-wrap: wrap;
+  }
+
   .matching-grid {
     grid-template-columns: 1fr;
     gap: var(--sp-5);
