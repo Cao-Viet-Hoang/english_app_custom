@@ -145,13 +145,21 @@ async function openActivityLog() {
             ${Array.from({ length: daysInMonth }, (_, i) => {
               const dayStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i + 1).padStart(2, '0')}`;
               const a = activityMap[dayStr];
-              const count = a ? (a.wordsLearned || 0) : 0;
+              const learned = a ? (a.wordsLearned || 0) : 0;
+              const practiced = a ? (a.practiceCount || 0) : 0;
+              const total = learned + practiced;
               let levelClass = '';
-              if (count >= 5) levelClass = 'level-3';
-              else if (count >= 2) levelClass = 'level-2';
-              else if (count >= 1) levelClass = 'level-1';
+              if (total >= 5) levelClass = 'level-3';
+              else if (total >= 2) levelClass = 'level-2';
+              else if (total >= 1) levelClass = 'level-1';
               const todayClass = dayStr === todayStr ? ' today' : '';
-              const title = count > 0 ? `${dayStr}: ${count} word${count > 1 ? 's' : ''} learned` : dayStr;
+              let title = dayStr;
+              if (total > 0) {
+                const parts = [];
+                if (learned > 0) parts.push(`${learned} learned`);
+                if (practiced > 0) parts.push(`${practiced} practiced`);
+                title = `${dayStr}: ${parts.join(', ')}`;
+              }
               return `<div class="activity-day${levelClass ? ' ' + levelClass : ''}${todayClass}" title="${title}"></div>`;
             }).join('')}
           </div>

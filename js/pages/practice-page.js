@@ -382,7 +382,7 @@ document.addEventListener('keydown', (e) => {
 // ============================================================
 // MATCHING
 // ============================================================
-const MATCH_COUNT = 6;
+let mtMatchCount = 6;
 let mtWords = [], mtSelected = null, mtMatched = 0, mtAttempts = 0;
 const mtContainer = document.getElementById('mt-container');
 const mtResult    = document.getElementById('mt-result');
@@ -392,9 +392,28 @@ const mtMatchedEl = document.getElementById('mt-matched');
 const mtTotalEl   = document.getElementById('mt-total');
 const mtAttemptsEl= document.getElementById('mt-attempts');
 const mtProgress  = document.getElementById('mt-progress');
+const mtCountOpts = document.getElementById('mt-count-options');
+
+// Count selector
+mtCountOpts.addEventListener('click', (e) => {
+  const btn = e.target.closest('.mt-count-btn');
+  if (!btn || btn.classList.contains('disabled')) return;
+  mtCountOpts.querySelectorAll('.mt-count-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  mtMatchCount = btn.dataset.count === 'all' ? Infinity : Number(btn.dataset.count);
+  initMatching();
+});
+
+function updateCountBtnStates() {
+  mtCountOpts.querySelectorAll('.mt-count-btn').forEach(btn => {
+    const val = btn.dataset.count === 'all' ? 0 : Number(btn.dataset.count);
+    btn.classList.toggle('disabled', val > allWords.length && val !== 0);
+  });
+}
 
 function initMatching() {
-  const count = Math.min(MATCH_COUNT, allWords.length);
+  updateCountBtnStates();
+  const count = Math.min(mtMatchCount, allWords.length);
   mtWords = shuffle(allWords).slice(0, count);
   mtMatched = 0;
   mtAttempts = 0;
@@ -491,17 +510,43 @@ mtColVi.addEventListener('click', (e) => {
 // LISTENING
 // ============================================================
 let lsWords = [], lsIndex = 0, lsScore = 0, lsAnswered = false;
-const lsContainer  = document.getElementById('ls-container');
-const lsResult     = document.getElementById('ls-result');
-const lsOptions    = document.getElementById('ls-options');
-const lsBtnNext    = document.getElementById('ls-btn-next');
-const lsCurrent    = document.getElementById('ls-current');
-const lsTotal      = document.getElementById('ls-total');
-const lsScoreEl    = document.getElementById('ls-score');
-const lsProgress   = document.getElementById('ls-progress');
-const lsProgressTxt= document.getElementById('ls-progress-text');
-const lsPlayBtn    = document.getElementById('ls-play-btn');
-const lsAnswerType = document.getElementById('listen-answer-type');
+let lsSubMode = 'choose'; // 'choose' or 'type'
+const lsContainer   = document.getElementById('ls-container');
+const lsResult      = document.getElementById('ls-result');
+const lsOptions     = document.getElementById('ls-options');
+const lsBtnNext     = document.getElementById('ls-btn-next');
+const lsCurrent     = document.getElementById('ls-current');
+const lsTotal       = document.getElementById('ls-total');
+const lsScoreEl     = document.getElementById('ls-score');
+const lsProgress    = document.getElementById('ls-progress');
+const lsProgressTxt = document.getElementById('ls-progress-text');
+const lsPlayBtn     = document.getElementById('ls-play-btn');
+const lsAnswerType  = document.getElementById('listen-answer-type');
+const lsPromptLabel = document.getElementById('ls-prompt-label');
+const lsChooseOpts  = document.getElementById('ls-choose-options');
+const lsTypeArea    = document.getElementById('ls-type-area');
+const lsTypeInput   = document.getElementById('ls-type-input');
+const lsLetterHint  = document.getElementById('ls-letter-hint');
+const lsTypeFeedback = document.getElementById('ls-type-feedback');
+
+// Sub-mode toggle
+document.querySelectorAll('.ls-submode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.ls-submode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    lsSubMode = btn.dataset.submode;
+
+    if (lsSubMode === 'choose') {
+      lsChooseOpts.classList.remove('hidden');
+      lsPromptLabel.textContent = 'Listen and choose the correct answer';
+    } else {
+      lsChooseOpts.classList.add('hidden');
+      lsPromptLabel.textContent = 'Listen and type the English word';
+    }
+
+    initListening();
+  });
+});
 
 lsAnswerType.addEventListener('change', () => initListening());
 
@@ -512,6 +557,15 @@ function initListening() {
   lsAnswered = false;
   lsContainer.classList.remove('hidden');
   lsResult.classList.add('hidden');
+
+  if (lsSubMode === 'choose') {
+    lsOptions.classList.remove('hidden');
+    lsTypeArea.classList.add('hidden');
+  } else {
+    lsOptions.classList.add('hidden');
+    lsTypeArea.classList.remove('hidden');
+  }
+
   showListeningQuestion();
 }
 
@@ -531,24 +585,35 @@ function showListeningQuestion() {
   lsAnswered = false;
   lsBtnNext.disabled = true;
   const w = lsWords[lsIndex];
-  const ansType = lsAnswerType.value;
 
   speakText(w.english);
 
-  const others = allWords.filter(x => x.id !== w.id);
-  const wrongPicks = shuffle(others).slice(0, 3);
-  const options = shuffle([w, ...wrongPicks]);
+  if (lsSubMode === 'choose') {
+    const ansType = lsAnswerType.value;
+    const others = allWords.filter(x => x.id !== w.id);
+    const wrongPicks = shuffle(others).slice(0, 3);
+    const options = shuffle([w, ...wrongPicks]);
 
-  const keys = ['A', 'B', 'C', 'D'];
-  lsOptions.innerHTML = options.map((opt, i) => {
-    const text = ansType === 'vi' ? opt.vietnamese : opt.english;
-    return `
-      <button class="quiz-option" data-id="${opt.id}">
-        <span class="option-key">${keys[i]}</span>
-        <span>${escapeHtml(text)}</span>
-      </button>
-    `;
-  }).join('');
+    const keys = ['A', 'B', 'C', 'D'];
+    lsOptions.innerHTML = options.map((opt, i) => {
+      const text = ansType === 'vi' ? opt.vietnamese : opt.english;
+      return `
+        <button class="quiz-option" data-id="${opt.id}">
+          <span class="option-key">${keys[i]}</span>
+          <span>${escapeHtml(text)}</span>
+        </button>
+      `;
+    }).join('');
+  } else {
+    lsTypeInput.value = '';
+    lsTypeInput.disabled = false;
+    lsTypeInput.classList.remove('ls-input-correct', 'ls-input-wrong');
+    lsTypeFeedback.classList.add('hidden');
+    lsTypeFeedback.textContent = '';
+    const eng = w.english;
+    lsLetterHint.textContent = `${eng.length} letter${eng.length !== 1 ? 's' : ''} \u2014 starts with \u201c${eng.charAt(0)}\u201d`;
+    setTimeout(() => lsTypeInput.focus(), 100);
+  }
 
   lsCurrent.textContent = lsIndex + 1;
   lsTotal.textContent = lsWords.length;
@@ -562,6 +627,7 @@ lsPlayBtn.addEventListener('click', () => {
   if (lsIndex < lsWords.length) speakText(lsWords[lsIndex].english);
 });
 
+// Choose mode: option click
 lsOptions.addEventListener('click', (e) => {
   const btn = e.target.closest('.quiz-option');
   if (!btn || lsAnswered) return;
@@ -584,6 +650,43 @@ lsOptions.addEventListener('click', (e) => {
   lsBtnNext.disabled = false;
 });
 
+// Type mode: check answer
+function lsCheckTyping() {
+  if (lsAnswered) return;
+  lsAnswered = true;
+
+  const w = lsWords[lsIndex];
+  const userAnswer = lsTypeInput.value.trim();
+  const isCorrect = userAnswer.toLowerCase() === w.english.toLowerCase();
+
+  lsTypeInput.disabled = true;
+
+  if (isCorrect) {
+    lsScore++;
+    lsScoreEl.textContent = lsScore;
+    lsTypeInput.classList.add('ls-input-correct');
+    lsTypeFeedback.className = 'ls-type-feedback ls-feedback-correct';
+    lsTypeFeedback.textContent = 'Correct!';
+  } else {
+    lsTypeInput.classList.add('ls-input-wrong');
+    lsTypeFeedback.className = 'ls-type-feedback ls-feedback-wrong';
+    lsTypeFeedback.innerHTML = `<span class="ls-feedback-your">Your answer: <strong>${escapeHtml(userAnswer || '(empty)')}</strong></span><span class="ls-feedback-correct-answer">Correct: <strong>${escapeHtml(w.english)}</strong></span>`;
+  }
+
+  lsTypeFeedback.classList.remove('hidden');
+  lsBtnNext.disabled = false;
+  setTimeout(() => lsBtnNext.focus(), 150);
+}
+
+lsTypeInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!lsAnswered) lsCheckTyping();
+    else lsBtnNext.click();
+  }
+});
+
 lsBtnNext.addEventListener('click', () => {
   lsIndex++;
   showListeningQuestion();
@@ -594,17 +697,24 @@ document.addEventListener('keydown', (e) => {
   if (currentMode !== 'listening') return;
   if (lsIndex >= lsWords.length) return;
 
-  if (!lsAnswered && e.key.toLowerCase() === 'r') {
+  // Don't intercept keys when typing in the input
+  if (lsSubMode === 'type' && document.activeElement === lsTypeInput && !lsAnswered) return;
+
+  // R to replay audio
+  if (e.key.toLowerCase() === 'r') {
     speakText(lsWords[lsIndex].english);
     return;
   }
 
-  const keyMap = { '1': 0, '2': 1, '3': 2, '4': 3, 'a': 0, 'b': 1, 'c': 2, 'd': 3 };
-  const idx = keyMap[e.key.toLowerCase()];
+  // Choose mode shortcuts (1-4, A-D)
+  if (lsSubMode === 'choose') {
+    const keyMap = { '1': 0, '2': 1, '3': 2, '4': 3, 'a': 0, 'b': 1, 'c': 2, 'd': 3 };
+    const idx = keyMap[e.key.toLowerCase()];
 
-  if (!lsAnswered && idx !== undefined) {
-    const btns = lsOptions.querySelectorAll('.quiz-option');
-    if (btns[idx]) btns[idx].click();
+    if (!lsAnswered && idx !== undefined) {
+      const btns = lsOptions.querySelectorAll('.quiz-option');
+      if (btns[idx]) btns[idx].click();
+    }
   }
 
   if (lsAnswered && (e.key === 'Enter' || e.key === ' ')) {
@@ -781,6 +891,8 @@ fbBtnNext.addEventListener('click', () => { fbIndex++; showFillBlank(); });
 // ============================================================
 let stWords = [], stIndex = 0, stScore = 0, stTimer = null, stTimeLeft = 60, stTotalAttempted = 0;
 let stNoTimer = false, stElapsedTime = 0, stElapsedTimer = null;
+let stRevealed = 0;
+const ST_REVEAL_PENALTY = 5; // seconds
 const stContainer  = document.getElementById('st-container');
 const stResult     = document.getElementById('st-result');
 const stInput      = document.getElementById('st-input');
@@ -797,6 +909,8 @@ const stBtnStart   = document.getElementById('st-btn-start');
 const stTimeSelect = document.getElementById('st-time-select');
 const stStopWrapper = document.getElementById('st-stop-wrapper');
 const stBtnStop    = document.getElementById('st-btn-stop');
+const stBtnReveal  = document.getElementById('st-btn-reveal');
+const stRevealRow  = document.getElementById('st-reveal-row');
 
 function initSpeedType() {
   stWords = shuffle(allWords);
@@ -808,11 +922,13 @@ function initSpeedType() {
   stTimer = null;
   stElapsedTimer = null;
   stElapsedTime = 0;
+  stRevealed = 0;
   stNoTimer = parseInt(stTimeSelect.value) === 0;
   stContainer.classList.remove('hidden');
   stResult.classList.add('hidden');
   stStartOverlay.classList.remove('hidden');
   stStopWrapper.classList.add('hidden');
+  stRevealRow.classList.add('hidden');
   stInput.value = '';
   stInput.disabled = true;
 
@@ -840,8 +956,91 @@ function showSpeedTypeWord() {
   stEnglishHint.textContent = `${eng.length} letters — starts with "${eng.charAt(0)}"`;
 }
 
+function stRevealWord() {
+  if (!stTimer) return;
+  const w = stWords[stIndex];
+
+  // Apply time penalty
+  if (stNoTimer) {
+    stElapsedTime += ST_REVEAL_PENALTY;
+    document.getElementById('st-timer').textContent = stElapsedTime;
+  } else {
+    stTimeLeft = Math.max(0, stTimeLeft - ST_REVEAL_PENALTY);
+    document.getElementById('st-timer').textContent = stTimeLeft;
+    const totalTime = parseInt(stTimeSelect.value);
+    stProgressEl.style.width = Math.round((stTimeLeft / totalTime) * 100) + '%';
+    if (stTimeLeft <= 10) {
+      document.getElementById('st-timer').style.color = 'var(--color-danger)';
+    }
+    if (stTimeLeft <= 0) {
+      clearInterval(stTimer);
+      stTimer = null;
+      stInput.disabled = true;
+      stRevealRow.classList.add('hidden');
+      stContainer.classList.add('hidden');
+      stResult.classList.remove('hidden');
+      stResult.innerHTML = buildSpeedTypeResultHtml(stScore, stTotalAttempted, totalTime);
+      return;
+    }
+  }
+
+  // Pause timer while showing answer
+  if (!stNoTimer) {
+    clearInterval(stTimer);
+  } else if (stElapsedTimer) {
+    clearInterval(stElapsedTimer);
+  }
+
+  // Show answer, count as wrong + revealed
+  stRevealed++;
+  stTotalAttempted++;
+  stTotalEl.textContent = stTotalAttempted;
+  stInput.value = w.english;
+  stInput.disabled = true;
+  stInput.classList.add('st-flash-reveal');
+
+  setTimeout(() => {
+    stInput.classList.remove('st-flash-reveal');
+    stInput.value = '';
+    stInput.disabled = false;
+    stInput.focus();
+    stIndex++;
+    showSpeedTypeWord();
+
+    // Resume timer
+    if (!stNoTimer) {
+      const totalTime = parseInt(stTimeSelect.value);
+      stTimer = setInterval(() => {
+        stTimeLeft--;
+        document.getElementById('st-timer').textContent = stTimeLeft;
+        stProgressEl.style.width = Math.round((stTimeLeft / totalTime) * 100) + '%';
+        if (stTimeLeft <= 10) {
+          document.getElementById('st-timer').style.color = 'var(--color-danger)';
+        }
+        if (stTimeLeft <= 0) {
+          clearInterval(stTimer);
+          stTimer = null;
+          stInput.disabled = true;
+          stRevealRow.classList.add('hidden');
+          stContainer.classList.add('hidden');
+          stResult.classList.remove('hidden');
+          stResult.innerHTML = buildSpeedTypeResultHtml(stScore, stTotalAttempted, totalTime);
+          document.getElementById('st-timer').style.color = '';
+        }
+      }, 1000);
+    } else {
+      const timerRef = document.getElementById('st-timer');
+      stElapsedTimer = setInterval(() => {
+        stElapsedTime++;
+        timerRef.textContent = stElapsedTime;
+      }, 1000);
+    }
+  }, 1200);
+}
+
 function startSpeedTypeTimer() {
   stStartOverlay.classList.add('hidden');
+  stRevealRow.classList.remove('hidden');
   stInput.disabled = false;
   stInput.focus();
 
@@ -872,6 +1071,7 @@ function startSpeedTypeTimer() {
       clearInterval(stTimer);
       stTimer = null;
       stInput.disabled = true;
+      stRevealRow.classList.add('hidden');
       stContainer.classList.add('hidden');
       stResult.classList.remove('hidden');
       stResult.innerHTML = buildSpeedTypeResultHtml(stScore, stTotalAttempted, totalTime);
@@ -886,6 +1086,7 @@ function finishSpeedTypeNoTimer() {
   stTimer = null;
   stInput.disabled = true;
   stStopWrapper.classList.add('hidden');
+  stRevealRow.classList.add('hidden');
   stContainer.classList.add('hidden');
   stResult.classList.remove('hidden');
   stResult.innerHTML = buildSpeedTypeResultHtml(stScore, stTotalAttempted, stElapsedTime + 's (no limit)');
@@ -923,9 +1124,13 @@ function buildSpeedTypeResultHtml(correct, total, timeDisplay) {
         <div class="lbl">Correct</div>
       </div>
       <div class="result-detail-item">
-        <div class="num red">${total - correct}</div>
+        <div class="num red">${total - correct - stRevealed}</div>
         <div class="lbl">Wrong</div>
       </div>
+      ${stRevealed > 0 ? `<div class="result-detail-item">
+        <div class="num" style="color:var(--color-warning)">${stRevealed}</div>
+        <div class="lbl">Revealed</div>
+      </div>` : ''}
       <div class="result-detail-item">
         <div class="num" style="color:var(--color-primary)">${timeStr}</div>
         <div class="lbl">Time</div>
@@ -943,6 +1148,7 @@ function buildSpeedTypeResultHtml(correct, total, timeDisplay) {
 
 stBtnStart.addEventListener('click', startSpeedTypeTimer);
 stBtnStop.addEventListener('click', finishSpeedTypeNoTimer);
+stBtnReveal.addEventListener('click', stRevealWord);
 
 stInput.addEventListener('input', () => {
   if (!stTimer) return;
@@ -964,6 +1170,11 @@ stInput.addEventListener('input', () => {
 });
 
 stInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Tab' && stTimer && !stInput.disabled) {
+    e.preventDefault();
+    stRevealWord();
+    return;
+  }
   if (e.key === 'Escape' && stTimer) {
     stTotalAttempted++;
     stTotalEl.textContent = stTotalAttempted;

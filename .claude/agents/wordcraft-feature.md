@@ -15,18 +15,34 @@ You work across the entire codebase: HTML pages, JS modules, CSS files, and Fire
 
 ## Key Files for Common Tasks
 
-| Task              | Files to edit                                                      |
-| ----------------- | ------------------------------------------------------------------ |
-| New practice mode | practice.html, js/router.js, css/practice.css                      |
-| New writing mode  | js/writing-modes.js, js/writing.js, writing.html, js/writing-ai.js |
-| New reading mode  | js/reading-modes.js, js/reading.js, reading.html, js/reading-ai.js |
-| New word field    | js/firebase.js + form + display logic                              |
-| New AI feature    | js/ai.js, js/reading-ai.js, or js/writing-ai.js                    |
+| Task              | Files to edit                                                                        |
+| ----------------- | ------------------------------------------------------------------------------------ |
+| New practice mode | `practice.html`, `js/pages/practice-page.js`, `css/practice/` (new CSS file)         |
+| New writing mode  | `js/pages/writing-modes/`, `js/pages/writing-page.js`, `writing.html`, `js/ai/writing-ai.js`, `css/writing/` |
+| New reading mode  | `js/pages/reading-modes/`, `js/pages/reading-page.js`, `reading.html`, `js/ai/reading-ai.js` |
+| New word field    | `js/core/firebase.js` + form + display logic                                         |
+| New AI feature    | `js/ai/word-ai.js`, `js/ai/reading-ai.js`, or `js/ai/writing-ai.js`                 |
+| New page          | New HTML file + `js/pages/` controller + CSS file + navbar links in all HTML files    |
+
+## Key Modules
+
+| Module                    | Purpose                                         |
+| ------------------------- | ----------------------------------------------- |
+| `js/core/router.js`      | Query param routing, `guardAuth()`, `navigateTo()` |
+| `js/core/firebase.js`    | Firestore CRUD, collection refs                  |
+| `js/core/ai-client.js`   | Azure OpenAI HTTP client                         |
+| `js/ui/index.js`         | Barrel import for showToast, showModal, escapeHtml, etc. |
+| `js/shared/page-init.js` | `initProtectedPage()` — auth guard, navbar, streak |
+| `js/shared/result-builder.js` | `buildResultHtml()` — shared result screen  |
+| `js/shared/tts.js`       | `speakText()` — Web Speech API                   |
+| `js/shared/shuffle.js`   | Fisher-Yates shuffle                             |
+| `js/chat/chat-ui.js`     | `initChatWidget()` — chat widget for each page   |
 
 ## Rules
 
-- escapeHtml() on ALL user/AI content before DOM insertion
+- `escapeHtml()` on ALL user/AI content before DOM insertion
 - async/await + try-catch for all async ops
 - CSS variables only, never hardcode colors/spacing
-- Firebase Compat SDK: firebase.firestore(), NOT modular
+- Firebase Compat SDK: `firebase.firestore()`, NOT modular
 - All AI feedback in Vietnamese
+- All pages use external `<script type="module" src="js/pages/xxx-page.js">`

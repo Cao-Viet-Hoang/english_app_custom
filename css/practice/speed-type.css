@@ -112,6 +112,43 @@
   font-size: var(--fs-md);
 }
 
+/* ---------- Reveal / Spoil ---------- */
+.speedtype-reveal-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-4);
+}
+
+.st-btn-reveal {
+  font-size: var(--fs-sm);
+  gap: var(--sp-1);
+  color: var(--color-text-light);
+  transition: color var(--t-fast), background var(--t-fast);
+}
+
+.st-btn-reveal:hover {
+  color: var(--color-warning);
+}
+
+.st-reveal-penalty {
+  font-weight: 600;
+  color: var(--color-danger);
+}
+
+.st-reveal-hint {
+  font-size: var(--fs-xs);
+  color: var(--color-text-light);
+  opacity: 0.6;
+}
+
+.speedtype-input.st-flash-reveal {
+  border-color: var(--color-warning);
+  background: #fef9e7;
+  color: var(--color-warning);
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 600px) {
   .speedtype-vietnamese {

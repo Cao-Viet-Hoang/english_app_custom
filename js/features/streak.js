@@ -158,10 +158,13 @@ export async function loadStreak(forceRefresh = false) {
 }
 
 /**
- * Record a daily activity event (word marked as learned).
+ * Record a daily activity event.
+ * @param {'learn'|'practice'} [type='learn']  Type of activity:
+ *   - 'learn': word marked as learned (increments wordsLearned)
+ *   - 'practice': practice/reading/writing session (increments practiceCount)
  * @returns {Promise<{ streakData: Object, isNewDay: boolean, milestone: number|null }>}
  */
-export async function recordActivity() {
+export async function recordActivity(type = 'learn') {
   const today = getTodayDateString();
   const yesterday = getYesterdayDateString();
 
@@ -199,12 +202,17 @@ export async function recordActivity() {
     }
 
     // Create/update daily activity doc
-    batch.set(dailyActivityRef().doc(today), {
+    const dailyData = {
       date: today,
-      wordsLearned: 1,
       firstActionAt: firebase.firestore.FieldValue.serverTimestamp(),
       lastActionAt: firebase.firestore.FieldValue.serverTimestamp(),
-    });
+    };
+    if (type === 'learn') {
+      dailyData.wordsLearned = 1;
+    } else {
+      dailyData.practiceCount = 1;
+    }
+    batch.set(dailyActivityRef().doc(today), dailyData, { merge: true });
 
     await batch.commit();
 
@@ -221,9 +229,10 @@ export async function recordActivity() {
     const milestone = checkMilestone(newStreak);
     return { streakData: data, isNewDay: true, milestone };
   } else {
-    // Same day — just increment daily counter
+    // Same day — just increment the appropriate counter
+    const incrementField = type === 'learn' ? 'wordsLearned' : 'practiceCount';
     batch.update(dailyActivityRef().doc(today), {
-      wordsLearned: firebase.firestore.FieldValue.increment(1),
+      [incrementField]: firebase.firestore.FieldValue.increment(1),
       lastActionAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
     await batch.commit();
@@ -240,7 +249,8 @@ export async function recordActivity() {
 
 /**
  * Decrement wordsLearned for today when a word is un-marked as learned.
- * If wordsLearned drops to 0, rolls back streak data so the day no longer counts.
+ * If all activity drops to 0 (no wordsLearned AND no practiceCount),
+ * rolls back streak data so the day no longer counts.
  * @returns {Promise<void>}
  */
 export async function removeActivity() {
@@ -250,8 +260,9 @@ export async function removeActivity() {
   const doc = await docRef.get();
   if (!doc.exists) return;
 
-  const current = doc.data().wordsLearned || 0;
-  if (current > 1) {
+  const docData = doc.data();
+  const currentLearned = docData.wordsLearned || 0;
+  if (currentLearned > 1) {
     await docRef.update({
       wordsLearned: firebase.firestore.FieldValue.increment(-1),
       lastActionAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -259,15 +270,21 @@ export async function removeActivity() {
     return;
   }
 
-  // wordsLearned is dropping to 0 — roll back streak if it was incremented today
+  // wordsLearned is dropping to 0
   await docRef.update({ wordsLearned: 0, lastActionAt: firebase.firestore.FieldValue.serverTimestamp() });
 
+  // If there's still practice activity today, don't roll back streak
+  const practiceCount = docData.practiceCount || 0;
+  if (practiceCount > 0) return;
+
+  // No activity left — roll back streak if it was incremented today
   const mainDoc = await streakRef().get();
   if (!mainDoc.exists || mainDoc.data().lastActiveDate !== today) return;
 
   const data = mainDoc.data();
   const yesterdayDoc = await dailyActivityRef().doc(yesterday).get();
-  const hadYesterday = yesterdayDoc.exists && (yesterdayDoc.data().wordsLearned || 0) > 0;
+  const hadYesterday = yesterdayDoc.exists
+    && ((yesterdayDoc.data().wordsLearned || 0) > 0 || (yesterdayDoc.data().practiceCount || 0) > 0);
 
   const rollback = {
     currentStreak: hadYesterday ? Math.max((data.currentStreak || 1) - 1, 0) : 0,

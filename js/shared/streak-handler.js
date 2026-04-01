@@ -13,7 +13,7 @@ import { showMilestoneModal } from '../ui/milestone.js';
  */
 export async function handleStreakRecord() {
   try {
-    const { streakData, isNewDay, milestone } = await recordActivity();
+    const { streakData, isNewDay, milestone } = await recordActivity('practice');
 
     if (milestone) {
       const msg = getMilestoneMessage(milestone);

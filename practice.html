@@ -259,6 +259,19 @@
 
     <!-- ============ MATCHING MODE ============ -->
     <div id="panel-matching" class="practice-panel">
+      <!-- Count selector -->
+      <div class="mt-count-selector">
+        <span class="mt-count-label">Pairs:</span>
+        <div class="mt-count-options" id="mt-count-options">
+          <button class="mt-count-btn" data-count="4" type="button">4</button>
+          <button class="mt-count-btn active" data-count="6" type="button">6</button>
+          <button class="mt-count-btn" data-count="8" type="button">8</button>
+          <button class="mt-count-btn" data-count="10" type="button">10</button>
+          <button class="mt-count-btn" data-count="15" type="button">15</button>
+          <button class="mt-count-btn" data-count="all" type="button">All</button>
+        </div>
+      </div>
+
       <div class="stats-bar">
         <div class="stat">Pairs: <strong id="mt-matched">0</strong> / <strong id="mt-total">0</strong></div>
         <div class="stat">Attempts: <strong id="mt-attempts">0</strong></div>
@@ -286,7 +299,26 @@
 
     <!-- ============ LISTENING MODE ============ -->
     <div id="panel-listening" class="practice-panel">
-      <div class="direction-toggle">
+      <!-- Sub-mode toggle -->
+      <div class="ls-submode-toggle">
+        <button class="ls-submode-btn active" data-submode="choose" type="button">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+          </svg>
+          Choose Answer
+        </button>
+        <button class="ls-submode-btn" data-submode="type" type="button">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.01"/><path d="M10 8h.01"/><path d="M14 8h.01"/><path d="M18 8h.01"/><path d="M8 12h.01"/><path d="M12 12h.01"/><path d="M16 12h.01"/><path d="M8 16h8"/>
+          </svg>
+          Type Answer
+        </button>
+      </div>
+
+      <!-- Answer type (Choose mode only) -->
+      <div class="direction-toggle" id="ls-choose-options">
         <label for="listen-answer-type">Answer type:</label>
         <select id="listen-answer-type">
           <option value="vi">Vietnamese</option>
@@ -305,7 +337,7 @@
 
       <div class="listening-container" id="ls-container">
         <div class="listening-prompt-card">
-          <div class="listening-prompt-label">Listen and choose the correct answer</div>
+          <div class="listening-prompt-label" id="ls-prompt-label">Listen and choose the correct answer</div>
           <button class="listening-play-btn" id="ls-play-btn" type="button">
             <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24"
                  fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -315,9 +347,21 @@
             </svg>
             <span>Play Sound</span>
           </button>
-          <div class="listening-replay-hint">Click to listen again</div>
+          <div class="listening-replay-hint">Press R or click to listen again</div>
         </div>
+
+        <!-- Choose mode: multiple choice -->
         <div class="quiz-options" id="ls-options"></div>
+
+        <!-- Type mode: text input -->
+        <div class="ls-type-area hidden" id="ls-type-area">
+          <div class="ls-type-input-row">
+            <input type="text" id="ls-type-input" class="ls-type-input" placeholder="Type the English word..." autocomplete="off" spellcheck="false" />
+          </div>
+          <div class="ls-letter-hint" id="ls-letter-hint"></div>
+          <div class="ls-type-feedback hidden" id="ls-type-feedback"></div>
+        </div>
+
         <div class="quiz-next-row">
           <button class="btn btn-primary" id="ls-btn-next" disabled>Next Question →</button>
         </div>
@@ -418,6 +462,17 @@
         </div>
         <div class="speedtype-input-row">
           <input type="text" class="speedtype-input" id="st-input" placeholder="Type here..." autocomplete="off" spellcheck="false" />
+        </div>
+        <div class="speedtype-reveal-row" id="st-reveal-row">
+          <button class="btn btn-ghost st-btn-reveal" id="st-btn-reveal" type="button">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            Reveal <span class="st-reveal-penalty">(-5s)</span>
+          </button>
+          <span class="st-reveal-hint">Press Tab to reveal</span>
         </div>
         <div class="speedtype-start-overlay" id="st-start-overlay">
           <button class="btn btn-primary btn-lg" id="st-btn-start">Start Typing!</button>

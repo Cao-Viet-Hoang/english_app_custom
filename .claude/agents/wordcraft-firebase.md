@@ -11,24 +11,33 @@ Full project context is in CLAUDE.md at the repo root.
 
 ## Your Files
 
-- js/firebase.js — Firebase init, CRUD helpers, collection ref functions
-- js/auth.js — Login, logout, session management, guardAuth()
-- js/streak.js — Streak tracking logic
+| File                     | Purpose                                      |
+| ------------------------ | -------------------------------------------- |
+| `js/core/firebase.js`   | Firebase init, CRUD helpers, collection refs  |
+| `js/features/auth.js`   | Login, logout, session management             |
+| `js/features/streak.js` | Streak tracking logic, milestones             |
+| `js/features/topics.js` | Topics CRUD, word management                  |
+| `js/features/vocabulary.js` | Word add/edit/delete, AI fill, duplicates |
+| `js/features/paragraphs.js` | Paragraph generation and management       |
 
 ## Collection Reference Pattern
 
 ```js
-topicsRef(); // users/{username}/topics
-wordsRef(topicId); // users/{username}/topics/{topicId}/words
-paragraphsRef(topicId); // users/{username}/topics/{topicId}/paragraphs
-streakRef(); // users/{username}/streak/main
-dailyActivityRef(date); // users/{username}/streak/main/dailyActivity/{date}
+import { getDb } from '../core/firebase.js';
+
+topicsRef();                // users/{username}/topics
+wordsRef(topicId);          // users/{username}/topics/{topicId}/words
+paragraphsRef(topicId);     // users/{username}/topics/{topicId}/paragraphs
+streakRef();                // users/{username}/streak/main
+dailyActivityRef(date);     // users/{username}/streak/main/dailyActivity/{date}
+notesRef();                 // users/{username}/notes
 ```
 
 ## Key Gotchas
 
-1. Compat SDK: Use firebase.firestore(), NOT modular getFirestore()
-2. Timestamps: Handle both Timestamp objects and plain values: ts?.toDate?.() || new Date(ts)
-3. Word ordering: Use orderKey (numeric), fallback createdAt
-4. No Firebase Auth: Username comes from sessionStorage, not Firebase Auth
-5. Batch deletes: When deleting a topic, batch-delete all words + paragraphs first
+1. **Compat SDK**: Use `firebase.firestore()`, NOT modular `getFirestore()`
+2. **Timestamps**: Handle both Timestamp objects and plain values: `ts?.toDate?.() || new Date(ts)`
+3. **Word ordering**: Use `orderKey` (numeric), fallback `createdAt`
+4. **No Firebase Auth**: Username comes from `sessionStorage`, not Firebase Auth
+5. **Batch deletes**: When deleting a topic, batch-delete all words + paragraphs first
+6. **Session**: `sessionStorage` for runtime, `localStorage` for persist across tabs

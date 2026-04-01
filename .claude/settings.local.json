@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(cd:*)",
-      "Bash(mv js/router.js js/core/router.js)",
-      "Bash(mv js/firebase.js js/core/firebase.js)"
-    ]
-  }
-}
