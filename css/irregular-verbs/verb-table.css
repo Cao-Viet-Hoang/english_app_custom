@@ -1,0 +1,215 @@
+/* ============================================================
+   IRREGULAR VERBS — Verb Table
+   Table columns, pattern badges, learned toggle
+   ============================================================ */
+
+/* ---------- Verb column styles ---------- */
+.iv-v1 {
+  font-weight: 600;
+  color: var(--color-primary-dark);
+  white-space: nowrap;
+}
+
+.iv-v1-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.iv-v2 {
+  color: var(--color-accent);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.iv-v3 {
+  color: var(--color-text);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.iv-vn {
+  color: var(--color-text-light);
+  font-size: var(--fs-sm);
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* ---------- Pattern Badge ---------- */
+.iv-pattern-badge {
+  display: inline-block;
+  padding: 2px var(--sp-2);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+.iv-pattern-badge.pat-abc {
+  background: rgba(124, 158, 217, 0.15);
+  color: var(--color-primary-dark);
+}
+
+.iv-pattern-badge.pat-abb {
+  background: rgba(232, 168, 124, 0.18);
+  color: #b06a30;
+}
+
+.iv-pattern-badge.pat-aba {
+  background: rgba(130, 201, 161, 0.18);
+  color: #3a7a56;
+}
+
+.iv-pattern-badge.pat-aaa {
+  background: rgba(242, 208, 122, 0.25);
+  color: #7a5c10;
+}
+
+/* ---------- Learned toggle (reuse from topic-detail) ---------- */
+.btn-learned {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  background: none;
+  border: 1.8px solid var(--color-border);
+  border-radius: 50%;
+  cursor: pointer;
+  color: transparent;
+  transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast), transform var(--t-fast);
+  flex-shrink: 0;
+}
+
+.btn-learned:hover {
+  border-color: var(--color-success);
+  color: rgba(130, 201, 161, 0.5);
+}
+
+.btn-learned.learned {
+  background: var(--color-success);
+  border-color: var(--color-success);
+  color: #fff;
+}
+
+.btn-learned.learned:hover {
+  background: #6ab88d;
+  border-color: #6ab88d;
+  color: #fff;
+}
+
+.btn-learned:active {
+  transform: scale(0.88);
+}
+
+.btn-learned svg {
+  pointer-events: none;
+}
+
+/* ---------- Speak button ---------- */
+.btn-speak {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-light);
+  padding: 2px;
+  border-radius: var(--radius-sm);
+  transition: color var(--t-fast), background var(--t-fast);
+  flex-shrink: 0;
+}
+
+.btn-speak:hover {
+  color: var(--color-primary);
+  background: rgba(124, 158, 217, .1);
+}
+
+/* ---------- IPA style ---------- */
+.iv-ipa {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--color-text-light);
+  white-space: nowrap;
+}
+
+/* ---------- Row highlight (learned) ---------- */
+.iv-row.learned-row .iv-v1 {
+  color: var(--color-text-light);
+}
+
+/* ---------- Swipe delete (reuse pattern) ---------- */
+.swipe-delete-th {
+  width: 0 !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+}
+
+.swipe-delete-cell {
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  border-bottom: none !important;
+  overflow: visible;
+  position: relative;
+  z-index: 0;
+  background: transparent !important;
+}
+
+.swipe-delete-btn {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: var(--color-danger);
+  color: var(--color-text-inverse);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--t-fast);
+  z-index: 0;
+  border: none;
+  outline: none;
+  pointer-events: none;
+}
+
+.swipe-delete-btn:hover {
+  background: #d67171;
+}
+
+.swipe-row.swiped .swipe-delete-btn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+  /* Hide pattern column on small screens */
+  .vocab-table th:nth-child(6),
+  .vocab-table td:nth-child(6) {
+    display: none;
+  }
+}
+
+@media (max-width: 540px) {
+  /* Hide Vietnamese on very small screens (still accessible via edit) */
+  .vocab-table th:nth-child(5),
+  .vocab-table td:nth-child(5) {
+    display: none;
+  }
+}

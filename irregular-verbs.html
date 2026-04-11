@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WordCraft — Irregular Verbs</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/irregular-verbs/layout.css" />
+  <link rel="stylesheet" href="css/irregular-verbs/verb-table.css" />
+  <link rel="stylesheet" href="css/irregular-verbs/practice.css" />
+  <link rel="stylesheet" href="css/streak.css" />
+  <link rel="stylesheet" href="css/chat.css" />
+</head>
+<body class="iv-page">
+
+  <!-- ===== Navbar ===== -->
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a class="navbar-brand" href="topics.html">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+        </svg>
+        WordCraft
+      </a>
+      <div class="navbar-spacer"></div>
+      <div class="navbar-right">
+        <span id="navbar-streak" class="navbar-streak" style="display:none">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M8 16c3.314 0 6-2 6-5.5 0-1.5-.5-4-2.5-6 .25 1.5-1.25 2-1.25 2C11 4 9 .5 8 0 7.5 2 5.5 4 4.75 4.75 4.75 4.75 3.25 4.25 3.5 2.75 1.5 4.75 1 7.25 1 8.75 1 12.25 4.686 16 8 16zm0-1c-1.657 0-3-1-3-2.75 0-.75.25-2 1.25-3 .125.75 1 1.25 1 1.25S8 9 8 8c.5 1 1.5 2 2 3 .75.75 1 1.5 1 2.25C11 14 9.657 15 8 15z"/>
+          </svg>
+          <span id="navbar-streak-count">0</span>
+        </span>
+        <div class="navbar-user-info">
+          <span class="navbar-avatar" id="nav-avatar"></span>
+          <span class="navbar-username" id="nav-username"></span>
+        </div>
+        <div class="navbar-vdivider"></div>
+        <button id="btn-logout" class="btn-signout">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          Sign out
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ===== Main Content ===== -->
+  <main class="container">
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+      <a href="topics.html">My Topics</a>
+      <span class="breadcrumb-separator">›</span>
+      <span>Irregular Verbs</span>
+    </div>
+
+    <!-- Header -->
+    <div class="detail-header">
+      <h2 class="detail-title">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             class="iv-header-icon">
+          <path d="M4 6h16M4 12h10M4 18h7"/>
+        </svg>
+        Irregular Verbs
+        <span class="detail-word-badge hidden" id="iv-verb-badge"></span>
+        <span class="learned-progress hidden" id="iv-learned-progress">
+          <span class="learned-progress-bar">
+            <span class="learned-progress-fill" id="iv-learned-fill"></span>
+          </span>
+          <span class="learned-progress-text" id="iv-learned-text"></span>
+        </span>
+      </h2>
+    </div>
+
+    <!-- Loading -->
+    <div id="iv-loading" class="text-center" style="padding:var(--sp-8)">
+      <div class="spinner spinner-lg"></div>
+    </div>
+
+    <!-- Tabs + content (hidden until data loaded) -->
+    <div id="iv-content" class="hidden">
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="table">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <line x1="3" y1="9" x2="21" y2="9"/>
+            <line x1="3" y1="15" x2="21" y2="15"/>
+            <line x1="9" y1="3" x2="9" y2="21"/>
+          </svg>
+          Verb Table
+        </button>
+        <button class="tab-btn" data-tab="practice">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+          Practice
+        </button>
+      </div>
+
+      <!-- ===== TAB: Verb Table ===== -->
+      <div id="tab-table" class="tab-content active">
+
+        <!-- Toolbar -->
+        <div class="vocab-toolbar">
+          <div class="vocab-search-group">
+            <div class="vocab-search">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input class="form-input" type="text" id="iv-search-input" placeholder="Search verbs…" />
+            </div>
+            <select id="iv-pattern-filter" class="sort-select">
+              <option value="">All patterns</option>
+              <option value="ABC">ABC (go/went/gone)</option>
+              <option value="ABB">ABB (buy/bought/bought)</option>
+              <option value="ABA">ABA (come/came/come)</option>
+              <option value="AAA">AAA (cut/cut/cut)</option>
+            </select>
+            <select id="iv-sort-select" class="sort-select">
+              <option value="input-order">Input order</option>
+              <option value="name-az">A → Z</option>
+              <option value="name-za">Z → A</option>
+              <option value="learned">Learned first</option>
+            </select>
+          </div>
+          <div class="vocab-toolbar-btns">
+            <button id="btn-bulk-verb" class="btn btn-outline btn-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2a10 10 0 0 1 10 10"/><path d="M12 2v4"/><path d="m14.5 4.5-2.5 2-2.5-2"/>
+                <circle cx="12" cy="12" r="2"/>
+              </svg>
+              Bulk Add (AI)
+            </button>
+            <button id="btn-add-verb" class="btn btn-primary btn-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Add Verb
+            </button>
+          </div>
+        </div>
+
+        <!-- Empty state -->
+        <div id="iv-empty" class="empty-state hidden">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 6h16M4 12h10M4 18h7"/>
+          </svg>
+          <h3>No Irregular Verbs Yet</h3>
+          <p>Add verbs one by one or use Bulk Add with AI to get started.</p>
+          <button id="btn-add-verb-empty" class="btn btn-primary">Add Verb</button>
+        </div>
+
+        <!-- Verb Table -->
+        <div id="iv-table-wrapper" class="vocab-table-wrapper iv-table-wrapper hidden">
+          <table class="vocab-table">
+            <thead>
+              <tr>
+                <th style="width:36px"></th>
+                <th>Base (V1)</th>
+                <th>Past Simple (V2)</th>
+                <th>Past Participle (V3)</th>
+                <th>Vietnamese</th>
+                <th>Pattern</th>
+                <th class="swipe-delete-th"></th>
+              </tr>
+            </thead>
+            <tbody id="iv-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== TAB: Practice ===== -->
+      <div id="tab-practice" class="tab-content hidden">
+
+        <!-- Not enough verbs -->
+        <div id="iv-practice-empty" class="practice-empty hidden">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <h3>Not Enough Verbs</h3>
+          <p>Add at least 4 irregular verbs to start practicing.</p>
+          <button class="btn btn-primary" onclick="document.querySelector('[data-tab=table]').click()">Go to Verb Table</button>
+        </div>
+
+        <!-- Mode Selector -->
+        <div id="iv-mode-selector" class="mode-selector hidden">
+          <button class="mode-btn active" data-mode="flashcard">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="4" width="20" height="16" rx="2"/>
+              <path d="M12 9v6M9 12h6"/>
+            </svg>
+            Flashcard
+          </button>
+          <button class="mode-btn" data-mode="fill-forms">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+            </svg>
+            Fill Forms
+          </button>
+          <button class="mode-btn" data-mode="quiz">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            Quiz
+          </button>
+          <button class="mode-btn" data-mode="matching">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+              <line x1="8" y1="18" x2="21" y2="18"/>
+              <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/>
+              <line x1="3" y1="18" x2="3.01" y2="18"/>
+            </svg>
+            Matching
+          </button>
+          <button class="mode-btn" data-mode="speed-conj">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            Speed
+          </button>
+        </div>
+
+        <!-- Practice Area -->
+        <div class="practice-area" id="iv-practice-area">
+          <div class="practice-panel active" id="panel-flashcard"></div>
+          <div class="practice-panel" id="panel-fill-forms"></div>
+          <div class="practice-panel" id="panel-quiz"></div>
+          <div class="practice-panel" id="panel-matching"></div>
+          <div class="practice-panel" id="panel-speed-conj"></div>
+        </div>
+      </div>
+    </div><!-- /#iv-content -->
+  </main>
+
+  <!-- ===== Add / Edit Verb Modal ===== -->
+  <div id="modal-verb" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modal-verb-title">Add Verb</h3>
+        <button class="btn-icon" data-close-modal aria-label="Close">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <form id="form-verb">
+        <div class="modal-body">
+          <div class="iv-form-row">
+            <div class="form-group">
+              <label class="form-label" for="input-verb-base">Base Form (V1) <span class="text-danger">*</span></label>
+              <input class="form-input" type="text" id="input-verb-base" placeholder="e.g. go" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="input-verb-p2">Past Simple (V2) <span class="text-danger">*</span></label>
+              <input class="form-input" type="text" id="input-verb-p2" placeholder="e.g. went" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="input-verb-p3">Past Participle (V3) <span class="text-danger">*</span></label>
+              <input class="form-input" type="text" id="input-verb-p3" placeholder="e.g. gone" required />
+            </div>
+          </div>
+          <div class="iv-form-row">
+            <div class="form-group">
+              <label class="form-label" for="input-verb-vi">Vietnamese Meaning</label>
+              <input class="form-input" type="text" id="input-verb-vi" placeholder="e.g. đi" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="input-verb-ipa">IPA (Base Form)</label>
+              <input class="form-input" type="text" id="input-verb-ipa" placeholder="e.g. /ɡoʊ/" />
+            </div>
+          </div>
+          <div id="modal-verb-pattern" class="iv-pattern-preview hidden">
+            Pattern: <span id="modal-verb-pattern-badge" class="iv-pattern-badge"></span>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="btn-verb-ai-fill" class="btn btn-outline btn-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+            AI Fill
+          </button>
+          <div style="flex:1"></div>
+          <button type="button" class="btn btn-ghost" data-close-modal>Cancel</button>
+          <button type="submit" id="btn-verb-save" class="btn btn-primary">Add</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== Bulk Add Modal ===== -->
+  <div id="modal-bulk-verb" class="modal-overlay">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3>Bulk Add Verbs (AI)</h3>
+        <button class="btn-icon" data-close-modal aria-label="Close">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Step 1: Input -->
+      <div id="bulk-verb-step-input">
+        <div class="modal-body">
+          <p class="text-sm text-light" style="margin-bottom:var(--sp-3)">
+            Nhập các base form (V1) của động từ, mỗi động từ một dòng hoặc ngăn cách bằng dấu phẩy.
+            AI sẽ tự động điền V2, V3 và nghĩa tiếng Việt.
+          </p>
+          <div class="form-group">
+            <label class="form-label" for="bulk-verb-input">Base Forms (V1)</label>
+            <textarea class="form-input" id="bulk-verb-input" rows="6"
+                      placeholder="go&#10;buy&#10;come&#10;run&#10;..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" data-close-modal>Cancel</button>
+          <button type="button" id="bulk-verb-btn-generate" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+            Generate with AI
+          </button>
+        </div>
+      </div>
+
+      <!-- Loading state -->
+      <div id="bulk-verb-loading" class="hidden">
+        <div class="modal-body text-center" style="padding:var(--sp-7)">
+          <div class="spinner spinner-lg" style="margin:0 auto var(--sp-4)"></div>
+          <p id="bulk-verb-loading-text" class="text-light">Generating…</p>
+          <div id="bulk-verb-progress-wrap" class="hidden">
+            <div class="progress-bar" style="margin:var(--sp-3) auto 0;max-width:240px">
+              <div class="progress-bar-fill" id="bulk-verb-progress-fill" style="width:0%"></div>
+            </div>
+            <p id="bulk-verb-progress-count" class="text-sm text-light" style="margin-top:var(--sp-2)"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Preview -->
+      <div id="bulk-verb-step-preview" class="hidden">
+        <div class="modal-body">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-3)">
+            <p class="text-sm text-light">Kiểm tra lại trước khi thêm. Bỏ chọn những động từ không muốn thêm.</p>
+            <div style="display:flex;gap:var(--sp-2)">
+              <button type="button" id="bulk-verb-select-all" class="btn btn-ghost btn-sm">Select All</button>
+              <button type="button" id="bulk-verb-deselect-all" class="btn btn-ghost btn-sm">Deselect All</button>
+              <span id="bulk-verb-counter" class="text-sm text-light" style="line-height:2.2"></span>
+            </div>
+          </div>
+          <div class="vocab-table-wrapper" style="max-height:340px;overflow-y:auto">
+            <table class="vocab-table">
+              <thead>
+                <tr>
+                  <th style="width:36px"></th>
+                  <th>V1</th><th>V2</th><th>V3</th><th>Vietnamese</th><th>Pattern</th>
+                </tr>
+              </thead>
+              <tbody id="bulk-verb-preview-tbody"></tbody>
+            </table>
+          </div>
+          <p id="bulk-verb-adding" class="text-sm text-light hidden" style="margin-top:var(--sp-3)">
+            <span id="bulk-verb-adding-text"></span>
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" data-close-modal>Cancel</button>
+          <button type="button" id="bulk-verb-btn-add" class="btn btn-primary" disabled>
+            Add Selected Verbs
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Firebase SDK ===== -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+  <!-- ===== App Script ===== -->
+  <script type="module" src="js/pages/irregular-verbs-page.js"></script>
+</body>
+</html>

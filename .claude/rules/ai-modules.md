@@ -20,7 +20,7 @@ paths:
 
 | File                | Functions                                                    |
 | ------------------- | ------------------------------------------------------------ |
-| `js/ai/word-ai.js`    | generateWordInfo, generateBulkWordInfo, generateParagraph, generateWordInsights |
+| `js/ai/word-ai.js`    | generateWordInfo, generateBulkWordInfo, generateParagraph, generateWordInsights, generateVerbInfo, generateBulkVerbInfo |
 | `js/ai/reading-ai.js` | generateReadingPassage                                       |
 | `js/ai/writing-ai.js` | evaluateSentence, evaluateParagraph, generateTranslationChallenge, evaluateTranslation, generateDictationSentence |
 | `js/ai/chat-ai.js`    | Chat streaming + 2-layer cache                               |

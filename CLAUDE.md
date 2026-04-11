@@ -15,16 +15,17 @@ Users provide their own Firebase + Azure OpenAI credentials via JSON — no sign
 
 ```
 ├── index.html                          # Login page (JSON credentials input)
-├── topics.html                         # Topics hub (grid of topics)
+├── topics.html                         # Topics hub (grid of topics + Learning Tools toolbar)
 ├── topic-detail.html                   # Topic detail (word list, add/edit/delete)
 ├── practice.html                       # Practice (7 interactive modes)
 ├── reading.html                        # Reading (2 AI modes)
 ├── writing.html                        # Writing (4 AI modes)
+├── irregular-verbs.html                # Irregular Verbs (verb table + 5 practice modes)
 │
 ├── css/
 │   ├── base.css                        # CSS vars, resets, shared components
 │   ├── login.css                       # Login page
-│   ├── topics.css                      # Topics grid
+│   ├── topics.css                      # Topics grid + Learning Tools toolbar
 │   ├── streak.css                      # Streak dashboard, heatmap
 │   ├── chat.css                        # Chat widget
 │   ├── reading.css                     # Reading page
@@ -44,13 +45,17 @@ Users provide their own Firebase + Azure OpenAI credentials via JSON — no sign
 │   │   ├── speed-type.css
 │   │   ├── unscramble.css
 │   │   └── results.css                 # Shared result overlay
-│   └── writing/                        # Writing page
-│       ├── layout.css                  # Mode selector, stats, result, AI loading
-│       ├── feedback.css                # Score badges, error cards, notes modal
-│       ├── sentence.css
-│       ├── paragraph.css
-│       ├── translation.css
-│       └── dictation.css
+│   ├── writing/                        # Writing page
+│   │   ├── layout.css                  # Mode selector, stats, result, AI loading
+│   │   ├── feedback.css                # Score badges, error cards, notes modal
+│   │   ├── sentence.css
+│   │   ├── paragraph.css
+│   │   ├── translation.css
+│   │   └── dictation.css
+│   └── irregular-verbs/                # Irregular Verbs page
+│       ├── layout.css                  # Page shell, breadcrumb, tabs, header
+│       ├── verb-table.css              # Verb table, pattern badges, swipe-delete
+│       └── practice.css                # Mode selector + all 5 practice mode styles
 │
 └── js/
     ├── core/                           # Foundation — no business logic
@@ -79,10 +84,11 @@ Users provide their own Firebase + Azure OpenAI credentials via JSON — no sign
     │   ├── topics.js                   # Topics CRUD, word management
     │   ├── vocabulary.js               # Word add/edit/delete, AI fill, duplicates
     │   ├── paragraphs.js               # Paragraph generation and management
-    │   └── streak.js                   # Daily streak tracking, milestones, heatmap
+    │   ├── streak.js                   # Daily streak tracking, milestones, heatmap
+    │   └── irregular-verbs.js          # Irregular verbs CRUD, pattern detection, stats
     │
     ├── ai/                             # AI integration layer
-    │   ├── word-ai.js                  # Word info, bulk info, insights, paragraph gen
+    │   ├── word-ai.js                  # Word info, bulk info, insights, paragraph gen, verb info
     │   ├── reading-ai.js               # Reading passage generation
     │   ├── writing-ai.js               # Writing evaluators, dictation
     │   ├── chat-ai.js                  # Chat streaming + 2-layer cache
@@ -100,14 +106,21 @@ Users provide their own Firebase + Azure OpenAI credentials via JSON — no sign
         ├── practice-page.js            # Practice page (7 modes)
         ├── reading-page.js             # Reading page controller
         ├── writing-page.js             # Writing page controller
+        ├── irregular-verbs-page.js     # Irregular Verbs page (table + 5 practice modes)
         ├── reading-modes/
         │   ├── comprehension.js
         │   └── truefalse.js
-        └── writing-modes/
-            ├── sentence.js
-            ├── paragraph.js
-            ├── translation.js
-            └── dictation.js
+        ├── writing-modes/
+        │   ├── sentence.js
+        │   ├── paragraph.js
+        │   ├── translation.js
+        │   └── dictation.js
+        └── irregular-verb-modes/
+            ├── flashcard.js            # Conjugation flashcard (flip, retry queue)
+            ├── fill-forms.js           # Fill missing verb forms (V2/V3)
+            ├── quiz.js                 # Multiple-choice conjugation quiz
+            ├── matching.js             # Click-to-match V1 ↔ V2/V3
+            └── speed-conjugation.js    # Timed typing (V2 + V3 per verb)
 ```
 
 ## Folder Conventions
@@ -155,6 +168,13 @@ users/{username}/
 │   ├── original: string, corrected: string, explanation: string
 │   ├── topicId: string (optional — link to source topic)
 │   └── savedAt: timestamp
+├── irregularVerbs/{verbId}/
+│   ├── base: string (V1), pastSimple: string (V2), pastParticiple: string (V3)
+│   ├── vietnamese: string, ipaBase: string (optional)
+│   ├── pattern: string ("AAA" | "ABB" | "ABA" | "ABC") — auto-computed
+│   ├── learned: boolean, learnedAt: timestamp | null
+│   ├── orderKey: number (Date.now() * 1000 — stable sort key)
+│   └── createdAt: timestamp
 └── streak/main/
     ├── currentStreak: number, longestStreak: number
     ├── lastActiveDate: string (YYYY-MM-DD), totalActiveDays: number
@@ -181,6 +201,8 @@ Body: { messages, temperature, max_tokens, response_format: { type: "json_object
 | `generateBulkWordInfo()`         | ai/word-ai.js     | Same, batched for multiple words (max ~6)                   |
 | `generateParagraph()`            | ai/word-ai.js     | Create paragraph from vocabulary words                      |
 | `generateWordInsights()`         | ai/word-ai.js     | Synonyms, antonyms, collocations, examples                  |
+| `generateVerbInfo()`             | ai/word-ai.js     | V2/V3 forms, Vietnamese meaning, IPA for a single verb      |
+| `generateBulkVerbInfo()`         | ai/word-ai.js     | Same, batched (10 verbs per call) with optional progress CB |
 | `generateReadingPassage()`       | ai/reading-ai.js  | Passage + MCQ or T/F questions                              |
 | `evaluateSentence()`             | ai/writing-ai.js  | Score grammar/usage/naturalness                             |
 | `evaluateParagraph()`            | ai/writing-ai.js  | Score grammar/coherence                                     |
@@ -234,13 +256,16 @@ Body: { messages, temperature, max_tokens, response_format: { type: "json_object
 
 | Task              | Files to edit                                                                        |
 | ----------------- | ------------------------------------------------------------------------------------ |
-| New practice mode | `practice.html`, `js/pages/practice-page.js`, `css/practice/`                        |
-| New writing mode  | `js/pages/writing-modes/`, `js/pages/writing-page.js`, `writing.html`, `js/ai/writing-ai.js` |
-| New reading mode  | `js/pages/reading-modes/`, `js/pages/reading-page.js`, `reading.html`, `js/ai/reading-ai.js` |
-| New AI feature    | `js/ai/word-ai.js` or `js/ai/reading-ai.js` or `js/ai/writing-ai.js`                |
-| Change UI shared  | `js/ui/` (toast/modal/confirm/utils), `css/base.css`                                 |
-| Change auth flow  | `js/features/auth.js`, `js/core/router.js`, `index.html`                             |
-| Change DB schema  | `js/core/firebase.js` + form + display logic                                         |
+| New practice mode      | `practice.html`, `js/pages/practice-page.js`, `css/practice/`                        |
+| New writing mode       | `js/pages/writing-modes/`, `js/pages/writing-page.js`, `writing.html`, `js/ai/writing-ai.js` |
+| New reading mode       | `js/pages/reading-modes/`, `js/pages/reading-page.js`, `reading.html`, `js/ai/reading-ai.js` |
+| New AI feature         | `js/ai/word-ai.js` or `js/ai/reading-ai.js` or `js/ai/writing-ai.js`                |
+| Change UI shared       | `js/ui/` (toast/modal/confirm/utils), `css/base.css`                                 |
+| Change auth flow       | `js/features/auth.js`, `js/core/router.js`, `index.html`                             |
+| Change DB schema       | `js/core/firebase.js` + form + display logic                                         |
+| Irregular Verbs table  | `irregular-verbs.html`, `js/pages/irregular-verbs-page.js`, `css/irregular-verbs/`  |
+| Irregular Verbs modes  | `js/pages/irregular-verb-modes/`, `css/irregular-verbs/practice.css`                 |
+| Irregular Verbs data   | `js/features/irregular-verbs.js`, `firestore.rules`                                  |
 
 ## Keyboard Shortcuts
 
@@ -295,6 +320,8 @@ Rules in `.claude/rules/` are loaded automatically when editing matching file pa
 ## Keeping Docs in Sync
 
 After any structural change (new files, renamed modules, new CSS variables, schema changes, new modes), update the relevant docs so they stay accurate. Stale docs cause agents to generate wrong code.
+
+**Mandatory rule:** Always keep everything under `.claude/` in sync with the latest code. If a needed file does not exist yet, create it immediately (do not skip because it is missing).
 
 - **This file (`CLAUDE.md`)**: File Structure, Firestore Schema, Common Tasks, Code Patterns
 - **`.claude/rules/`**: css.md, javascript.md, ai-modules.md, style-consistency.md

@@ -1,0 +1,190 @@
+/* ============================================================
+   IRREGULAR VERBS — Layout
+   Page shell, breadcrumb, header, tabs, toolbar
+   ============================================================ */
+
+.iv-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- Breadcrumb (reuse base pattern) ---------- */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-sm);
+  color: var(--color-text-light);
+  margin-bottom: var(--sp-5);
+}
+
+.breadcrumb a {
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.breadcrumb a:hover { text-decoration: underline; }
+
+.breadcrumb-separator {
+  color: var(--color-border);
+}
+
+/* ---------- Detail Header (reuse topic-detail pattern) ---------- */
+.detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: var(--sp-5);
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+}
+
+.detail-title {
+  font-size: var(--fs-xl);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+
+.iv-header-icon {
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.detail-word-badge {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  padding: 2px var(--sp-3);
+  background: var(--color-surface-alt);
+  color: var(--color-text-light);
+  border: 1px solid var(--color-border);
+  border-radius: 100px;
+  line-height: 1.8;
+}
+
+/* ---------- Learned Progress ---------- */
+.learned-progress {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-xs);
+  color: var(--color-text-light);
+  padding: 3px var(--sp-3);
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: 100px;
+  line-height: 1.8;
+  vertical-align: middle;
+}
+
+.learned-progress-bar {
+  display: inline-block;
+  width: 60px;
+  height: 5px;
+  background: var(--color-border);
+  border-radius: 3px;
+  overflow: hidden;
+  vertical-align: middle;
+}
+
+.learned-progress-fill {
+  display: block;
+  height: 100%;
+  background: var(--color-success);
+  border-radius: 3px;
+  transition: width 0.4s var(--ease-out);
+}
+
+.learned-progress-text {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.learned-progress.completed {
+  border-color: var(--color-success);
+}
+
+.learned-progress.completed .learned-progress-text {
+  color: var(--color-success);
+}
+
+/* ---------- Tabs ---------- */
+.tabs {
+  display: flex;
+  gap: var(--sp-2);
+  border-bottom: 2px solid var(--color-border);
+  margin-bottom: var(--sp-5);
+}
+
+.tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--color-text-light);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  transition: color var(--t-fast), border-color var(--t-fast);
+}
+
+.tab-btn:hover {
+  color: var(--color-text);
+}
+
+.tab-btn.active {
+  color: var(--color-primary-dark);
+  border-bottom-color: var(--color-primary);
+}
+
+.tab-btn svg {
+  flex-shrink: 0;
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* ---------- Form row (verb add/edit) ---------- */
+.iv-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-3);
+}
+
+.iv-pattern-preview {
+  font-size: var(--fs-sm);
+  color: var(--color-text-light);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-sm);
+  margin-top: var(--sp-2);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 640px) {
+  .iv-form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-title {
+    font-size: var(--fs-lg);
+  }
+
+  .tabs {
+    margin-bottom: var(--sp-4);
+  }
+}

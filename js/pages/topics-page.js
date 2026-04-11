@@ -6,6 +6,7 @@
 import { guardAuth, logout, navigateTo } from '../core/router.js';
 import { initFirebase } from '../core/firebase.js';
 import { loadTopics, createTopic, renameTopic, deleteTopic } from '../features/topics.js';
+import { getVerbStats } from '../features/irregular-verbs.js';
 import { showModal, closeModal, setupModalClose, showToast, confirmDialog, formatDate, escapeHtml, showMilestoneModal } from '../ui/index.js';
 import { loadStreak, loadActivityHistory, getMilestoneMessage, getDailyEncouragement } from '../features/streak.js';
 import { initChatWidget } from '../chat/chat-ui.js';
@@ -443,6 +444,23 @@ searchInput.addEventListener('input', () => {
   renderTopicCards(sortTopics(filtered));
 });
 
+// ---- Irregular Verbs toolbar icon ----
+async function initIrregularVerbsCard() {
+  try {
+    const { total, learned } = await getVerbStats();
+    const labelEl = document.getElementById('iv-tool-label');
+    if (!labelEl) return;
+    if (total === 0) {
+      labelEl.textContent = 'Irregular Verbs';
+    } else {
+      labelEl.textContent = `Irregular Verbs · ${learned}/${total}`;
+    }
+  } catch {
+    // silently ignore — tooltip stays at default text
+  }
+}
+
 // ---- Initial load ----
 initStreak();
+initIrregularVerbsCard();
 render();
