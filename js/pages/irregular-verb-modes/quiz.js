@@ -65,8 +65,8 @@ export function initIVQuiz(allVerbs) {
           <span>${pct}%</span>
         </div>
         <div class="stat">
-          ✓ <strong style="color:var(--color-success)">${correct}</strong>
-          &nbsp;✗ <strong style="color:var(--color-danger)">${wrong}</strong>
+          ✓ <strong class="stat-correct">${correct}</strong>
+          &nbsp;✗ <strong class="stat-wrong">${wrong}</strong>
         </div>
       </div>
 
@@ -80,7 +80,6 @@ export function initIVQuiz(allVerbs) {
         <div class="iv-quiz-card">
           <div class="iv-quiz-prompt-label">${escapeHtml(promptLabel)}</div>
           <div class="iv-quiz-prompt">${escapeHtml(v[promptField] || '—')}</div>
-          ${v.vietnamese ? `<div class="iv-quiz-sub">${escapeHtml(v.vietnamese)}</div>` : ''}
           <div class="iv-quiz-ask-label">What is the <strong>${escapeHtml(answerLabel)}</strong>?</div>
         </div>
 
@@ -128,8 +127,7 @@ export function initIVQuiz(allVerbs) {
     const optionsEl = panel.querySelector('.iv-quiz-options');
     const nextBtn = document.createElement('button');
     nextBtn.type = 'button';
-    nextBtn.className = 'btn btn-primary';
-    nextBtn.style.marginTop = 'var(--sp-3)';
+    nextBtn.className = 'btn btn-primary iv-quiz-next';
     nextBtn.textContent = index + 1 < total ? 'Next →' : 'See Results';
     nextBtn.addEventListener('click', () => {
       index++;

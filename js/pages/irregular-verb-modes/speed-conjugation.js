@@ -36,17 +36,18 @@ export function initIVSpeedConj(allVerbs) {
     panel.innerHTML = `
       <div class="iv-speed-container">
         <div class="iv-speed-toolbar">
-          <div class="iv-speed-timer-group">
+          <label for="iv-speed-time-select">Time limit:</label>
+          <select id="iv-speed-time-select" class="sort-select">
             ${TIME_OPTIONS.map(t => `
-              <button class="iv-speed-timer-btn${t === timeLimit ? ' active' : ''}" data-time="${t}" type="button">
-                ${t === 0 ? '∞' : t + 's'}
-              </button>
+              <option value="${t}"${t === timeLimit ? ' selected' : ''}>
+                ${t === 0 ? 'No Timer' : t + ' seconds'}
+              </option>
             `).join('')}
-          </div>
+          </select>
         </div>
-        <div style="text-align:center;padding:var(--sp-7)">
-          <p class="text-light" style="margin-bottom:var(--sp-5)">
-            Với mỗi động từ V1 được hiện ra, hãy điền V2 và V3 càng nhanh càng tốt.
+        <div class="iv-speed-start-view">
+          <p class="text-light iv-speed-start-desc">
+            For each base verb (V1), type the Past Simple (V2) and Past Participle (V3) as fast as you can.
           </p>
           <button id="iv-speed-start" class="btn btn-primary btn-lg" type="button">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
@@ -59,11 +60,8 @@ export function initIVSpeedConj(allVerbs) {
       </div>
     `;
 
-    panel.querySelectorAll('.iv-speed-timer-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        timeLimit = parseInt(btn.dataset.time);
-        panel.querySelectorAll('.iv-speed-timer-btn').forEach(b => b.classList.toggle('active', b === btn));
-      });
+    panel.querySelector('#iv-speed-time-select')?.addEventListener('change', (e) => {
+      timeLimit = parseInt(e.target.value);
     });
 
     panel.querySelector('#iv-speed-start')?.addEventListener('click', startGame);
@@ -125,8 +123,8 @@ export function initIVSpeedConj(allVerbs) {
           <span>${pct}%</span>
         </div>
         <div class="stat">
-          ✓ <strong style="color:var(--color-success)">${correct}</strong>
-          &nbsp;✗ <strong style="color:var(--color-danger)">${wrong}</strong>
+          ✓ <strong class="stat-correct">${correct}</strong>
+          &nbsp;✗ <strong class="stat-wrong">${wrong}</strong>
         </div>
       </div>
 
@@ -157,11 +155,6 @@ export function initIVSpeedConj(allVerbs) {
             <button class="btn btn-primary" id="iv-speed-check" type="button">Check</button>
             <button class="btn btn-ghost" id="iv-speed-skip" type="button">Skip</button>
           </div>
-        </div>
-
-        <div class="iv-speed-score">
-          <div class="score-correct"><strong>${correct}</strong><span>Correct</span></div>
-          <div class="score-wrong"><strong>${wrong}</strong><span>Wrong</span></div>
         </div>
       </div>
     `;
@@ -239,7 +232,7 @@ export function initIVSpeedConj(allVerbs) {
           backLabel: 'Back to Verbs',
           label: `${correct} / ${index} verbs`,
         })}
-        <p class="text-light text-sm" style="margin-top:var(--sp-3)">Time: ${totalSeconds}s</p>
+        <p class="text-light text-sm iv-speed-result-time">Time: ${totalSeconds}s</p>
       </div>
     `;
     const pct = index > 0 ? Math.round((correct / index) * 100) : 0;

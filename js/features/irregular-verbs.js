@@ -155,6 +155,27 @@ export async function toggleVerbLearned(verbId, learned) {
 }
 
 /**
+ * Find which base forms already exist in the user's irregular verbs collection.
+ * Returns a Map compatible with the shared bulk-add-utils format:
+ *   key → [{ name: string, isCurrent: boolean }]
+ *
+ * @param {string[]} bases  Array of base forms to check
+ * @returns {Promise<Map<string, Array<{name:string, isCurrent:boolean}>>>}
+ */
+export async function findDuplicateVerbs(bases) {
+  const verbs = await loadIrregularVerbs();
+  const existing = new Set(verbs.map(v => v.base.toLowerCase()));
+  const result = new Map();
+  for (const base of bases) {
+    const key = base.toLowerCase().trim();
+    if (existing.has(key)) {
+      result.set(key, [{ name: 'Irregular Verbs', isCurrent: true }]);
+    }
+  }
+  return result;
+}
+
+/**
  * Get verb count stats: total and learned.
  * @returns {Promise<{ total: number, learned: number }>}
  */

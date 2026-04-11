@@ -4,16 +4,15 @@
    ============================================================ */
 
 import { shuffle } from '../../shared/shuffle.js';
-import { speakText } from '../../shared/tts.js';
 import { buildResultHtml } from '../../shared/result-builder.js';
 import { handleStreakRecord } from '../../shared/streak-handler.js';
 import { escapeHtml } from '../../ui/index.js';
 
-// Challenge types: which field is hidden
-const CHALLENGE_TYPES = [
-  { hide: ['pastSimple', 'pastParticiple'], label: 'V2 & V3' },
-  { hide: ['pastSimple'],                  label: 'V2' },
-  { hide: ['pastParticiple'],              label: 'V3' },
+// All three verb forms
+const ALL_FIELDS = [
+  { key: 'base',           label: 'Base (V1)' },
+  { key: 'pastSimple',     label: 'Past Simple (V2)' },
+  { key: 'pastParticiple', label: 'Past Participle (V3)' },
 ];
 
 export function initIVFillForms(allVerbs) {
@@ -24,18 +23,23 @@ export function initIVFillForms(allVerbs) {
   let index = 0, correct = 0, wrong = 0, answered = false;
   const total = verbs.length;
 
+  // Pre-assign a random given field for each verb
+  const givenIndices = verbs.map(() => Math.floor(Math.random() * 3));
+
   renderQuestion();
 
   function getCurrentChallenge() {
     const v = verbs[index];
-    const ct = CHALLENGE_TYPES[index % CHALLENGE_TYPES.length];
-    return { v, ct };
+    const givenIdx = givenIndices[index];
+    const givenField = ALL_FIELDS[givenIdx];
+    const hideFields = ALL_FIELDS.filter((_, i) => i !== givenIdx);
+    return { v, givenField, hideFields };
   }
 
   function renderQuestion() {
     answered = false;
-    const { v, ct } = getCurrentChallenge();
-    panel.innerHTML = buildQuestionHtml(v, ct, index, total, correct, wrong);
+    const { v, givenField, hideFields } = getCurrentChallenge();
+    panel.innerHTML = buildQuestionHtml(v, givenField, hideFields, index, total, correct, wrong);
 
     panel.querySelectorAll('.iv-fill-input').forEach(inp => {
       inp.addEventListener('keydown', (e) => {
@@ -47,7 +51,6 @@ export function initIVFillForms(allVerbs) {
     });
 
     panel.querySelector('.btn-check')?.addEventListener('click', checkAnswers);
-    panel.querySelector('.btn-speak-fill')?.addEventListener('click', () => speakText(v.base));
 
     // Auto-focus first input
     panel.querySelector('.iv-fill-input')?.focus();
@@ -57,14 +60,14 @@ export function initIVFillForms(allVerbs) {
     if (answered) return;
     answered = true;
 
-    const { v, ct } = getCurrentChallenge();
+    const { v, hideFields } = getCurrentChallenge();
     let allCorrect = true;
 
-    ct.hide.forEach(field => {
-      const inp = panel.querySelector(`.iv-fill-input[data-field="${field}"]`);
+    hideFields.forEach(f => {
+      const inp = panel.querySelector(`.iv-fill-input[data-field="${f.key}"]`);
       if (!inp) return;
       const userVal = inp.value.trim().toLowerCase();
-      const correctVal = (v[field] || '').toLowerCase();
+      const correctVal = (v[f.key] || '').toLowerCase();
       const isCorrect = userVal === correctVal;
       if (!isCorrect) allCorrect = false;
 
@@ -95,7 +98,8 @@ export function initIVFillForms(allVerbs) {
     if (statWrong) statWrong.textContent = wrong;
 
     document.removeEventListener('keydown', onKeyDown);
-    document.addEventListener('keydown', onNextKeyDown);
+    // Defer so the current Enter keydown doesn't also trigger next
+    setTimeout(() => document.addEventListener('keydown', onNextKeyDown), 0);
   }
 
   function onKeyDown(e) {
@@ -142,32 +146,17 @@ export function initIVFillForms(allVerbs) {
   }
 }
 
-function buildQuestionHtml(v, ct, index, total, correct, wrong) {
-  const FIELDS = [
-    { key: 'base',           label: 'Base (V1)' },
-    { key: 'pastSimple',     label: 'Past Simple (V2)' },
-    { key: 'pastParticiple', label: 'Past Participle (V3)' },
-  ];
-
+function buildQuestionHtml(v, givenField, hideFields, index, total, correct, wrong) {
   const pct = total > 0 ? Math.round((index / total) * 100) : 0;
 
-  const formsHtml = FIELDS.map(f => {
-    const isHidden = ct.hide.includes(f.key);
-    if (isHidden) {
-      return `
-        <div class="iv-fill-form-col">
-          <div class="iv-fill-form-col-label">${escapeHtml(f.label)}</div>
-          <input class="iv-fill-input" type="text" data-field="${f.key}"
-                 placeholder="type here…" autocomplete="off" autocorrect="off" spellcheck="false" />
-          <div class="iv-fill-correct-answer"></div>
-        </div>`;
-    }
-    return `
-      <div class="iv-fill-form-col">
-        <div class="iv-fill-form-col-label">${escapeHtml(f.label)}</div>
-        <div class="iv-fill-given">${escapeHtml(v[f.key] || '—')}</div>
-      </div>`;
-  }).join('');
+  const inputsHtml = hideFields.map(f => `
+    <div class="iv-fill-form-col">
+      <div class="iv-fill-form-col-label">${escapeHtml(f.label)}</div>
+      <input class="iv-fill-input" type="text" data-field="${f.key}"
+             placeholder="type here…" autocomplete="off" autocorrect="off" spellcheck="false" />
+      <div class="iv-fill-correct-answer"></div>
+    </div>
+  `).join('');
 
   return `
     <div class="stats-bar">
@@ -177,29 +166,22 @@ function buildQuestionHtml(v, ct, index, total, correct, wrong) {
         <span>${pct}%</span>
       </div>
       <div class="stat">
-        ✓ <strong class="stat-correct" style="color:var(--color-success)">${correct}</strong>
-        &nbsp;✗ <strong class="stat-wrong" style="color:var(--color-danger)">${wrong}</strong>
+        ✓ <strong class="stat-correct">${correct}</strong>
+        &nbsp;✗ <strong class="stat-wrong">${wrong}</strong>
       </div>
     </div>
 
     <div class="iv-fill-container">
       <div class="iv-fill-card">
-        <div class="iv-fill-meaning">
-          ${escapeHtml(v.vietnamese || v.base)}
-          <button class="btn-speak-fill btn-speak" type="button" title="Pronounce V1" style="vertical-align:middle;margin-left:6px">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-            </svg>
-          </button>
-        </div>
+        <div class="iv-fill-prompt-label">${escapeHtml(givenField.label)}</div>
+        <div class="iv-fill-prompt">${escapeHtml(v[givenField.key] || '—')}</div>
+
         <div class="iv-fill-forms-grid">
-          ${formsHtml}
+          ${inputsHtml}
         </div>
         <div class="iv-fill-actions">
           <button class="btn btn-primary btn-check" type="button">Check</button>
-          <button class="btn btn-ghost btn-next hidden" type="button">
+          <button class="btn btn-primary btn-next hidden" type="button">
             ${index + 1 < total ? 'Next →' : 'See Results'}
           </button>
         </div>

@@ -157,14 +157,7 @@
   display: block;
 }
 
-/* ---------- Form row (verb add/edit) ---------- */
-.iv-form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: var(--sp-4);
-  margin-bottom: var(--sp-3);
-}
-
+/* ---------- Form (verb add/edit) ---------- */
 .iv-pattern-preview {
   font-size: var(--fs-sm);
   color: var(--color-text-light);
@@ -176,10 +169,6 @@
 
 /* ---------- Responsive ---------- */
 @media (max-width: 640px) {
-  .iv-form-row {
-    grid-template-columns: 1fr;
-  }
-
   .detail-title {
     font-size: var(--fs-lg);
   }

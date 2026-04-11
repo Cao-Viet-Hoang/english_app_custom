@@ -159,8 +159,8 @@ function buildPanelHtml(total) {
         <div class="progress-bar"><div class="progress-bar-fill" style="width:0%"></div></div>
         <span class="fc-progress-text">0%</span>
       </div>
-      <div class="stat">✓ <strong class="fc-known" style="color:var(--color-success)">0</strong>
-        &nbsp;✗ <strong class="fc-unknown" style="color:var(--color-danger)">0</strong>
+      <div class="stat">✓ <strong class="fc-known">0</strong>
+        &nbsp;✗ <strong class="fc-unknown">0</strong>
       </div>
     </div>
 

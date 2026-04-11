@@ -12,12 +12,22 @@ import {
   deleteIrregularVerb,
   toggleVerbLearned,
   detectVerbPattern,
+  findDuplicateVerbs,
 } from '../features/irregular-verbs.js';
 import { generateVerbInfo, generateBulkVerbInfo } from '../ai/word-ai.js';
 import {
   showModal, closeModal, setupModalClose,
-  showToast, confirmDialog, escapeHtml, showMilestoneModal,
+  showToast, confirmDialog, confirmDialogHtml, escapeHtml, showMilestoneModal,
 } from '../ui/index.js';
+import {
+  parseBulkInput,
+  setupLowercaseWarning,
+  updateBulkCounter,
+  setupBulkPreviewHandlers,
+  showCorrectionNotice,
+  buildDupeRowHtml,
+  buildDuplicateWarningHtml,
+} from '../shared/bulk-add-utils.js';
 import { loadStreak, getMilestoneMessage } from '../features/streak.js';
 import { initChatWidget } from '../chat/chat-ui.js';
 import { speakText } from '../shared/tts.js';
@@ -112,6 +122,13 @@ const bulkVerbBtnGenerate = document.getElementById('bulk-verb-btn-generate');
 const bulkVerbBtnAdd     = document.getElementById('bulk-verb-btn-add');
 const bulkVerbSelectAll  = document.getElementById('bulk-verb-select-all');
 const bulkVerbDeselectAll = document.getElementById('bulk-verb-deselect-all');
+const bulkVerbCorrectionNotice = document.getElementById('bulk-verb-correction-notice');
+const verbLowercaseWarn  = document.getElementById('verb-lowercase-warn');
+const bulkVerbLowercaseWarn = document.getElementById('bulk-verb-lowercase-warn');
+
+// ---- Lowercase warnings ----
+setupLowercaseWarning(inputVerbBase, verbLowercaseWarn);
+setupLowercaseWarning(bulkVerbInput, bulkVerbLowercaseWarn);
 
 // ---- DOM refs: practice tab ----
 const ivPracticeEmpty    = document.getElementById('iv-practice-empty');
@@ -719,40 +736,34 @@ if (formVerb) {
 // ============================================================
 
 const BULK_GENERATE_BTN_HTML = bulkVerbBtnGenerate ? bulkVerbBtnGenerate.innerHTML : '';
+let bulkVerbDuplicatesMap = new Map();
 
-function parseBulkVerbInput(text) {
-  const raw = [...new Set(
-    text.split(/[,\n]+/)
-      .map(w => w.trim().toLowerCase())
-      .filter(w => w.length > 0)
-  )];
-  return raw;
+function onBulkVerbCountChange() {
+  updateBulkCounter(bulkVerbPreviewTbody, bulkVerbCounter, bulkVerbBtnAdd);
 }
 
-function updateBulkVerbCounter() {
-  if (!bulkVerbPreviewTbody || !bulkVerbCounter || !bulkVerbBtnAdd) return;
-  const checked = bulkVerbPreviewTbody.querySelectorAll('input[type=checkbox]:checked').length;
-  const total   = bulkVerbPreviewTbody.querySelectorAll('input[type=checkbox]').length;
-  bulkVerbCounter.textContent = `${checked} / ${total} selected`;
-  bulkVerbBtnAdd.disabled = checked === 0;
-}
-
-function renderBulkVerbPreview(results) {
+function renderBulkVerbPreview(results, duplicatesMap = new Map()) {
   bulkVerbResults = results;
+  bulkVerbDuplicatesMap = duplicatesMap;
   if (!bulkVerbPreviewTbody) return;
 
-  bulkVerbPreviewTbody.innerHTML = results.map((r, i) => `
-    <tr>
+  showCorrectionNotice(results, bulkVerbCorrectionNotice);
+
+  bulkVerbPreviewTbody.innerHTML = results.map((r, i) => {
+    const dupeLocations = duplicatesMap.get((r.base || '').toLowerCase());
+    const dupeHtml = buildDupeRowHtml(dupeLocations);
+    return `
+    <tr${dupeLocations ? ' class="bulk-dupe-row"' : ''}>
       <td><input type="checkbox" data-index="${i}" checked /></td>
-      <td>${escapeHtml(r.base || '')}</td>
+      <td>${escapeHtml(r.base || '')}${dupeHtml}</td>
       <td>${escapeHtml(r.pastSimple || '')}</td>
       <td>${escapeHtml(r.pastParticiple || '')}</td>
       <td>${escapeHtml(r.vietnamese || '')}</td>
       <td>${patternBadgeHtml(detectVerbPattern(r.base || '', r.pastSimple || '', r.pastParticiple || ''))}</td>
-    </tr>
-  `).join('');
+    </tr>`;
+  }).join('');
 
-  updateBulkVerbCounter();
+  onBulkVerbCountChange();
 }
 
 function resetBulkVerbModal() {
@@ -762,6 +773,10 @@ function resetBulkVerbModal() {
   if (bulkVerbLoading)     bulkVerbLoading.classList.add('hidden');
   if (bulkVerbProgressWrap) bulkVerbProgressWrap.classList.add('hidden');
   if (bulkVerbAdding)      bulkVerbAdding.classList.add('hidden');
+  if (bulkVerbCorrectionNotice) {
+    bulkVerbCorrectionNotice.classList.add('hidden');
+    bulkVerbCorrectionNotice.innerHTML = '';
+  }
   if (bulkVerbBtnGenerate) {
     bulkVerbBtnGenerate.classList.remove('hidden');
     bulkVerbBtnGenerate.disabled = false;
@@ -769,6 +784,7 @@ function resetBulkVerbModal() {
   }
   if (bulkVerbBtnAdd) bulkVerbBtnAdd.classList.add('hidden');
   bulkVerbResults = [];
+  bulkVerbDuplicatesMap = new Map();
 }
 
 if (btnBulkVerb) {
@@ -778,35 +794,16 @@ if (btnBulkVerb) {
   });
 }
 
-if (bulkVerbPreviewTbody) {
-  bulkVerbPreviewTbody.addEventListener('change', updateBulkVerbCounter);
-  bulkVerbPreviewTbody.addEventListener('click', (e) => {
-    if (e.target.type === 'checkbox') return;
-    const row = e.target.closest('tr');
-    if (!row) return;
-    const cb = row.querySelector('input[type=checkbox]');
-    if (cb) { cb.checked = !cb.checked; updateBulkVerbCounter(); }
-  });
-}
-
-if (bulkVerbSelectAll) {
-  bulkVerbSelectAll.addEventListener('click', () => {
-    if (!bulkVerbPreviewTbody) return;
-    bulkVerbPreviewTbody.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = true);
-    updateBulkVerbCounter();
-  });
-}
-if (bulkVerbDeselectAll) {
-  bulkVerbDeselectAll.addEventListener('click', () => {
-    if (!bulkVerbPreviewTbody) return;
-    bulkVerbPreviewTbody.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = false);
-    updateBulkVerbCounter();
-  });
-}
+setupBulkPreviewHandlers({
+  tbodyEl: bulkVerbPreviewTbody,
+  selectAllBtn: bulkVerbSelectAll,
+  deselectAllBtn: bulkVerbDeselectAll,
+  onCountChange: onBulkVerbCountChange,
+});
 
 if (bulkVerbBtnGenerate) {
   bulkVerbBtnGenerate.addEventListener('click', async () => {
-    const words = parseBulkVerbInput(bulkVerbInput ? bulkVerbInput.value : '');
+    const words = parseBulkInput(bulkVerbInput ? bulkVerbInput.value : '', bulkVerbInput);
     if (words.length === 0) {
       showToast('Please enter at least one verb.', 'warning');
       if (bulkVerbInput) bulkVerbInput.focus();
@@ -844,13 +841,22 @@ if (bulkVerbBtnGenerate) {
         }
       });
 
+      // Check for duplicates
+      if (bulkVerbLoadingText) bulkVerbLoadingText.textContent = 'Checking for duplicates…';
+      let duplicatesMap = new Map();
+      try {
+        duplicatesMap = await findDuplicateVerbs(results.map(r => r.base));
+      } catch (dupErr) {
+        console.warn('Duplicate check failed:', dupErr);
+      }
+
       if (bulkVerbLoading)    bulkVerbLoading.classList.add('hidden');
       if (bulkVerbProgressWrap) bulkVerbProgressWrap.classList.add('hidden');
       if (bulkVerbStepPreview) bulkVerbStepPreview.classList.remove('hidden');
       if (bulkVerbBtnGenerate) bulkVerbBtnGenerate.classList.add('hidden');
       if (bulkVerbBtnAdd) bulkVerbBtnAdd.classList.remove('hidden');
 
-      renderBulkVerbPreview(results);
+      renderBulkVerbPreview(results, duplicatesMap);
     } catch (err) {
       console.error(err);
       showToast('AI generation failed. ' + (err.message || ''), 'error');
@@ -876,6 +882,24 @@ if (bulkVerbBtnAdd) {
     if (selectedIndices.length === 0) return;
 
     const toAdd = selectedIndices.map(i => bulkVerbResults[i]);
+
+    // Check if any selected verbs are duplicates — confirm before proceeding
+    const selectedDupes = new Map();
+    for (const verb of toAdd) {
+      const key = verb.base.toLowerCase();
+      if (bulkVerbDuplicatesMap.has(key)) {
+        selectedDupes.set(key, bulkVerbDuplicatesMap.get(key));
+      }
+    }
+    if (selectedDupes.size > 0) {
+      const ok = await confirmDialogHtml(buildDuplicateWarningHtml(selectedDupes), {
+        title: `${selectedDupes.size} Duplicate Verb${selectedDupes.size > 1 ? 's' : ''} Found`,
+        confirmText: 'Add Anyway',
+        cancelText: 'Go Back',
+        confirmClass: 'btn-warning',
+      });
+      if (!ok) return;
+    }
 
     bulkVerbBtnAdd.disabled = true;
     if (bulkVerbStepPreview) bulkVerbStepPreview.classList.add('hidden');

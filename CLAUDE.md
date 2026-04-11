@@ -77,7 +77,8 @@ Users provide their own Firebase + Azure OpenAI credentials via JSON — no sign
     │   ├── shuffle.js                  # Fisher-Yates shuffle
     │   ├── tts.js                      # speakText() — Web Speech API
     │   ├── result-builder.js           # buildResultHtml() — shared result screen
-    │   └── streak-handler.js           # handleStreakRecord() — milestone/encouragement
+    │   ├── streak-handler.js           # handleStreakRecord() — milestone/encouragement
+    │   └── bulk-add-utils.js           # Bulk-add shared: parsing, counter, dupes, corrections
     │
     ├── features/                       # Business logic — data layer
     │   ├── auth.js                     # Login/logout, session management
@@ -212,7 +213,7 @@ Body: { messages, temperature, max_tokens, response_format: { type: "json_object
 
 ### AI rules
 
-- All feedback text in **Vietnamese** (learners are Vietnamese speakers)
+- All feedback text shown on frontend must be in **English**
 - Always request `response_format: { type: "json_object" }`
 - Temperature: 0.5 (deterministic), 0.7-0.9 (creative)
 - Batch limit: ~6 words per AI call (token limits)
@@ -239,6 +240,7 @@ Body: { messages, temperature, max_tokens, response_format: { type: "json_object
 - ES modules with `import`/`export`
 - `async/await` + try-catch for all async ops
 - `escapeHtml()` from `ui/index.js` on ALL user/AI content before DOM insertion (XSS)
+- All new code (identifiers, comments, messages) and all frontend text must be in English
 - CSS variables for theming — never hardcode:
   - Colors: `--color-primary`, `--color-primary-light`, `--color-primary-dark`, `--color-accent`, `--color-success`, `--color-danger`, `--color-warning`, `--color-bg`, `--color-surface`, `--color-surface-alt`, `--color-text`, `--color-text-light`, `--color-text-inverse`, `--color-border`
   - Font sizes: `--fs-xs` (0.75rem) through `--fs-2xl` (2.25rem) — never hardcode px/rem
@@ -281,6 +283,7 @@ Body: { messages, temperature, max_tokens, response_format: { type: "json_object
 - Do NOT insert user/AI content into DOM without `escapeHtml()`
 - Do NOT hardcode colors/spacing — use CSS variables
 - Do NOT exceed ~6 words per AI batch call
+- Do NOT display Vietnamese text on frontend (labels, buttons, toasts, modals, AI feedback)
 
 ## Using Sub-Agents and Skills
 

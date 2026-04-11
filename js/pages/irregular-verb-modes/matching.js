@@ -46,7 +46,7 @@ export function initIVMatching(allVerbs) {
               <button class="iv-match-count-btn${n === pairCount ? ' active' : ''}" data-count="${n}" type="button">${n}</button>
             `).join('')}
           </div>
-          <div style="display:flex;gap:var(--sp-2);align-items:center;margin-left:auto">
+          <div class="iv-match-toolbar-actions">
             <select id="iv-match-field" class="sort-select">
               <option value="pastSimple"${matchField === 'pastSimple' ? ' selected' : ''}>Match V1 → V2</option>
               <option value="pastParticiple"${matchField === 'pastParticiple' ? ' selected' : ''}>Match V1 → V3</option>
@@ -130,20 +130,21 @@ export function initIVMatching(allVerbs) {
   }
 
   function buildMatchGrid(v1Cards, v2Cards) {
-    // Interleave V1 and V2 cards in two columns
-    const left = v1Cards.map(c => `
-      <div class="iv-match-card v1-card" data-id="${c.id}" data-side="v1">
-        ${escapeHtml(c.text)}
-      </div>
-    `).join('');
+    const rightLabel = matchField === 'pastParticiple' ? 'Past Participle (V3)' : 'Past Simple (V2)';
 
-    const right = v2Cards.map(c => `
-      <div class="iv-match-card v2-card" data-id="${c.id}" data-side="v2">
-        ${escapeHtml(c.text)}
-      </div>
-    `).join('');
+    const rows = v1Cards.map((c1, i) => {
+      const c2 = v2Cards[i];
+      return `
+        <div class="iv-match-card v1-card" data-id="${c1.id}" data-side="v1">${escapeHtml(c1.text)}</div>
+        <div class="iv-match-card v2-card" data-id="${c2.id}" data-side="v2">${escapeHtml(c2.text)}</div>
+      `;
+    }).join('');
 
-    return left + right;
+    return `
+      <div class="iv-match-col-header">Base (V1)</div>
+      <div class="iv-match-col-header">${escapeHtml(rightLabel)}</div>
+      ${rows}
+    `;
   }
 
   function finishSession(total) {
