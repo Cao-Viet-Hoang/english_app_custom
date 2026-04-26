@@ -118,7 +118,11 @@ export async function updateIrregularVerb(verbId, data) {
 export async function deleteIrregularVerb(verbId, wasLearned = false) {
   await verbsRef().doc(verbId).delete();
   if (wasLearned) {
-    try { await removeActivity(); } catch { /* ignore */ }
+    try {
+      await removeActivity({ type: 'learn', source: 'irregularVerb' });
+    } catch {
+      /* ignore */
+    }
   }
 }
 
@@ -135,7 +139,10 @@ export async function toggleVerbLearned(verbId, learned) {
 
   if (learned) {
     try {
-      const { streakData, isNewDay, milestone } = await recordActivity();
+      const { streakData, isNewDay, milestone } = await recordActivity({
+        type: 'learn',
+        source: 'irregularVerb',
+      });
       if (milestone) {
         sessionStorage.setItem('streak_milestone', String(milestone));
       } else if (isNewDay) {
@@ -147,7 +154,7 @@ export async function toggleVerbLearned(verbId, learned) {
     }
   } else {
     try {
-      await removeActivity();
+      await removeActivity({ type: 'learn', source: 'irregularVerb' });
     } catch (err) {
       console.warn('Streak remove failed:', err);
     }

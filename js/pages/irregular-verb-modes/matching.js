@@ -158,6 +158,6 @@ export function initIVMatching(allVerbs) {
         })}
       </div>
     `;
-    if (pct >= 50) handleStreakRecord();
+    if (pct >= 50) handleStreakRecord('irregularVerb');
   }
 }

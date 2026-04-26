@@ -236,6 +236,6 @@ export function initIVSpeedConj(allVerbs) {
       </div>
     `;
     const pct = index > 0 ? Math.round((correct / index) * 100) : 0;
-    if (pct >= 50) handleStreakRecord();
+    if (pct >= 50) handleStreakRecord('irregularVerb');
   }
 }

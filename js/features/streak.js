@@ -41,6 +41,55 @@ function getDateStringDaysAgo(daysAgo) {
   return d.toLocaleDateString('en-CA');
 }
 
+const ACTIVITY_FIELD_MAP = {
+  vocabulary: {
+    learn: 'wordsLearned',
+    practice: 'practiceCount',
+  },
+  irregularVerb: {
+    learn: 'irregularVerbsLearned',
+    practice: 'irregularVerbPracticeCount',
+  },
+};
+
+function normalizeActivityOptions(activity = 'learn') {
+  if (typeof activity === 'string') {
+    return {
+      type: activity === 'practice' ? 'practice' : 'learn',
+      source: 'vocabulary',
+    };
+  }
+
+  return {
+    type: activity?.type === 'practice' ? 'practice' : 'learn',
+    source: activity?.source === 'irregularVerb' ? 'irregularVerb' : 'vocabulary',
+  };
+}
+
+function getActivityField(activity = 'learn') {
+  const { type, source } = normalizeActivityOptions(activity);
+  return ACTIVITY_FIELD_MAP[source][type];
+}
+
+export function summarizeActivityEntry(entry = {}) {
+  const vocabularyLearned = entry.wordsLearned || 0;
+  const irregularVerbsLearned = entry.irregularVerbsLearned || 0;
+  const vocabularyPractice = entry.practiceCount || 0;
+  const irregularVerbPractice = entry.irregularVerbPracticeCount || 0;
+  const learned = vocabularyLearned + irregularVerbsLearned;
+  const practiced = vocabularyPractice + irregularVerbPractice;
+
+  return {
+    vocabularyLearned,
+    irregularVerbsLearned,
+    vocabularyPractice,
+    irregularVerbPractice,
+    learned,
+    practiced,
+    total: learned + practiced,
+  };
+}
+
 // ---- Milestones ----
 
 const MILESTONES = [3, 7, 14, 30, 60, 100, 365];
@@ -159,12 +208,11 @@ export async function loadStreak(forceRefresh = false) {
 
 /**
  * Record a daily activity event.
- * @param {'learn'|'practice'} [type='learn']  Type of activity:
- *   - 'learn': word marked as learned (increments wordsLearned)
- *   - 'practice': practice/reading/writing session (increments practiceCount)
+ * @param {'learn'|'practice'|{type?: 'learn'|'practice', source?: 'vocabulary'|'irregularVerb'}} [activity='learn']
  * @returns {Promise<{ streakData: Object, isNewDay: boolean, milestone: number|null }>}
  */
-export async function recordActivity(type = 'learn') {
+export async function recordActivity(activity = 'learn') {
+  const incrementField = getActivityField(activity);
   const today = getTodayDateString();
   const yesterday = getYesterdayDateString();
 
@@ -207,11 +255,7 @@ export async function recordActivity(type = 'learn') {
       firstActionAt: firebase.firestore.FieldValue.serverTimestamp(),
       lastActionAt: firebase.firestore.FieldValue.serverTimestamp(),
     };
-    if (type === 'learn') {
-      dailyData.wordsLearned = 1;
-    } else {
-      dailyData.practiceCount = 1;
-    }
+    dailyData[incrementField] = 1;
     batch.set(dailyActivityRef().doc(today), dailyData, { merge: true });
 
     await batch.commit();
@@ -230,11 +274,11 @@ export async function recordActivity(type = 'learn') {
     return { streakData: data, isNewDay: true, milestone };
   } else {
     // Same day — just increment the appropriate counter
-    const incrementField = type === 'learn' ? 'wordsLearned' : 'practiceCount';
-    batch.update(dailyActivityRef().doc(today), {
+    batch.set(dailyActivityRef().doc(today), {
+      date: today,
       [incrementField]: firebase.firestore.FieldValue.increment(1),
       lastActionAt: firebase.firestore.FieldValue.serverTimestamp(),
-    });
+    }, { merge: true });
     await batch.commit();
 
     // Update cache
@@ -248,12 +292,12 @@ export async function recordActivity(type = 'learn') {
 }
 
 /**
- * Decrement wordsLearned for today when a word is un-marked as learned.
- * If all activity drops to 0 (no wordsLearned AND no practiceCount),
- * rolls back streak data so the day no longer counts.
+ * Decrement a daily activity counter for today.
+ * If all activity drops to 0, rolls back streak data so the day no longer counts.
  * @returns {Promise<void>}
  */
-export async function removeActivity() {
+export async function removeActivity(activity = 'learn') {
+  const decrementField = getActivityField(activity);
   const today = getTodayDateString();
   const yesterday = getYesterdayDateString();
   const docRef = dailyActivityRef().doc(today);
@@ -261,21 +305,27 @@ export async function removeActivity() {
   if (!doc.exists) return;
 
   const docData = doc.data();
-  const currentLearned = docData.wordsLearned || 0;
-  if (currentLearned > 1) {
+  const currentCount = docData[decrementField] || 0;
+  if (currentCount <= 0) return;
+
+  if (currentCount > 1) {
     await docRef.update({
-      wordsLearned: firebase.firestore.FieldValue.increment(-1),
+      [decrementField]: firebase.firestore.FieldValue.increment(-1),
       lastActionAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
     return;
   }
 
-  // wordsLearned is dropping to 0
-  await docRef.update({ wordsLearned: 0, lastActionAt: firebase.firestore.FieldValue.serverTimestamp() });
+  await docRef.update({
+    [decrementField]: 0,
+    lastActionAt: firebase.firestore.FieldValue.serverTimestamp(),
+  });
 
-  // If there's still practice activity today, don't roll back streak
-  const practiceCount = docData.practiceCount || 0;
-  if (practiceCount > 0) return;
+  const remainingToday = summarizeActivityEntry({
+    ...docData,
+    [decrementField]: 0,
+  });
+  if (remainingToday.total > 0) return;
 
   // No activity left — roll back streak if it was incremented today
   const mainDoc = await streakRef().get();
@@ -284,7 +334,7 @@ export async function removeActivity() {
   const data = mainDoc.data();
   const yesterdayDoc = await dailyActivityRef().doc(yesterday).get();
   const hadYesterday = yesterdayDoc.exists
-    && ((yesterdayDoc.data().wordsLearned || 0) > 0 || (yesterdayDoc.data().practiceCount || 0) > 0);
+    && summarizeActivityEntry(yesterdayDoc.data()).total > 0;
 
   const rollback = {
     currentStreak: hadYesterday ? Math.max((data.currentStreak || 1) - 1, 0) : 0,

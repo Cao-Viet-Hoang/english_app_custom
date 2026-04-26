@@ -162,6 +162,6 @@ export function initIVQuiz(allVerbs) {
       </div>
     `;
     const pct = Math.round((correct / total) * 100);
-    if (pct >= 50) handleStreakRecord();
+    if (pct >= 50) handleStreakRecord('irregularVerb');
   }
 }

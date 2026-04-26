@@ -195,6 +195,7 @@ service cloud.firestore {
             request.resource.data.diff(resource.data).affectedKeys()
               .hasOnly([
                 'date', 'wordsLearned', 'practiceCount',
+                'irregularVerbsLearned', 'irregularVerbPracticeCount',
                 'firstActionAt', 'lastActionAt'
               ]);
 

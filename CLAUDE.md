@@ -179,7 +179,11 @@ users/{username}/
 └── streak/main/
     ├── currentStreak: number, longestStreak: number
     ├── lastActiveDate: string (YYYY-MM-DD), totalActiveDays: number
-    └── dailyActivity/{YYYY-MM-DD}/ → wordsLearned: number
+    └── dailyActivity/{YYYY-MM-DD}/
+        ├── date: string (YYYY-MM-DD)
+        ├── wordsLearned: number, practiceCount: number
+        ├── irregularVerbsLearned: number, irregularVerbPracticeCount: number
+        ├── firstActionAt: timestamp, lastActionAt: timestamp
 ```
 
 ## AI Integration

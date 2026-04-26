@@ -123,7 +123,7 @@ export function initIVFlashcard(allVerbs) {
     `;
 
     const pct = Math.round((known / originalTotal) * 100);
-    if (pct >= 50) handleStreakRecord();
+    if (pct >= 50) handleStreakRecord('irregularVerb');
   }
 
   showCard();

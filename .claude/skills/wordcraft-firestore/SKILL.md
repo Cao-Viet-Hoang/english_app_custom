@@ -67,6 +67,45 @@ await topicsRef().doc(topicId).delete();
 const date = ts?.toDate?.() || new Date(ts);
 ```
 
+## Streak — Daily Activity
+
+`users/{username}/streak/main/dailyActivity/{YYYY-MM-DD}` doc fields:
+
+| Field                          | Source / Type            |
+| ------------------------------ | ------------------------ |
+| `date`                         | string (YYYY-MM-DD)      |
+| `wordsLearned`                 | vocabulary learn         |
+| `practiceCount`                | vocabulary practice      |
+| `irregularVerbsLearned`        | irregular verb learn     |
+| `irregularVerbPracticeCount`   | irregular verb practice  |
+| `firstActionAt`                | server timestamp         |
+| `lastActionAt`                 | server timestamp         |
+
+```js
+import {
+  recordActivity,
+  removeActivity,
+  summarizeActivityEntry,
+} from '../features/streak.js';
+
+// Increment a counter
+await recordActivity({ type: 'learn', source: 'irregularVerb' });
+// type: 'learn' | 'practice' (default 'learn')
+// source: 'vocabulary' | 'irregularVerb' (default 'vocabulary')
+
+// Decrement a counter (e.g. when un-marking learned, or deleting a learned item)
+await removeActivity({ type: 'learn', source: 'irregularVerb' });
+
+// Aggregate a daily doc — never sum fields by hand
+const { learned, practiced, total, vocabularyLearned, irregularVerbsLearned } =
+  summarizeActivityEntry(dailyDoc);
+```
+
+When adding a new activity source:
+1. Add it to `ACTIVITY_FIELD_MAP` in `js/features/streak.js`
+2. Extend `summarizeActivityEntry()` to include the new field
+3. Add the new field name to `firestore.rules` `affectedKeys()` allow-list — otherwise writes are rejected
+
 ## Feature Files Using Firebase
 
 | File                       | Purpose                              |

@@ -565,6 +565,7 @@ if (ivTbody) {
 
     try {
       await deleteIrregularVerb(verbId, !!verb?.learned);
+      updateStreakBadge();
       showToast('Verb deleted.', 'success');
       await loadVerbs();
     } catch (err) {
