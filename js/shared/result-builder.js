@@ -9,11 +9,13 @@
  * @param {number} correct  Number of correct answers
  * @param {number} total    Total questions / words
  * @param {Object} [options]
- * @param {string} [options.topicId]  For the "Back to Topic" link
- * @param {string} [options.label]    Custom score label (overrides percentage)
+ * @param {string} [options.topicId]   For the "Back to Topic" link (topic-detail.html)
+ * @param {string} [options.backHref]  Custom back link URL (overrides topicId)
+ * @param {string} [options.backLabel] Custom back link label (defaults to "Back to Topic")
+ * @param {string} [options.label]     Custom score label (overrides percentage)
  * @returns {string} HTML string
  */
-export function buildResultHtml(correct, total, { topicId = '', label = '' } = {}) {
+export function buildResultHtml(correct, total, { topicId = '', backHref = '', backLabel = '', label = '' } = {}) {
   const pct = Math.round((correct / total) * 100);
   let iconClass, iconSvg, resultLabel;
 
@@ -31,8 +33,10 @@ export function buildResultHtml(correct, total, { topicId = '', label = '' } = {
     resultLabel = 'Keep going! Practice makes perfect.';
   }
 
-  const backLink = topicId
-    ? `<a class="btn btn-ghost" href="topic-detail.html?topicId=${topicId}">Back to Topic</a>`
+  const resolvedHref = backHref || (topicId ? `topic-detail.html?topicId=${topicId}` : '');
+  const resolvedLabel = backLabel || 'Back to Topic';
+  const backLink = resolvedHref
+    ? `<a class="btn btn-ghost" href="${resolvedHref}">${resolvedLabel}</a>`
     : '';
 
   return `

@@ -11,9 +11,12 @@ import { showMilestoneModal } from '../ui/milestone.js';
  * Record a streak activity, show milestone/encouragement, and refresh the navbar badge.
  * Safe to call multiple times — recordActivity handles dedup internally.
  */
-export async function handleStreakRecord() {
+export async function handleStreakRecord(source = 'vocabulary') {
   try {
-    const { streakData, isNewDay, milestone } = await recordActivity('practice');
+    const { streakData, isNewDay, milestone } = await recordActivity({
+      type: 'practice',
+      source,
+    });
 
     if (milestone) {
       const msg = getMilestoneMessage(milestone);

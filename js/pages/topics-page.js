@@ -6,8 +6,15 @@
 import { guardAuth, logout, navigateTo } from '../core/router.js';
 import { initFirebase } from '../core/firebase.js';
 import { loadTopics, createTopic, renameTopic, deleteTopic } from '../features/topics.js';
+import { getVerbStats } from '../features/irregular-verbs.js';
 import { showModal, closeModal, setupModalClose, showToast, confirmDialog, formatDate, escapeHtml, showMilestoneModal } from '../ui/index.js';
-import { loadStreak, loadActivityHistory, getMilestoneMessage, getDailyEncouragement } from '../features/streak.js';
+import {
+  loadStreak,
+  loadActivityHistory,
+  getMilestoneMessage,
+  getDailyEncouragement,
+  summarizeActivityEntry,
+} from '../features/streak.js';
 import { initChatWidget } from '../chat/chat-ui.js';
 
 // ---- Guard & Init ----
@@ -68,7 +75,7 @@ function renderStreakInline(streakData, weekActivity) {
 
   const weekDotsHtml = weekDates.map((dateStr, i) => {
     const isToday = dateStr === today;
-    const isActive = !!activityMap[dateStr];
+    const isActive = summarizeActivityEntry(activityMap[dateStr]).total > 0;
     let dotClass = 'streak-week-dot';
     if (isToday) dotClass += ' today';
     if (isActive) dotClass += ' active';
@@ -145,9 +152,8 @@ async function openActivityLog() {
             ${Array.from({ length: daysInMonth }, (_, i) => {
               const dayStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i + 1).padStart(2, '0')}`;
               const a = activityMap[dayStr];
-              const learned = a ? (a.wordsLearned || 0) : 0;
-              const practiced = a ? (a.practiceCount || 0) : 0;
-              const total = learned + practiced;
+              const summary = summarizeActivityEntry(a);
+              const total = summary.total;
               let levelClass = '';
               if (total >= 5) levelClass = 'level-3';
               else if (total >= 2) levelClass = 'level-2';
@@ -156,8 +162,10 @@ async function openActivityLog() {
               let title = dayStr;
               if (total > 0) {
                 const parts = [];
-                if (learned > 0) parts.push(`${learned} learned`);
-                if (practiced > 0) parts.push(`${practiced} practiced`);
+                if (summary.vocabularyLearned > 0) parts.push(`${summary.vocabularyLearned} vocabulary learned`);
+                if (summary.irregularVerbsLearned > 0) parts.push(`${summary.irregularVerbsLearned} irregular verbs learned`);
+                if (summary.vocabularyPractice > 0) parts.push(`${summary.vocabularyPractice} vocabulary practice`);
+                if (summary.irregularVerbPractice > 0) parts.push(`${summary.irregularVerbPractice} irregular verb practice`);
                 title = `${dayStr}: ${parts.join(', ')}`;
               }
               return `<div class="activity-day${levelClass ? ' ' + levelClass : ''}${todayClass}" title="${title}"></div>`;
@@ -443,6 +451,23 @@ searchInput.addEventListener('input', () => {
   renderTopicCards(sortTopics(filtered));
 });
 
+// ---- Irregular Verbs toolbar icon ----
+async function initIrregularVerbsCard() {
+  try {
+    const { total, learned } = await getVerbStats();
+    const labelEl = document.getElementById('iv-tool-label');
+    if (!labelEl) return;
+    if (total === 0) {
+      labelEl.textContent = 'Irregular Verbs';
+    } else {
+      labelEl.textContent = `Irregular Verbs · ${learned}/${total}`;
+    }
+  } catch {
+    // silently ignore — tooltip stays at default text
+  }
+}
+
 // ---- Initial load ----
 initStreak();
+initIrregularVerbsCard();
 render();

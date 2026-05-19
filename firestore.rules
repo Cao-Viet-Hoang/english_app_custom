@@ -1,0 +1,244 @@
+rules_version = '2';
+
+// ============================================================
+// WordCraft Firestore Security Rules
+// ============================================================
+//
+// AUTH MODEL: This app does NOT use Firebase Authentication.
+// Users provide their own Firebase project credentials and
+// authenticate via username lookup (users/{username}.active == true).
+//
+// Since request.auth is always null, these rules focus on:
+//   1. Data structure validation (required fields, types)
+//   2. Deny access to unknown collections
+//   3. Prevent writes to system fields
+//
+// ⚠️  WARNING: Without Firebase Auth, any client with the
+//     Firebase API key can read/write any user's data.
+//     This is acceptable because each user owns their own
+//     Firebase project. If sharing a project between users,
+//     consider adding Firebase Anonymous Auth or Custom Auth.
+// ============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --------------------------------------------------------
+    // Helper functions
+    // --------------------------------------------------------
+
+    // Check if a field exists and is a non-empty string
+    function isNonEmptyString(field) {
+      return field is string && field.size() > 0;
+    }
+
+    // Check if a field is a valid word type
+    function isValidWordType(val) {
+      return val in ['noun', 'verb', 'adjective', 'adverb', 'phrase', 'other'];
+    }
+
+    // Check if a field is a valid note source
+    function isValidNoteSource(val) {
+      return val in ['writing', 'reading', 'practice', 'chat'];
+    }
+
+    // Check if a field is a valid note type
+    function isValidNoteType(val) {
+      return val in ['grammar', 'word_choice', 'spelling', 'punctuation',
+                      'vocabulary', 'structure', 'other'];
+    }
+
+    // --------------------------------------------------------
+    // Connectivity ping (read-only, used for login check)
+    // --------------------------------------------------------
+    match /_ping/{document} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // --------------------------------------------------------
+    // User root document
+    // users/{username}
+    // Fields: active (bool), and any profile data
+    // --------------------------------------------------------
+    match /users/{username} {
+      allow read: if true;
+      allow write: if false; // managed manually / by admin
+
+      // ------------------------------------------------------
+      // Topics
+      // users/{username}/topics/{topicId}
+      // ------------------------------------------------------
+      match /topics/{topicId} {
+        allow read: if true;
+
+        allow create: if
+          isNonEmptyString(request.resource.data.name)
+          && request.resource.data.name.size() <= 100
+          && request.resource.data.wordCount is int
+          && request.resource.data.learnedCount is int;
+
+        allow update: if
+          // Must include at least one valid field
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['name', 'description', 'wordCount', 'learnedCount', 'updatedAt'])
+          // name, if present, must be valid
+          && (!('name' in request.resource.data.diff(resource.data).affectedKeys())
+              || isNonEmptyString(request.resource.data.name));
+
+        allow delete: if true;
+
+        // --------------------------------------------------
+        // Words
+        // users/{username}/topics/{topicId}/words/{wordId}
+        // --------------------------------------------------
+        match /words/{wordId} {
+          allow read: if true;
+
+          allow create: if
+            isNonEmptyString(request.resource.data.english)
+            && request.resource.data.english.size() <= 200
+            && request.resource.data.orderKey is number;
+
+          allow update: if
+            // Cannot change the document ID or createdAt
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly([
+                'english', 'vietnamese', 'description', 'wordType',
+                'ipaUS', 'ipaUK', 'iPA',
+                'learned', 'learnedAt',
+                'aiInsights', 'aiInsightsGeneratedAt',
+                'orderKey', 'updatedAt', 'type'
+              ]);
+
+          allow delete: if true;
+        }
+
+        // --------------------------------------------------
+        // Paragraphs
+        // users/{username}/topics/{topicId}/paragraphs/{paraId}
+        // --------------------------------------------------
+        match /paragraphs/{paraId} {
+          allow read: if true;
+
+          allow create: if
+            isNonEmptyString(request.resource.data.englishText)
+            && isNonEmptyString(request.resource.data.vietnameseText);
+
+          allow update: if
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly([
+                'englishText', 'vietnameseText',
+                'usedWords', 'customInstruction', 'updatedAt'
+              ]);
+
+          allow delete: if true;
+        }
+      }
+
+      // ------------------------------------------------------
+      // Notes
+      // users/{username}/notes/{noteId}
+      // ------------------------------------------------------
+      match /notes/{noteId} {
+        allow read: if true;
+
+        allow create: if
+          isNonEmptyString(request.resource.data.source)
+          && isNonEmptyString(request.resource.data.original);
+
+        allow update: if
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly([
+              'source', 'type', 'original', 'corrected',
+              'explanation', 'topicId', 'savedAt'
+            ]);
+
+        allow delete: if true;
+      }
+
+      // ------------------------------------------------------
+      // Streak
+      // users/{username}/streak/main
+      // ------------------------------------------------------
+      match /streak/main {
+        allow read: if true;
+
+        allow create: if
+          request.resource.data.currentStreak is int
+          && request.resource.data.longestStreak is int
+          && request.resource.data.totalActiveDays is int;
+
+        allow update: if
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly([
+              'currentStreak', 'longestStreak',
+              'lastActiveDate', 'totalActiveDays',
+              'createdAt'
+            ]);
+
+        // --------------------------------------------------
+        // Daily Activity
+        // users/{username}/streak/main/dailyActivity/{dateStr}
+        // dateStr format: YYYY-MM-DD
+        // --------------------------------------------------
+        match /dailyActivity/{dateStr} {
+          allow read: if true;
+
+          allow create: if
+            // dateStr must look like a date (basic length check)
+            dateStr.size() == 10
+            && isNonEmptyString(request.resource.data.date)
+            && request.resource.data.date == dateStr;
+
+          allow update: if
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly([
+                'date', 'wordsLearned', 'practiceCount',
+                'irregularVerbsLearned', 'irregularVerbPracticeCount',
+                'firstActionAt', 'lastActionAt'
+              ]);
+
+          allow delete: if false; // activity history should not be deleted
+        }
+      }
+
+      // ------------------------------------------------------
+      // Irregular Verbs
+      // users/{username}/irregularVerbs/{verbId}
+      // ------------------------------------------------------
+      match /irregularVerbs/{verbId} {
+        allow read: if true;
+
+        allow create: if
+          isNonEmptyString(request.resource.data.base)
+          && isNonEmptyString(request.resource.data.pastSimple)
+          && isNonEmptyString(request.resource.data.pastParticiple)
+          && request.resource.data.orderKey is number;
+
+        allow update: if
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly([
+              'base', 'pastSimple', 'pastParticiple',
+              'vietnamese', 'ipaBase', 'pattern',
+              'learned', 'learnedAt',
+              'orderKey', 'updatedAt'
+            ]);
+
+        allow delete: if true;
+      }
+
+      // Deny access to any other subcollection under users/{username}
+      match /{unknown=**} {
+        allow read, write: if false;
+      }
+    }
+
+    // --------------------------------------------------------
+    // Deny everything else at root level
+    // --------------------------------------------------------
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

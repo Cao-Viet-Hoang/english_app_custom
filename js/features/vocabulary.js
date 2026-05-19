@@ -180,7 +180,7 @@ export async function toggleWordLearned(topicId, wordId, learned) {
  * Search for duplicate words across all topics.
  * @param {string[]} words  Array of English words to check
  * @param {string} [currentTopicId]  The current topic ID (to distinguish "same topic" vs "other topic")
- * @returns {Promise<Map<string, Array<{topicId: string, topicName: string, isCurrent: boolean}>>>}
+ * @returns {Promise<Map<string, Array<{topicId: string, name: string, isCurrent: boolean}>>>}
  */
 export async function findDuplicateWords(words, currentTopicId = null) {
   const db = getDb();
@@ -205,7 +205,7 @@ export async function findDuplicateWords(words, currentTopicId = null) {
       const eng = (wordDoc.data().english || '').toLowerCase().trim();
       if (normalizedWords.has(eng)) {
         if (!result.has(eng)) result.set(eng, []);
-        result.get(eng).push({ topicId: tid, topicName, isCurrent });
+        result.get(eng).push({ topicId: tid, name: topicName, isCurrent });
       }
     }
   }

@@ -933,7 +933,7 @@ function initSpeedType() {
   stInput.disabled = true;
 
   if (stNoTimer) {
-    stTimerStat.innerHTML = 'Time: <strong id="st-timer">0</strong>s';
+    stTimerStat.innerHTML = 'Time: <strong id="st-timer">∞</strong>';
     stProgressStat.style.display = 'none';
   } else {
     stTimeLeft = parseInt(stTimeSelect.value);
@@ -963,7 +963,6 @@ function stRevealWord() {
   // Apply time penalty
   if (stNoTimer) {
     stElapsedTime += ST_REVEAL_PENALTY;
-    document.getElementById('st-timer').textContent = stElapsedTime;
   } else {
     stTimeLeft = Math.max(0, stTimeLeft - ST_REVEAL_PENALTY);
     document.getElementById('st-timer').textContent = stTimeLeft;
@@ -1029,10 +1028,8 @@ function stRevealWord() {
         }
       }, 1000);
     } else {
-      const timerRef = document.getElementById('st-timer');
       stElapsedTimer = setInterval(() => {
         stElapsedTime++;
-        timerRef.textContent = stElapsedTime;
       }, 1000);
     }
   }, 1200);
@@ -1050,7 +1047,6 @@ function startSpeedTypeTimer() {
     const timerRef = document.getElementById('st-timer');
     stElapsedTimer = setInterval(() => {
       stElapsedTime++;
-      timerRef.textContent = stElapsedTime;
     }, 1000);
     stTimer = true;
     return;

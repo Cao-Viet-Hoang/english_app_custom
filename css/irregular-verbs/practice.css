@@ -1,0 +1,924 @@
+/* ============================================================
+   IRREGULAR VERBS — Practice Tab
+   Mode selector, practice panels, all 5 modes
+   ============================================================ */
+
+/* ---------- Mode Selector (reuse practice-page pattern) ---------- */
+.mode-selector {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-5);
+}
+
+.mode-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  padding: var(--sp-4) var(--sp-2);
+  font-family: var(--font-sans);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text-light);
+  cursor: pointer;
+  transition: all var(--t-normal);
+  text-align: center;
+  min-height: 76px;
+}
+
+.mode-btn:hover {
+  border-color: var(--color-primary-light);
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.mode-btn.active {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+  box-shadow: 0 2px 8px rgba(124, 158, 217, 0.3);
+}
+
+.mode-btn svg {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+/* ---------- Practice Empty State ---------- */
+.practice-empty {
+  text-align: center;
+  padding: var(--sp-8) var(--sp-5);
+  color: var(--color-text-light);
+}
+
+.practice-empty svg {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto var(--sp-4);
+  stroke: var(--color-border);
+}
+
+.practice-empty h3 {
+  color: var(--color-text);
+  margin-bottom: var(--sp-2);
+}
+
+/* ---------- Stat Counter Colors ---------- */
+.stats-bar .stat .fc-known,
+.stats-bar .stat .stat-correct { color: var(--color-success); }
+
+.stats-bar .stat .fc-unknown,
+.stats-bar .stat .stat-wrong { color: var(--color-danger); }
+
+/* ---------- Practice Area ---------- */
+.practice-area {
+  flex: 1;
+  padding-bottom: var(--sp-8);
+}
+
+.practice-panel {
+  display: none;
+}
+
+.practice-panel.active {
+  display: block;
+}
+
+/* ---------- Stats Bar (reuse) ---------- */
+.stats-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-5);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  flex-wrap: wrap;
+}
+
+.stats-bar .stat {
+  font-size: var(--fs-sm);
+  color: var(--color-text-light);
+}
+
+.stats-bar .stat strong {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.stats-bar .stat-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.progress-bar {
+  width: 120px;
+  height: 8px;
+  background: var(--color-surface-alt);
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: 100px;
+  transition: width 0.4s ease;
+}
+
+/* ============================================================
+   MODE 1: CONJUGATION FLASHCARD
+   ============================================================ */
+
+.iv-fc-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-5);
+}
+
+.iv-fc-wrapper {
+  perspective: 1000px;
+  width: 100%;
+  max-width: 520px;
+}
+
+.iv-fc-card {
+  position: relative;
+  width: 100%;
+  min-height: 240px;
+  cursor: pointer;
+  transform-style: preserve-3d;
+  transition: transform 0.5s ease;
+  user-select: none;
+}
+
+.iv-fc-card.flipped {
+  transform: rotateY(180deg);
+}
+
+.iv-fc-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-6);
+  border-radius: var(--radius-lg);
+  border: 2px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+  text-align: center;
+}
+
+.iv-fc-front { z-index: 2; }
+
+.iv-fc-back {
+  transform: rotateY(180deg);
+  background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-surface) 50%, var(--color-surface-alt) 100%);
+}
+
+.iv-fc-label {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-text-light);
+  margin-bottom: var(--sp-3);
+}
+
+.iv-fc-verb {
+  font-size: var(--fs-2xl);
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  margin-bottom: var(--sp-2);
+}
+
+.iv-fc-ipa {
+  font-size: var(--fs-sm);
+  color: var(--color-text-light);
+  font-family: var(--font-mono);
+  margin-bottom: var(--sp-2);
+}
+
+.iv-fc-meaning {
+  font-size: var(--fs-md);
+  color: var(--color-text-light);
+  margin-bottom: var(--sp-3);
+}
+
+.iv-fc-hint {
+  font-size: var(--fs-xs);
+  color: var(--color-text-light);
+  opacity: 0.6;
+}
+
+.iv-fc-speak-btn {
+  position: absolute;
+  top: var(--sp-3);
+  right: var(--sp-3);
+  padding: var(--sp-2);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--color-text-light);
+  transition: color var(--t-fast), background var(--t-fast);
+}
+
+.iv-fc-speak-btn:hover {
+  color: var(--color-primary);
+  background: var(--color-surface-alt);
+}
+
+.iv-fc-review-badge {
+  position: absolute;
+  top: var(--sp-3);
+  left: var(--sp-3);
+  z-index: 3;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 10px;
+  border-radius: 100px;
+  background: var(--color-warning);
+  color: var(--color-text-inverse);
+}
+
+/* Back side: V2 / V3 display */
+.iv-fc-forms {
+  display: flex;
+  gap: var(--sp-6);
+  margin-bottom: var(--sp-3);
+}
+
+.iv-fc-form-item {
+  text-align: center;
+}
+
+.iv-fc-form-label {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-light);
+  margin-bottom: var(--sp-1);
+}
+
+.iv-fc-form-value {
+  font-size: var(--fs-xl);
+  font-weight: 700;
+}
+
+.iv-fc-form-value.v2 { color: var(--color-accent); }
+.iv-fc-form-value.v3 { color: var(--color-primary-dark); }
+
+.iv-fc-pattern-badge {
+  margin-top: var(--sp-3);
+}
+
+/* Actions */
+.iv-fc-actions {
+  display: flex;
+  gap: var(--sp-4);
+}
+
+.iv-fc-actions .btn {
+  min-width: 120px;
+}
+
+.btn-know {
+  background: var(--color-success);
+  color: var(--color-text-inverse);
+}
+.btn-know:hover { background: #6ab88d; }
+
+.btn-dont-know {
+  background: var(--color-danger);
+  color: var(--color-text-inverse);
+}
+.btn-dont-know:hover { background: #d67171; }
+
+/* ============================================================
+   MODE 2: FILL FORMS
+   ============================================================ */
+
+.iv-fill-container {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.iv-fill-card {
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-6);
+  text-align: center;
+  margin-bottom: var(--sp-5);
+  box-shadow: var(--shadow-sm);
+}
+
+.iv-fill-prompt-label {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-text-light);
+  margin-bottom: var(--sp-2);
+}
+
+.iv-fill-prompt {
+  font-size: var(--fs-2xl);
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  margin-bottom: var(--sp-5);
+}
+
+.iv-fill-forms-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-4);
+  align-items: start;
+}
+
+.iv-fill-form-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.iv-fill-form-col-label {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-light);
+  white-space: nowrap;
+}
+
+.iv-fill-given,
+.iv-fill-input {
+  width: 100%;
+  min-height: 42px;
+  font-size: var(--fs-md);
+  font-weight: 600;
+  text-align: center;
+  padding: var(--sp-2) var(--sp-3);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+}
+
+.iv-fill-given {
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.iv-fill-input {
+  border-color: var(--color-primary-light);
+  background: var(--color-surface);
+  font-family: var(--font-sans);
+  transition: border-color var(--t-fast), box-shadow var(--t-fast), background var(--t-fast);
+}
+
+.iv-fill-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(124, 158, 217, 0.2);
+}
+
+.iv-fill-input.correct {
+  border-color: var(--color-success);
+  background: rgba(130, 201, 161, 0.08);
+  color: var(--color-text);
+}
+
+.iv-fill-input.wrong {
+  border-color: var(--color-danger);
+  background: rgba(232, 139, 139, 0.08);
+}
+
+.iv-fill-correct-answer {
+  font-size: var(--fs-xs);
+  color: var(--color-danger);
+  font-weight: 600;
+  margin-top: 2px;
+  min-height: var(--sp-4);
+}
+
+.iv-fill-actions {
+  display: flex;
+  gap: var(--sp-3);
+  justify-content: center;
+  margin-top: var(--sp-5);
+}
+
+/* ============================================================
+   MODE 3: CONJUGATION QUIZ
+   ============================================================ */
+
+.iv-quiz-container {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.iv-quiz-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--sp-4);
+}
+
+.iv-quiz-card {
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-6);
+  text-align: center;
+  margin-bottom: var(--sp-4);
+  box-shadow: var(--shadow-sm);
+}
+
+.iv-quiz-prompt-label {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-text-light);
+  margin-bottom: var(--sp-2);
+}
+
+.iv-quiz-prompt {
+  font-size: var(--fs-2xl);
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  margin-bottom: var(--sp-2);
+}
+
+.iv-quiz-sub {
+  font-size: var(--fs-sm);
+  color: var(--color-text-light);
+  margin-bottom: var(--sp-2);
+}
+
+.iv-quiz-ask-label {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.iv-quiz-next {
+  margin-top: var(--sp-3);
+}
+
+.iv-quiz-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+}
+
+.iv-quiz-option {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--color-text);
+  transition: background var(--t-fast), border-color var(--t-fast);
+}
+
+.iv-quiz-option:hover:not(:disabled) {
+  background: rgba(124, 158, 217, 0.06);
+  border-color: var(--color-primary-light);
+}
+
+.iv-quiz-option:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.iv-quiz-option.correct {
+  border-color: var(--color-success);
+  background: rgba(130, 201, 161, 0.1);
+}
+
+.iv-quiz-option.wrong {
+  border-color: var(--color-danger);
+  background: rgba(232, 139, 139, 0.1);
+}
+
+.iv-quiz-option-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-surface-alt);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  flex-shrink: 0;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+
+.iv-quiz-option.correct .iv-quiz-option-key {
+  background: var(--color-success);
+  color: var(--color-text-inverse);
+}
+
+.iv-quiz-option.wrong .iv-quiz-option-key {
+  background: var(--color-danger);
+  color: var(--color-text-inverse);
+}
+
+/* ============================================================
+   MODE 4: VERB MATCHING
+   ============================================================ */
+
+.iv-match-container {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.iv-match-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+  flex-wrap: wrap;
+}
+
+.iv-match-count-group {
+  display: flex;
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-md);
+  padding: 3px;
+  gap: 2px;
+}
+
+.iv-match-count-btn {
+  padding: var(--sp-1) var(--sp-3);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-light);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--t-fast) var(--ease-out);
+  min-width: 36px;
+  text-align: center;
+}
+
+.iv-match-count-btn:hover {
+  color: var(--color-text);
+}
+
+.iv-match-count-btn.active {
+  background: var(--color-surface);
+  color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+  font-weight: 600;
+}
+
+.iv-match-toolbar-actions {
+  display: flex;
+  gap: var(--sp-2);
+  align-items: center;
+  margin-left: auto;
+}
+
+.iv-match-ask-label {
+  font-size: var(--fs-sm);
+  color: var(--color-text-light);
+  margin-left: auto;
+}
+
+.iv-match-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-5);
+}
+
+.iv-match-col-header {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-light);
+  text-align: center;
+  padding-bottom: var(--sp-1);
+}
+
+.iv-match-card {
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  text-align: center;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  transition: background var(--t-fast), border-color var(--t-fast), box-shadow var(--t-fast);
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.iv-match-card:hover:not(.matched):not(.selected) {
+  border-color: var(--color-primary-light);
+  background: rgba(124, 158, 217, 0.06);
+}
+
+.iv-match-card.selected {
+  border-color: var(--color-primary);
+  background: rgba(124, 158, 217, 0.12);
+  box-shadow: 0 0 0 3px rgba(124, 158, 217, 0.2);
+}
+
+.iv-match-card.matched {
+  opacity: 0.5;
+  cursor: default;
+  border-color: var(--color-success);
+  background: rgba(130, 201, 161, 0.08);
+  color: var(--color-text-light);
+}
+
+.iv-match-card.wrong-flash {
+  animation: iv-wrong-shake 0.4s ease;
+  border-color: var(--color-danger);
+  background: rgba(232, 139, 139, 0.1);
+}
+
+@keyframes iv-wrong-shake {
+  0%   { transform: translateX(0); }
+  20%  { transform: translateX(-6px); }
+  40%  { transform: translateX(6px); }
+  60%  { transform: translateX(-4px); }
+  80%  { transform: translateX(4px); }
+  100% { transform: translateX(0); }
+}
+
+/* V1 / V2 cards — same text color */
+.iv-match-card.v1-card,
+.iv-match-card.v2-card {
+  color: var(--color-text);
+}
+
+.iv-match-progress {
+  font-size: var(--fs-sm);
+  color: var(--color-text-light);
+  text-align: center;
+  margin-bottom: var(--sp-3);
+}
+
+/* ============================================================
+   MODE 5: SPEED CONJUGATION
+   ============================================================ */
+
+.iv-speed-container {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.iv-speed-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+  font-size: var(--fs-sm);
+  color: var(--color-text-light);
+}
+
+.iv-speed-start-view {
+  text-align: center;
+  padding: var(--sp-7);
+}
+
+.iv-speed-start-desc {
+  margin-bottom: var(--sp-5);
+}
+
+.iv-speed-result-time {
+  margin-top: var(--sp-3);
+}
+
+.iv-speed-timer-display {
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  margin-bottom: var(--sp-3);
+}
+
+.iv-speed-timer-display.warning {
+  color: var(--color-warning);
+}
+
+.iv-speed-timer-display.danger {
+  color: var(--color-danger);
+}
+
+.iv-speed-card {
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-6);
+  text-align: center;
+  margin-bottom: var(--sp-4);
+  box-shadow: var(--shadow-sm);
+}
+
+.iv-speed-prompt-label {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-text-light);
+  margin-bottom: var(--sp-2);
+}
+
+.iv-speed-prompt {
+  font-size: var(--fs-2xl);
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  margin-bottom: var(--sp-2);
+}
+
+.iv-speed-meaning {
+  font-size: var(--fs-sm);
+  color: var(--color-text-light);
+  margin-bottom: var(--sp-5);
+}
+
+.iv-speed-inputs {
+  display: flex;
+  gap: var(--sp-4);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.iv-speed-input-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  flex: 1;
+  min-width: 130px;
+}
+
+.iv-speed-input-label {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-light);
+}
+
+.iv-speed-input {
+  width: 100%;
+  font-size: var(--fs-md);
+  font-weight: 600;
+  text-align: center;
+  padding: var(--sp-3);
+  border: 2px solid var(--color-primary-light);
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  transition: border-color var(--t-fast), background var(--t-fast);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.iv-speed-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(124, 158, 217, 0.2);
+}
+
+.iv-speed-input.correct {
+  border-color: var(--color-success);
+  background: rgba(130, 201, 161, 0.08);
+}
+
+.iv-speed-input.wrong {
+  border-color: var(--color-danger);
+  background: rgba(232, 139, 139, 0.08);
+}
+
+.iv-speed-feedback {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  margin-top: 2px;
+  min-height: 16px;
+  text-align: center;
+}
+
+.iv-speed-feedback.correct { color: var(--color-success); }
+.iv-speed-feedback.wrong   { color: var(--color-danger); }
+
+.iv-speed-actions {
+  display: flex;
+  gap: var(--sp-3);
+  justify-content: center;
+  margin-top: var(--sp-4);
+}
+
+.iv-speed-score {
+  display: flex;
+  justify-content: center;
+  gap: var(--sp-5);
+  font-size: var(--fs-sm);
+  color: var(--color-text-light);
+}
+
+.iv-speed-score strong {
+  font-size: var(--fs-md);
+  font-weight: 700;
+  display: block;
+}
+
+.iv-speed-score .score-correct strong { color: var(--color-success); }
+.iv-speed-score .score-wrong strong   { color: var(--color-danger); }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 600px) {
+  .mode-selector {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: var(--sp-2);
+  }
+
+  .mode-btn {
+    padding: var(--sp-3) var(--sp-1);
+    font-size: 11px;
+    min-height: 64px;
+  }
+
+  .mode-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .iv-fc-actions {
+    flex-direction: column;
+    width: 100%;
+    max-width: 480px;
+  }
+
+  .iv-fc-actions .btn {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .iv-fc-verb {
+    font-size: var(--fs-xl);
+  }
+
+  .iv-fill-card {
+    padding: var(--sp-5) var(--sp-4);
+  }
+
+  .iv-fill-prompt {
+    font-size: var(--fs-xl);
+  }
+
+  .iv-fill-forms-grid {
+    gap: var(--sp-3);
+  }
+
+  .iv-match-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .iv-match-col-header {
+    display: none;
+  }
+}

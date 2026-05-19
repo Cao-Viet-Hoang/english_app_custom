@@ -260,9 +260,36 @@
 .bulk-dupe-row {
   background: rgba(242, 208, 122, .08);
 }
-.bulk-dupe-warn {
+
+.bulk-dupe-warn,
+.bulk-correction-warn {
   display: inline-block;
   margin-top: 2px;
+  color: var(--color-warning);
+}
+
+.bulk-dupe-dialog p {
+  margin-bottom: var(--sp-2);
+}
+
+.bulk-dupe-dialog ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--sp-3) 0;
+}
+
+.bulk-dupe-dialog li {
+  padding: var(--sp-1) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.bulk-dupe-dialog li:last-child {
+  border-bottom: none;
+}
+
+.bulk-dupe-key {
+  color: var(--color-warning);
+  font-weight: 600;
 }
 
 /* ---------- AI Generation ---------- */

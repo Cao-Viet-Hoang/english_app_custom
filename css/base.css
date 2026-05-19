@@ -315,6 +315,8 @@ h4 { font-size: var(--fs-md); }
   transition: transform var(--t-normal);
 }
 
+.modal-lg { max-width: 720px; }
+
 .modal-overlay.active .modal {
   transform: translateY(0) scale(1);
 }

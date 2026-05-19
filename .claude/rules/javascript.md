@@ -14,6 +14,8 @@ paths:
 - State variables: plural for collections (`allWords`), singular for current (`currentIndex`)
 - Firebase Compat SDK only: `firebase.firestore()`, NOT `getFirestore()`
 - Handle timestamps both ways: `ts?.toDate?.() || new Date(ts)`
+- Streak activity: pass `{ type, source }` to `recordActivity`/`removeActivity` for non-vocabulary sources (e.g. `{ type: 'learn', source: 'irregularVerb' }`); legacy string form (`'learn'`/`'practice'`) defaults source to `vocabulary`
+- Use `summarizeActivityEntry(dailyDoc)` to aggregate counters across sources — never sum `wordsLearned` + `practiceCount` manually
 
 ## Style in JS
 - Never set colors/fonts/spacing via `element.style.*` — use CSS classes instead

@@ -15,6 +15,16 @@ import {
 } from '../ui/index.js';
 import { loadStreak } from '../features/streak.js';
 import { initChatWidget } from '../chat/chat-ui.js';
+import {
+  parseBulkInput,
+  setupLowercaseWarning,
+  updateBulkCounter,
+  setupBulkPreviewHandlers,
+  showCorrectionNotice,
+  buildDupeRowHtml,
+  buildCorrectionRowHtml,
+  buildDuplicateWarningHtml,
+} from '../shared/bulk-add-utils.js';
 
 // ---- Auth & Firebase ----
 const session = guardAuth();
@@ -117,10 +127,7 @@ const btnAiFill        = document.getElementById('btn-ai-fill');
 const englishLowercaseWarn = document.getElementById('english-lowercase-warn');
 const bulkLowercaseWarn   = document.getElementById('bulk-lowercase-warn');
 
-inputEnglish.addEventListener('input', () => {
-  const hasUpper = /[A-Z]/.test(inputEnglish.value);
-  englishLowercaseWarn.classList.toggle('hidden', !hasUpper);
-});
+setupLowercaseWarning(inputEnglish, englishLowercaseWarn);
 
 setupModalClose('#modal-word');
 setupModalClose('#modal-word-select');
@@ -409,76 +416,41 @@ const btnBulkAdd          = document.getElementById('btn-bulk-add');
 
 const GENERATE_BTN_HTML = bulkBtnGenerate.innerHTML;
 
-bulkWordsInput.addEventListener('input', () => {
-  const hasUpper = /[A-Z]/.test(bulkWordsInput.value);
-  bulkLowercaseWarn.classList.toggle('hidden', !hasUpper);
-});
+setupLowercaseWarning(bulkWordsInput, bulkLowercaseWarn);
 
 let bulkResults = [];
 
-function parseBulkInput(text) {
-  const raw = [...new Set(
-    text.split(/[,\n]+/)
-      .map(w => w.trim())
-      .filter(w => w.length > 0)
-  )];
-  const lowered = raw.map(w => w.toLowerCase());
-  if (raw.some((w, i) => w !== lowered[i])) {
-    bulkWordsInput.value = lowered.join(', ');
-    showToast('Converted to lowercase.', 'info');
-  }
-  return [...new Set(lowered)];
-}
-
-function updateBulkCounter() {
-  const checked = bulkPreviewTbody.querySelectorAll('input[type=checkbox]:checked').length;
-  const total = bulkPreviewTbody.querySelectorAll('input[type=checkbox]').length;
-  bulkCounter.textContent = `${checked} / ${total} selected`;
-  bulkBtnAdd.disabled = checked === 0;
-}
-
 const bulkCorrectionNotice = document.getElementById('bulk-correction-notice');
-
 let bulkDuplicatesMap = new Map();
+
+function onBulkCountChange() {
+  updateBulkCounter(bulkPreviewTbody, bulkCounter, bulkBtnAdd);
+}
 
 function renderBulkPreview(results, duplicatesMap = new Map()) {
   bulkResults = results;
   bulkDuplicatesMap = duplicatesMap;
 
-  // Build correction list
-  const corrections = results.filter(r =>
-    r.correctedWord && r.originalWord &&
-    r.correctedWord.toLowerCase() !== r.originalWord.toLowerCase()
-  );
-
-  if (corrections.length > 0) {
-    const list = corrections
-      .map(r => `<strong><s>${escapeHtml(r.originalWord)}</s> → ${escapeHtml(r.correctedWord)}</strong>`)
-      .join(', ');
-    bulkCorrectionNotice.innerHTML =
-      `⚠ Spelling auto-corrected for ${corrections.length} word${corrections.length > 1 ? 's' : ''}: ${list}`;
-    bulkCorrectionNotice.classList.remove('hidden');
-  } else {
-    bulkCorrectionNotice.classList.add('hidden');
-  }
+  showCorrectionNotice(results, bulkCorrectionNotice);
 
   bulkPreviewTbody.innerHTML = results.map((r, i) => {
-    const wasCorrected = r.correctedWord && r.originalWord &&
-      r.correctedWord.toLowerCase() !== r.originalWord.toLowerCase();
+    const correctionHtml = buildCorrectionRowHtml(
+      r.correctedWord && r.originalWord &&
+      r.correctedWord.toLowerCase() !== r.originalWord.toLowerCase()
+        ? r.originalWord : null
+    );
     const dupeLocations = duplicatesMap.get(r.english.toLowerCase());
-    const dupeHtml = dupeLocations
-      ? `<br><small class="bulk-dupe-warn" style="color:var(--color-warning,#F2D07A);">Exists in: ${dupeLocations.map(l => escapeHtml(l.topicName) + (l.isCurrent ? ' (this topic)' : '')).join(', ')}</small>`
-      : '';
+    const dupeHtml = buildDupeRowHtml(dupeLocations);
     return `
     <tr${dupeLocations ? ' class="bulk-dupe-row"' : ''}>
       <td><input type="checkbox" data-index="${i}" checked /></td>
-      <td class="vocab-english">${escapeHtml(r.english)}${wasCorrected ? `<br><small style="color:var(--color-warning,#F2D07A);"><s>${escapeHtml(r.originalWord)}</s> → corrected</small>` : ''}${dupeHtml}</td>
+      <td class="vocab-english">${escapeHtml(r.english)}${correctionHtml}${dupeHtml}</td>
       <td>${escapeHtml(r.vietnamese)}</td>
       <td class="vocab-ipa">${escapeHtml(r.ipaUS)}</td>
       <td><span class="${badgeClass(r.wordType)}">${WORD_TYPE_LABELS[r.wordType] || r.wordType}</span></td>
     </tr>`;
   }).join('');
-  updateBulkCounter();
+  onBulkCountChange();
 }
 
 function resetBulkModal() {
@@ -504,29 +476,15 @@ btnBulkAdd.addEventListener('click', () => {
   showModal(modalBulkAdd);
 });
 
-bulkPreviewTbody.addEventListener('change', updateBulkCounter);
-bulkPreviewTbody.addEventListener('click', (e) => {
-  if (e.target.type === 'checkbox') return;
-  const row = e.target.closest('tr');
-  if (!row) return;
-  const cb = row.querySelector('input[type=checkbox]');
-  if (cb) {
-    cb.checked = !cb.checked;
-    updateBulkCounter();
-  }
-});
-
-bulkSelectAll.addEventListener('click', () => {
-  bulkPreviewTbody.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = true);
-  updateBulkCounter();
-});
-bulkDeselectAll.addEventListener('click', () => {
-  bulkPreviewTbody.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = false);
-  updateBulkCounter();
+setupBulkPreviewHandlers({
+  tbodyEl: bulkPreviewTbody,
+  selectAllBtn: bulkSelectAll,
+  deselectAllBtn: bulkDeselectAll,
+  onCountChange: onBulkCountChange,
 });
 
 bulkBtnGenerate.addEventListener('click', async () => {
-  const words = parseBulkInput(bulkWordsInput.value);
+  const words = parseBulkInput(bulkWordsInput.value, bulkWordsInput);
   if (words.length === 0) {
     showToast('Please enter at least one English word.', 'warning');
     bulkWordsInput.focus();
@@ -596,7 +554,7 @@ bulkBtnAdd.addEventListener('click', async () => {
 
   const toAdd = selectedIndices.map(i => bulkResults[i]);
 
-  // Check if any selected words are duplicates
+  // Check if any selected words are duplicates — confirm before proceeding
   const selectedDupes = new Map();
   for (const word of toAdd) {
     const key = word.english.toLowerCase();
@@ -1373,24 +1331,6 @@ btnAddWord.addEventListener('click', () => {
 });
 
 // ---- Duplicate word warning helpers ----
-function buildDuplicateWarningHtml(duplicatesMap) {
-  let html = '<div style="font-size:0.9rem;line-height:1.7">';
-  html += '<p style="margin-bottom:10px">The following word(s) already exist:</p>';
-  html += '<ul style="list-style:none;padding:0;margin:0 0 10px 0">';
-  for (const [word, locations] of duplicatesMap) {
-    const locs = locations.map(l => {
-      const label = l.isCurrent ? `<strong>${escapeHtml(l.topicName)}</strong> (this topic)` : `<strong>${escapeHtml(l.topicName)}</strong>`;
-      return label;
-    }).join(', ');
-    html += `<li style="padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.06)">` +
-      `<span style="color:var(--color-warning,#F2D07A);font-weight:600">${escapeHtml(word)}</span> — ${locs}</li>`;
-  }
-  html += '</ul>';
-  html += '<p style="color:var(--color-text-light)">Do you still want to add?</p>';
-  html += '</div>';
-  return html;
-}
-
 // Word form submit
 formWord.addEventListener('submit', async (e) => {
   e.preventDefault();

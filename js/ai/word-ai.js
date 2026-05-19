@@ -243,7 +243,7 @@ Return JSON with all the required fields.`;
 }
 
 // ----------------------------------------------------------------
-// Internal: bulk batch helper
+// Internal: bulk batch helper (word info)
 // ----------------------------------------------------------------
 
 async function requestBulkWordInfoBatch(englishWords, topicName) {
@@ -305,6 +305,133 @@ Return a JSON array:
       ipaUK: item.ipaUK || '',
       wordType: VALID_WORD_TYPES.includes(item.wordType) ? item.wordType : 'other',
       description: item.description || '',
+    };
+  });
+}
+
+// ----------------------------------------------------------------
+// Verb conjugation helpers
+// ----------------------------------------------------------------
+
+/**
+ * Call Azure OpenAI to return V2/V3 forms and Vietnamese meaning for a base verb.
+ *
+ * @param {string} baseForm - Base form (V1) of the verb, e.g. "go"
+ * @returns {Promise<{ pastSimple: string, pastParticiple: string, vietnamese: string, ipaBase: string }>}
+ */
+export async function generateVerbInfo(baseForm) {
+  const systemPrompt = `You are an English-Vietnamese irregular verb assistant.
+Given a base verb form (V1), return ONLY valid JSON with these fields:
+- "pastSimple": past simple form (V2)
+- "pastParticiple": past participle form (V3)
+- "vietnamese": the most common Vietnamese meaning (short, 1-4 words)
+- "ipaBase": IPA pronunciation for the base form (e.g. /ɡoʊ/)
+Return ONLY valid JSON, no markdown code blocks, no extra text.`;
+
+  const userPrompt = `Base verb: "${baseForm}"
+
+Return JSON:
+{
+  "pastSimple": "...",
+  "pastParticiple": "...",
+  "vietnamese": "...",
+  "ipaBase": "..."
+}`;
+
+  const parsed = await callAzureOpenAI(
+    [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt },
+    ],
+    { temperature: 0.5, maxTokens: 150 },
+  );
+
+  return {
+    pastSimple: parsed.pastSimple || '',
+    pastParticiple: parsed.pastParticiple || '',
+    vietnamese: parsed.vietnamese || '',
+    ipaBase: parsed.ipaBase || '',
+  };
+}
+
+/**
+ * Call Azure OpenAI to return V2/V3 forms for multiple base verbs.
+ * Requests are split into batches of 10.
+ *
+ * @param {string[]} baseFormList - Array of base verb forms
+ * @param {Function} [onProgress] - Optional callback (done, total) => void
+ * @returns {Promise<Array<{ base: string, pastSimple: string, pastParticiple: string, vietnamese: string }>>}
+ */
+export async function generateBulkVerbInfo(baseFormList, onProgress) {
+  if (!Array.isArray(baseFormList) || baseFormList.length === 0) {
+    return [];
+  }
+
+  const BULK_VERB_BATCH_SIZE = 10;
+  const allResults = [];
+
+  for (let i = 0; i < baseFormList.length; i += BULK_VERB_BATCH_SIZE) {
+    const batch = baseFormList.slice(i, i + BULK_VERB_BATCH_SIZE);
+    const batchResults = await requestBulkVerbInfoBatch(batch);
+    allResults.push(...batchResults);
+    if (typeof onProgress === 'function') {
+      onProgress(allResults.length, baseFormList.length);
+    }
+  }
+
+  return allResults;
+}
+
+// ----------------------------------------------------------------
+// Internal: bulk batch helper (verb info)
+// ----------------------------------------------------------------
+
+async function requestBulkVerbInfoBatch(baseFormList) {
+  const wordList = baseFormList.map(w => `"${w}"`).join(', ');
+
+  const systemPrompt = `You are an English-Vietnamese irregular verb assistant.
+Given a list of base verb forms, return a JSON array where each element has these fields:
+- "base": the base verb form (V1) exactly as given
+- "pastSimple": past simple form (V2)
+- "pastParticiple": past participle form (V3)
+- "vietnamese": the most common Vietnamese meaning (short, 1-4 words)
+IMPORTANT:
+- Return ONLY a valid JSON array, no markdown code blocks, no extra text.
+- The array must have exactly one element per input verb, in the same order.`;
+
+  const userPrompt = `Base verbs: [${wordList}]
+
+Return a JSON array:
+[
+  { "base": "...", "pastSimple": "...", "pastParticiple": "...", "vietnamese": "..." },
+  ...
+]`;
+
+  const maxTokens = Math.min(baseFormList.length * 80, 2048);
+
+  let parsed;
+  try {
+    parsed = await callAzureOpenAI(
+      [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      { temperature: 0.5, maxTokens },
+    );
+  } catch (err) {
+    console.warn('requestBulkVerbInfoBatch error:', err.message);
+    return baseFormList.map(base => ({ base, pastSimple: '', pastParticiple: '', vietnamese: '' }));
+  }
+
+  const arr = Array.isArray(parsed) ? parsed : [];
+
+  return baseFormList.map((base, i) => {
+    const item = arr[i] && typeof arr[i] === 'object' ? arr[i] : {};
+    return {
+      base: item.base || base,
+      pastSimple: item.pastSimple || '',
+      pastParticiple: item.pastParticiple || '',
+      vietnamese: item.vietnamese || '',
     };
   });
 }
