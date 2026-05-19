@@ -23,6 +23,7 @@ You work across the entire codebase: HTML pages, JS modules, CSS files, and Fire
 | New word field    | `js/core/firebase.js` + form + display logic                                         |
 | New AI feature    | `js/ai/word-ai.js`, `js/ai/reading-ai.js`, or `js/ai/writing-ai.js`                 |
 | New page          | New HTML file + `js/pages/` controller + CSS file + navbar links in all HTML files    |
+| New standalone tool | New HTML file, `js/pages/{tool}-page.js`, `css/{tool}/` folder, add chip to `.lt-toolbar` in `topics.html`. Reference: `irregular-verbs.html`, `listen-and-fill.html` |
 
 ## Key Modules
 

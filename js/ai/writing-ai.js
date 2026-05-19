@@ -498,3 +498,115 @@ Return JSON:
     usedWords: Array.isArray(parsed.usedWords) ? parsed.usedWords : [],
   };
 }
+
+// ----------------------------------------------------------------
+// Listen and Fill — generate a passage with strategic blanks
+// ----------------------------------------------------------------
+
+/**
+ * Generate an English passage at the requested CEFR level with words
+ * removed for the user to fill in while listening.
+ *
+ * @param {Object} opts
+ * @param {string} opts.level   CEFR level: A1, A2, B1, B2, C1, C2
+ * @param {string} [opts.topic] Topic name/description, or empty for random
+ * @param {string} [opts.length]  'short' (≈60w) | 'medium' (≈110w) | 'long' (≈180w)
+ * @returns {Promise<{
+ *   title: string,
+ *   topic: string,
+ *   level: string,
+ *   sentences: Array<{ text: string, blanks: string[] }>
+ * }>}
+ *
+ * Each sentence's `text` contains `{0}`, `{1}` placeholders that map
+ * positionally to the `blanks` array for that sentence.
+ */
+export async function generateListenAndFillPassage({ level = 'A2', topic = '', length = 'medium' } = {}) {
+  const wordCount = length === 'short' ? '50-70' : length === 'long' ? '160-200' : '100-130';
+  const blankRange = length === 'short' ? '5-8' : length === 'long' ? '12-18' : '8-12';
+
+  const topicLine = topic.trim()
+    ? `The topic is: "${topic.trim()}". Build the scenario around this topic.`
+    : `Choose any engaging, everyday topic appropriate for the learner level. Pick something concrete (e.g. a daily routine, a short story, a description of a place, a hobby, a small adventure).`;
+
+  const levelGuide = {
+    A1: 'A1 — very simple vocabulary, short sentences, present tense, basic everyday topics. Blanks should target very common words (objects, verbs, places).',
+    A2: 'A2 — simple vocabulary, mostly present and simple past, familiar everyday topics. Blanks target common nouns, verbs, adjectives.',
+    B1: 'B1 — intermediate vocabulary, mixed tenses, slightly more nuanced topics. Blanks target useful intermediate words and a few collocations.',
+    B2: 'B2 — upper-intermediate vocabulary, varied tenses, abstract ideas welcomed. Blanks target less common content words, phrasal verbs, and collocations.',
+    C1: 'C1 — advanced vocabulary, idiomatic expressions, complex sentence structures. Blanks target advanced content words, collocations, and idiomatic phrases.',
+    C2: 'C2 — proficient/native-like vocabulary, sophisticated phrasing. Blanks target nuanced word choices, idiomatic expressions, and precise terminology.',
+  }[level] || 'A2 — simple vocabulary.';
+
+  const systemPrompt = `You are an English listening-comprehension content creator.
+Generate an English passage (${wordCount} words) for a dictation "Listen and Fill" exercise at CEFR level ${level}.
+
+LEVEL GUIDANCE: ${levelGuide}
+
+TOPIC: ${topicLine}
+
+The passage should:
+- Tell a coherent mini-story or describe a clear situation.
+- Use natural, spoken-friendly language that reads aloud well.
+- Use clear punctuation — periods and commas only, no semicolons/colons/em-dashes.
+- Split into ${length === 'long' ? '8-12' : length === 'short' ? '4-6' : '6-9'} sentences.
+
+BLANKING RULES:
+- Insert ${blankRange} blanks total across the whole passage, distributed across sentences.
+- Each blank must be a SINGLE word (no multi-word blanks).
+- Choose words that are PRONOUNCEABLE and clearly hearable — never blank out tiny function words like "a", "the", "of", "is", "to" unless they are stressed/critical.
+- For ${level}: blanks should target content words appropriate to the level (see level guidance).
+- Each sentence may have 0, 1, or 2 blanks — vary the density naturally.
+- The first sentence should have no blank OR an easy blank, to anchor the user.
+
+OUTPUT FORMAT (CRITICAL):
+- "sentences" is an array; each entry has:
+  - "text": the sentence with blanks replaced by positional placeholders "{0}", "{1}", "{2}" (zero-indexed within that sentence).
+  - "blanks": array of the actual answer words for {0}, {1}, ... in order.
+- The placeholder "{i}" in text MUST appear exactly once per blank and match the index in "blanks".
+- "title" is a short 2-6 word title for the passage.
+
+IMPORTANT:
+- Return ONLY valid JSON, no markdown, no extra text.
+- All text MUST be English only.`;
+
+  const userPrompt = `Return JSON:
+{
+  "title": "...",
+  "topic": "...",
+  "level": "${level}",
+  "sentences": [
+    { "text": "I {0} the bus to school every {1}.", "blanks": ["take", "morning"] },
+    { "text": "It usually arrives on time.", "blanks": [] }
+  ]
+}`;
+
+  const parsed = await callAzureOpenAI(
+    [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt },
+    ],
+    { temperature: 0.85, maxTokens: 1400 },
+  );
+
+  const sentences = Array.isArray(parsed.sentences) ? parsed.sentences : [];
+
+  // Sanitize: ensure each sentence has text + blanks array, and that
+  // the number of {i} placeholders matches blanks.length.
+  const safeSentences = sentences
+    .map(s => {
+      const text = typeof s.text === 'string' ? s.text : '';
+      const blanks = Array.isArray(s.blanks) ? s.blanks.map(b => String(b ?? '').trim()) : [];
+      const placeholders = (text.match(/\{\d+\}/g) || []).length;
+      if (placeholders !== blanks.length) return null;
+      return { text, blanks };
+    })
+    .filter(Boolean);
+
+  return {
+    title: parsed.title || 'Listen and Fill',
+    topic: parsed.topic || topic || '',
+    level: parsed.level || level,
+    sentences: safeSentences,
+  };
+}

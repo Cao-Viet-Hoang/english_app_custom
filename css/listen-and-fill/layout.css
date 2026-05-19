@@ -1,0 +1,198 @@
+/* ============================================================
+   LISTEN AND FILL — Layout
+   Page shell, breadcrumb, header, setup chips
+   ============================================================ */
+
+.lf-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- Breadcrumb (shared pattern) ---------- */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-sm);
+  color: var(--color-text-light);
+  margin-bottom: var(--sp-5);
+}
+
+.breadcrumb a {
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.breadcrumb a:hover { text-decoration: underline; }
+
+.breadcrumb-separator {
+  color: var(--color-border);
+}
+
+/* ---------- Detail Header ---------- */
+.detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: var(--sp-5);
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+}
+
+.detail-title {
+  font-size: var(--fs-xl);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+
+.lf-header-icon {
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.detail-word-badge {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  padding: 2px var(--sp-3);
+  background: var(--color-surface-alt);
+  color: var(--color-text-light);
+  border: 1px solid var(--color-border);
+  border-radius: 100px;
+  line-height: 1.8;
+}
+
+/* ---------- Setup Screen ---------- */
+.lf-setup {
+  max-width: 760px;
+  margin: 0 auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-6);
+  box-shadow: var(--shadow-sm);
+}
+
+.lf-setup-intro {
+  font-size: var(--fs-sm);
+  color: var(--color-text-light);
+  margin-bottom: var(--sp-5);
+  line-height: 1.6;
+}
+
+.lf-field {
+  margin-bottom: var(--sp-5);
+}
+
+.lf-field:last-of-type {
+  margin-bottom: var(--sp-4);
+}
+
+.lf-field-label {
+  display: block;
+  margin-bottom: var(--sp-3);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* ---------- Chip groups ---------- */
+.lf-chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.lf-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: var(--sp-2) var(--sp-4);
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: 100px;
+  cursor: pointer;
+  transition: all var(--t-fast);
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.lf-chip:hover {
+  border-color: var(--color-primary-light);
+  background: var(--color-surface-alt);
+}
+
+.lf-chip.active {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+}
+
+.lf-chip.active:hover {
+  background: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+}
+
+.lf-chip svg {
+  flex-shrink: 0;
+}
+
+.lf-chip-topic.active {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.lf-chip-topic.active:hover {
+  background: #d9956b;
+  border-color: #d9956b;
+}
+
+/* ---------- Custom topic input ---------- */
+.lf-custom-topic {
+  margin-top: var(--sp-3);
+  font-size: var(--fs-sm);
+}
+
+/* ---------- Setup actions ---------- */
+.lf-setup-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--sp-6);
+}
+
+/* ---------- Loading state ---------- */
+.lf-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-8) var(--sp-5);
+  color: var(--color-text-light);
+}
+
+.ai-loading-text {
+  font-size: var(--fs-sm);
+  text-align: center;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 640px) {
+  .detail-title {
+    font-size: var(--fs-lg);
+  }
+
+  .lf-setup {
+    padding: var(--sp-4);
+  }
+
+  .lf-chip {
+    padding: var(--sp-2) var(--sp-3);
+    font-size: var(--fs-xs);
+  }
+}
