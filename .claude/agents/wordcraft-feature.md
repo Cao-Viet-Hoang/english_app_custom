@@ -35,7 +35,7 @@ You work across the entire codebase: HTML pages, JS modules, CSS files, and Fire
 | `js/ui/index.js`         | Barrel import for showToast, showModal, escapeHtml, etc. |
 | `js/shared/page-init.js` | `initProtectedPage()` — auth guard, navbar, streak |
 | `js/shared/result-builder.js` | `buildResultHtml()` — shared result screen  |
-| `js/shared/tts.js`       | `speakText()` — Web Speech API                   |
+| `js/shared/tts.js`       | `speakText()` (with onStart/onEnd/onError callbacks), `pauseSpeech()`, `resumeSpeech()`, `cancelSpeech()`, `isSpeaking()`, `isPaused()` |
 | `js/shared/shuffle.js`   | Fisher-Yates shuffle                             |
 | `js/chat/chat-ui.js`     | `initChatWidget()` — chat widget for each page   |
 

@@ -6,7 +6,7 @@
 
 import { initProtectedPage } from '../shared/page-init.js';
 import { generateListenAndFillPassage } from '../ai/writing-ai.js';
-import { speakText } from '../shared/tts.js';
+import { speakText, pauseSpeech, resumeSpeech, cancelSpeech } from '../shared/tts.js';
 import { handleStreakRecord } from '../shared/streak-handler.js';
 import { buildResultHtml } from '../shared/result-builder.js';
 import { showToast, escapeHtml } from '../ui/index.js';
@@ -52,6 +52,7 @@ let selectedTopic  = '';   // empty string = "Surprise me"
 let selectedLength = 'medium';
 let currentPassage = null; // { title, topic, level, sentences: [{ text, blanks }] }
 let resultMode     = false;
+let playState      = 'idle'; // 'idle' | 'playing' | 'paused'
 
 // ---- Chat widget ----
 initChatWidget(() => ({
@@ -239,11 +240,15 @@ function showPractice() {
   resultEl.classList.add('hidden');
   practiceEl.classList.remove('hidden');
 
+  // Reset any in-flight audio before rendering a fresh passage
+  cancelSpeech();
+  setPlayState('idle');
+
   renderPassageInputs();
 
   // Auto-play once on first render — small delay so the DOM is painted
   setTimeout(() => {
-    playFull();
+    startFullPlayback();
     // Focus first blank
     const firstInput = passageEl.querySelector('input.lf-blank');
     if (firstInput) firstInput.focus();
@@ -251,18 +256,83 @@ function showPractice() {
 }
 
 // ============================================================
-// AUDIO PLAYBACK
+// AUDIO PLAYBACK — play / pause / resume on the main button
 // ============================================================
 
-function playFull() {
+const PLAY_ICON_SVG = `
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+       stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="5 3 19 12 5 21 5 3"/>
+  </svg>`;
+
+const PAUSE_ICON_SVG = `
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+       stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="6" y="4" width="4" height="16"/>
+    <rect x="14" y="4" width="4" height="16"/>
+  </svg>`;
+
+function setPlayState(next) {
+  playState = next;
+  if (!btnPlay) return;
+
+  let label;
+  let iconHtml;
+  if (next === 'playing') {
+    label = 'Pause';
+    iconHtml = PAUSE_ICON_SVG;
+    btnPlay.classList.add('lf-btn-playing');
+  } else if (next === 'paused') {
+    label = 'Resume';
+    iconHtml = PLAY_ICON_SVG;
+    btnPlay.classList.remove('lf-btn-playing');
+  } else {
+    label = 'Play Full';
+    iconHtml = PLAY_ICON_SVG;
+    btnPlay.classList.remove('lf-btn-playing');
+  }
+
+  btnPlay.innerHTML = `${iconHtml}<span class="lf-btn-play-label">${label}</span><kbd class="lf-kbd">R</kbd>`;
+}
+
+function startFullPlayback() {
   if (!currentPassage) return;
   const text = buildFullPassageText(currentPassage);
-  speakText(text, getSpeed());
+  setPlayState('playing');
+  speakText(text, getSpeed(), {
+    onEnd:   () => setPlayState('idle'),
+    onError: () => setPlayState('idle'),
+  });
+}
+
+function handlePlayClick() {
+  if (playState === 'playing') {
+    pauseSpeech();
+    setPlayState('paused');
+  } else if (playState === 'paused') {
+    resumeSpeech();
+    setPlayState('playing');
+  } else {
+    startFullPlayback();
+  }
+}
+
+// Backwards-compatible alias used by keyboard shortcut + auto-play on show.
+// Toggles when speech is already in flight, otherwise starts fresh.
+function playFull() {
+  handlePlayClick();
 }
 
 function playSentence(sIdx) {
   const sentence = currentPassage?.sentences?.[sIdx];
   if (!sentence) return;
+
+  // A per-sentence replay interrupts full-passage playback.
+  if (playState !== 'idle') {
+    cancelSpeech();
+    setPlayState('idle');
+  }
+
   speakText(buildSentenceText(sentence), getSpeed());
 
   // Visual feedback — pulse the icon briefly
@@ -273,7 +343,7 @@ function playSentence(sIdx) {
   }
 }
 
-if (btnPlay) btnPlay.addEventListener('click', playFull);
+if (btnPlay) btnPlay.addEventListener('click', handlePlayClick);
 
 if (passageEl) {
   passageEl.addEventListener('click', (e) => {
@@ -359,6 +429,8 @@ function buildResultPassageHtml() {
 }
 
 function showResult(correct, total) {
+  cancelSpeech();
+  setPlayState('idle');
   practiceEl.classList.add('hidden');
   resultEl.classList.remove('hidden');
 
@@ -376,6 +448,8 @@ function showResult(correct, total) {
 // ============================================================
 
 function goToSetup() {
+  cancelSpeech();
+  setPlayState('idle');
   currentPassage = null;
   resultMode = false;
   practiceEl.classList.add('hidden');

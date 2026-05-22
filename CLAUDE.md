@@ -79,7 +79,7 @@ Users provide their own Firebase + Azure OpenAI credentials via JSON — no sign
     ├── shared/                         # Shared utilities (deduplicated)
     │   ├── page-init.js                # initProtectedPage() — auth, navbar, streak
     │   ├── shuffle.js                  # Fisher-Yates shuffle
-    │   ├── tts.js                      # speakText() — Web Speech API
+    │   ├── tts.js                      # speakText(), pauseSpeech(), resumeSpeech(), cancelSpeech(), isSpeaking(), isPaused()
     │   ├── result-builder.js           # buildResultHtml() — shared result screen
     │   ├── streak-handler.js           # handleStreakRecord() — milestone/encouragement
     │   └── bulk-add-utils.js           # Bulk-add shared: parsing, counter, dupes, corrections
