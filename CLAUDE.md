@@ -21,6 +21,7 @@ Users provide their own Firebase + Azure OpenAI credentials via JSON — no sign
 ├── reading.html                        # Reading (2 AI modes)
 ├── writing.html                        # Writing (4 AI modes)
 ├── irregular-verbs.html                # Irregular Verbs (verb table + 5 practice modes)
+├── listen-and-fill.html                # Listen and Fill (AI dictation passage with blanks)
 │
 ├── css/
 │   ├── base.css                        # CSS vars, resets, shared components
@@ -52,10 +53,13 @@ Users provide their own Firebase + Azure OpenAI credentials via JSON — no sign
 │   │   ├── paragraph.css
 │   │   ├── translation.css
 │   │   └── dictation.css
-│   └── irregular-verbs/                # Irregular Verbs page
-│       ├── layout.css                  # Page shell, breadcrumb, tabs, header
-│       ├── verb-table.css              # Verb table, pattern badges, swipe-delete
-│       └── practice.css                # Mode selector + all 5 practice mode styles
+│   ├── irregular-verbs/                # Irregular Verbs page
+│   │   ├── layout.css                  # Page shell, breadcrumb, tabs, header
+│   │   ├── verb-table.css              # Verb table, pattern badges, swipe-delete
+│   │   └── practice.css                # Mode selector + all 5 practice mode styles
+│   └── listen-and-fill/                # Listen and Fill tool
+│       ├── layout.css                  # Page shell, breadcrumb, header, setup chips
+│       └── practice.css                # Audio controls, passage, blanks, result review
 │
 └── js/
     ├── core/                           # Foundation — no business logic
@@ -75,7 +79,7 @@ Users provide their own Firebase + Azure OpenAI credentials via JSON — no sign
     ├── shared/                         # Shared utilities (deduplicated)
     │   ├── page-init.js                # initProtectedPage() — auth, navbar, streak
     │   ├── shuffle.js                  # Fisher-Yates shuffle
-    │   ├── tts.js                      # speakText() — Web Speech API
+    │   ├── tts.js                      # speakText(), pauseSpeech(), resumeSpeech(), cancelSpeech(), isSpeaking(), isPaused()
     │   ├── result-builder.js           # buildResultHtml() — shared result screen
     │   ├── streak-handler.js           # handleStreakRecord() — milestone/encouragement
     │   └── bulk-add-utils.js           # Bulk-add shared: parsing, counter, dupes, corrections
@@ -108,6 +112,7 @@ Users provide their own Firebase + Azure OpenAI credentials via JSON — no sign
         ├── reading-page.js             # Reading page controller
         ├── writing-page.js             # Writing page controller
         ├── irregular-verbs-page.js     # Irregular Verbs page (table + 5 practice modes)
+        ├── listen-and-fill-page.js     # Listen and Fill tool (AI dictation + blanks)
         ├── reading-modes/
         │   ├── comprehension.js
         │   └── truefalse.js
@@ -214,6 +219,7 @@ Body: { messages, temperature, max_tokens, response_format: { type: "json_object
 | `generateTranslationChallenge()` | ai/writing-ai.js  | Vietnamese→English exercise                                 |
 | `evaluateTranslation()`          | ai/writing-ai.js  | Evaluate translation accuracy                               |
 | `generateDictationSentence()`    | ai/writing-ai.js  | Create listening exercises                                  |
+| `generateListenAndFillPassage()` | ai/writing-ai.js  | Generate CEFR-leveled passage with blanks for dictation     |
 
 ### AI rules
 
@@ -272,6 +278,7 @@ Body: { messages, temperature, max_tokens, response_format: { type: "json_object
 | Irregular Verbs table  | `irregular-verbs.html`, `js/pages/irregular-verbs-page.js`, `css/irregular-verbs/`  |
 | Irregular Verbs modes  | `js/pages/irregular-verb-modes/`, `css/irregular-verbs/practice.css`                 |
 | Irregular Verbs data   | `js/features/irregular-verbs.js`, `firestore.rules`                                  |
+| Listen and Fill tool   | `listen-and-fill.html`, `js/pages/listen-and-fill-page.js`, `css/listen-and-fill/`, `js/ai/writing-ai.js` (`generateListenAndFillPassage`) |
 
 ## Keyboard Shortcuts
 

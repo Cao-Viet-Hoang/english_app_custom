@@ -23,6 +23,7 @@ You work across the entire codebase: HTML pages, JS modules, CSS files, and Fire
 | New word field    | `js/core/firebase.js` + form + display logic                                         |
 | New AI feature    | `js/ai/word-ai.js`, `js/ai/reading-ai.js`, or `js/ai/writing-ai.js`                 |
 | New page          | New HTML file + `js/pages/` controller + CSS file + navbar links in all HTML files    |
+| New standalone tool | New HTML file, `js/pages/{tool}-page.js`, `css/{tool}/` folder, add chip to `.lt-toolbar` in `topics.html`. Reference: `irregular-verbs.html`, `listen-and-fill.html` |
 
 ## Key Modules
 
@@ -34,7 +35,7 @@ You work across the entire codebase: HTML pages, JS modules, CSS files, and Fire
 | `js/ui/index.js`         | Barrel import for showToast, showModal, escapeHtml, etc. |
 | `js/shared/page-init.js` | `initProtectedPage()` — auth guard, navbar, streak |
 | `js/shared/result-builder.js` | `buildResultHtml()` — shared result screen  |
-| `js/shared/tts.js`       | `speakText()` — Web Speech API                   |
+| `js/shared/tts.js`       | `speakText()` (with onStart/onEnd/onError callbacks), `pauseSpeech()`, `resumeSpeech()`, `cancelSpeech()`, `isSpeaking()`, `isPaused()` |
 | `js/shared/shuffle.js`   | Fisher-Yates shuffle                             |
 | `js/chat/chat-ui.js`     | `initChatWidget()` — chat widget for each page   |
 

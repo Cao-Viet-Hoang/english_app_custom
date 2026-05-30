@@ -41,6 +41,11 @@ Full project context is in CLAUDE.md at the repo root.
 | `css/writing/paragraph.css`        | Paragraph mode                             |
 | `css/writing/translation.css`      | Translation mode                           |
 | `css/writing/dictation.css`        | Dictation mode                             |
+| `css/listen-and-fill/layout.css`   | Page shell, setup chips, header             |
+| `css/listen-and-fill/practice.css` | Audio controls, passage, blanks, result     |
+| `css/irregular-verbs/layout.css`   | Page shell, breadcrumb, tabs, header        |
+| `css/irregular-verbs/verb-table.css` | Verb table, pattern badges, swipe-delete  |
+| `css/irregular-verbs/practice.css` | Mode selector + 5 practice modes            |
 
 ### JS UI modules
 

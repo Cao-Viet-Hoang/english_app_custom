@@ -35,8 +35,9 @@ if ('speechSynthesis' in window) {
  * Speak text aloud using Web Speech API.
  * @param {string} text
  * @param {number} [rate=0.85] Speech rate (0.1 – 10)
+ * @param {{ onStart?: () => void, onEnd?: () => void, onError?: () => void }} [callbacks]
  */
-export function speakText(text, rate = 0.85) {
+export function speakText(text, rate = 0.85, callbacks = {}) {
   if (!('speechSynthesis' in window)) return;
 
   function doSpeak() {
@@ -45,6 +46,9 @@ export function speakText(text, rate = 0.85) {
     u.lang = 'en-US';
     u.rate = rate;
     if (_voice) u.voice = _voice;
+    if (callbacks.onStart) u.onstart = callbacks.onStart;
+    if (callbacks.onEnd)   u.onend   = callbacks.onEnd;
+    if (callbacks.onError) u.onerror = callbacks.onError;
     window.speechSynthesis.speak(u);
   }
 
@@ -59,4 +63,29 @@ export function speakText(text, rate = 0.85) {
     loadVoice();
     if (_ready) doSpeak();
   }
+}
+
+/** Pause current speech (does nothing if not speaking). */
+export function pauseSpeech() {
+  if ('speechSynthesis' in window) window.speechSynthesis.pause();
+}
+
+/** Resume paused speech. */
+export function resumeSpeech() {
+  if ('speechSynthesis' in window) window.speechSynthesis.resume();
+}
+
+/** Cancel current speech entirely. */
+export function cancelSpeech() {
+  if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+}
+
+/** True if the synthesizer is currently producing speech (including paused). */
+export function isSpeaking() {
+  return 'speechSynthesis' in window && window.speechSynthesis.speaking;
+}
+
+/** True if speech is currently paused. */
+export function isPaused() {
+  return 'speechSynthesis' in window && window.speechSynthesis.paused;
 }

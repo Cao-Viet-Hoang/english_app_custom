@@ -15,7 +15,7 @@ Full project context is in CLAUDE.md at the repo root.
 | -------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | `js/ai/word-ai.js`        | generateWordInfo(), generateBulkWordInfo(), generateParagraph(), generateWordInsights()                                     |
 | `js/ai/reading-ai.js`     | generateReadingPassage()                                                                                                    |
-| `js/ai/writing-ai.js`     | evaluateSentence(), evaluateParagraph(), generateTranslationChallenge(), evaluateTranslation(), generateDictationSentence() |
+| `js/ai/writing-ai.js`     | evaluateSentence(), evaluateParagraph(), generateTranslationChallenge(), evaluateTranslation(), generateDictationSentence(), generateListenAndFillPassage() |
 | `js/ai/chat-ai.js`        | Chat streaming + 2-layer cache (L1 memory Map + L2 sessionStorage)                                                         |
 | `js/ai/feedback-builder.js`| Score badges, error cards, diff HTML builders                                                                              |
 | `js/core/ai-client.js`    | Shared HTTP client: callAzureOpenAI(), streamAzureOpenAI()                                                                  |
