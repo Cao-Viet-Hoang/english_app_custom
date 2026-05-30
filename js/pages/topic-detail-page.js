@@ -125,6 +125,7 @@ const btnWordSave      = document.getElementById('btn-word-save');
 const btnAiFill        = document.getElementById('btn-ai-fill');
 
 // Meaning selector (multiple common meanings from AI)
+const modalWordDialog      = modalWordOverlay.querySelector('.modal-word-dialog');
 const meaningSelector      = document.getElementById('meaning-selector');
 const meaningList          = document.getElementById('meaning-list');
 const meaningSelectorCount = document.getElementById('meaning-selector-count');
@@ -365,16 +366,30 @@ function buildMeaningCardHtml(meaning, index, selectedIndex) {
   const selected = index === selectedIndex;
   const typeLabel = WORD_TYPE_LABELS[meaning.wordType] || meaning.wordType;
   const ipa = meaning.ipaUS || meaning.ipaUK || '';
+  const primaryTag = index === 0
+    ? `<span class="meaning-card-tag">
+         <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+              fill="currentColor" stroke="none">
+           <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+         </svg>
+         Most common
+       </span>`
+    : '';
+  const meta = [
+    meaning.sense ? `<span class="meaning-card-sense">${escapeHtml(meaning.sense)}</span>` : '',
+    `<span class="${badgeClass(meaning.wordType)}">${typeLabel}</span>`,
+    ipa ? `<span class="meaning-card-ipa">${escapeHtml(ipa)}</span>` : '',
+  ].join('');
   return `
-    <button type="button" class="meaning-card${selected ? ' selected' : ''}" data-index="${index}">
+    <button type="button" class="meaning-card${selected ? ' selected' : ''}" data-index="${index}"
+            role="radio" aria-checked="${selected}">
       <span class="meaning-card-radio" aria-hidden="true"></span>
       <span class="meaning-card-body">
-        ${meaning.sense ? `<span class="meaning-card-sense">${escapeHtml(meaning.sense)}</span>` : ''}
-        <span class="meaning-card-meta">
+        <span class="meaning-card-head">
           <span class="meaning-card-vi">${escapeHtml(meaning.vietnamese)}</span>
-          <span class="${badgeClass(meaning.wordType)}">${typeLabel}</span>
-          ${ipa ? `<span class="meaning-card-ipa">${escapeHtml(ipa)}</span>` : ''}
+          ${primaryTag}
         </span>
+        <span class="meaning-card-meta">${meta}</span>
       </span>
     </button>`;
 }
@@ -390,12 +405,14 @@ function renderMeaningSelector(meanings, selectedIndex = 0) {
     .map((m, i) => buildMeaningCardHtml(m, i, selectedIndex))
     .join('');
   meaningSelector.classList.remove('hidden');
+  if (modalWordDialog) modalWordDialog.classList.add('is-split');
 }
 
 function hideMeaningSelector() {
   currentMeanings = [];
   meaningList.innerHTML = '';
   meaningSelector.classList.add('hidden');
+  if (modalWordDialog) modalWordDialog.classList.remove('is-split');
 }
 
 meaningList.addEventListener('click', (e) => {
@@ -403,8 +420,12 @@ meaningList.addEventListener('click', (e) => {
   if (!card) return;
   const index = parseInt(card.dataset.index, 10);
   if (!Number.isFinite(index) || !currentMeanings[index]) return;
-  meaningList.querySelectorAll('.meaning-card').forEach(c => c.classList.remove('selected'));
+  meaningList.querySelectorAll('.meaning-card').forEach(c => {
+    c.classList.remove('selected');
+    c.setAttribute('aria-checked', 'false');
+  });
   card.classList.add('selected');
+  card.setAttribute('aria-checked', 'true');
   applyMeaningToForm(currentMeanings[index]);
 });
 

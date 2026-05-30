@@ -47,13 +47,52 @@
   margin-top: var(--sp-4);
 }
 
+/* ---------- Word Modal: split layout when meanings are shown ---------- */
+.modal-word-dialog {
+  max-width: 560px;
+  transition: max-width var(--t-normal);
+}
+
+.modal-word-dialog.is-split {
+  max-width: 900px;
+}
+
+.vocab-form-body {
+  display: block;
+}
+
+.modal-word-dialog.is-split .vocab-form-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: var(--sp-5);
+  align-items: stretch;
+}
+
+.vocab-form-fields {
+  min-width: 0;
+}
+
+/* Stack the two panels on narrow screens */
+@media (max-width: 720px) {
+  .modal-word-dialog.is-split .vocab-form-body {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ---------- Meaning Selector (multiple AI meanings) ---------- */
 .meaning-selector {
-  margin-top: var(--sp-4);
-  padding: var(--sp-3) var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  padding: var(--sp-4);
   background: rgba(124, 158, 217, .06);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+  animation: meaningFade var(--t-normal);
+}
+
+@keyframes meaningFade {
+  from { opacity: 0; transform: translateX(8px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 
 .meaning-selector-head {
@@ -75,6 +114,7 @@
 
 .meaning-selector-count {
   font-size: var(--fs-xs);
+  font-weight: 500;
   color: var(--color-text-light);
 }
 
@@ -82,8 +122,16 @@
   display: flex;
   flex-direction: column;
   gap: var(--sp-2);
-  max-height: 260px;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
+}
+
+.meaning-selector-hint {
+  margin-top: var(--sp-3);
+  margin-bottom: 0;
+  font-size: var(--fs-xs);
+  color: var(--color-text-light);
 }
 
 .meaning-card {
@@ -95,9 +143,9 @@
   padding: var(--sp-3);
   background: var(--color-surface);
   border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: border-color var(--t-fast) var(--ease-out), background var(--t-fast) var(--ease-out);
+  transition: border-color var(--t-fast), background var(--t-fast), box-shadow var(--t-fast);
 }
 
 .meaning-card:hover {
@@ -105,21 +153,28 @@
   background: rgba(124, 158, 217, .04);
 }
 
+.meaning-card:focus-visible {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(124, 158, 217, .2);
+}
+
 .meaning-card.selected {
   border-color: var(--color-primary);
   background: rgba(124, 158, 217, .1);
+  box-shadow: var(--shadow-sm);
 }
 
 .meaning-card-radio {
   flex-shrink: 0;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   margin-top: 2px;
   border: 2px solid var(--color-border);
   border-radius: 50%;
   background: var(--color-surface);
   position: relative;
-  transition: border-color var(--t-fast) var(--ease-out);
+  transition: border-color var(--t-fast);
 }
 
 .meaning-card.selected .meaning-card-radio {
@@ -131,8 +186,8 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 8px;
-  height: 8px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   background: var(--color-primary);
   transform: translate(-50%, -50%);
@@ -143,12 +198,32 @@
   flex-direction: column;
   gap: var(--sp-1);
   min-width: 0;
+  flex: 1;
 }
 
-.meaning-card-sense {
+.meaning-card-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.meaning-card-vi {
   font-size: var(--fs-sm);
   font-weight: 600;
   color: var(--color-text);
+}
+
+.meaning-card-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px var(--sp-2);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  border-radius: 100px;
+  background: rgba(124, 158, 217, .18);
+  color: var(--color-primary-dark);
 }
 
 .meaning-card-meta {
@@ -159,7 +234,7 @@
   font-size: var(--fs-xs);
 }
 
-.meaning-card-vi {
+.meaning-card-sense {
   color: var(--color-text-light);
 }
 
@@ -170,21 +245,28 @@
 
 /* Per-row meaning dropdown in the bulk preview table */
 .bulk-meaning-select {
+  appearance: none;
+  -webkit-appearance: none;
   width: 100%;
-  max-width: 240px;
-  padding: 4px var(--sp-2);
+  max-width: 260px;
+  padding: 5px 28px 5px var(--sp-2);
   font-size: var(--fs-sm);
   font-family: var(--font-sans);
   color: var(--color-text);
-  background: var(--color-surface);
+  background-color: var(--color-surface);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237A7A7A' d='M6 8.825a.5.5 0 0 1-.354-.146l-3.5-3.5a.5.5 0 1 1 .708-.708L6 7.618l3.146-3.147a.5.5 0 1 1 .708.708l-3.5 3.5A.5.5 0 0 1 6 8.825z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-sm);
   cursor: pointer;
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
 }
 
 .bulk-meaning-select:focus {
   outline: none;
   border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(124, 158, 217, .2);
 }
 
 /* ---------- Word Selection Modal ---------- */

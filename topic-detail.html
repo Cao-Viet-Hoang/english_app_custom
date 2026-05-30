@@ -411,7 +411,7 @@
 
   <!-- ===== Add / Edit Word Modal ===== -->
   <div id="modal-word" class="modal-overlay">
-    <div class="modal" style="max-width:560px">
+    <div class="modal modal-word-dialog">
       <div class="modal-header">
         <h3 id="modal-word-title">Add Word</h3>
         <button class="btn-icon" data-close-modal aria-label="Close">
@@ -422,28 +422,61 @@
         </button>
       </div>
       <form id="form-word" class="vocab-form">
-        <div class="modal-body">
-          <div class="form-row vocab-form-row-main">
-            <div class="form-group">
-              <label class="form-label" for="input-english">English</label>
-              <input class="form-input" type="text" id="input-english" placeholder="e.g. accomplish" required />
-              <p id="english-lowercase-warn" class="lowercase-warn hidden">This word will be converted to lowercase when added.</p>
-              <button type="button" id="btn-ai-fill" class="btn btn-accent btn-sm word-ai-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
-                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-                </svg>
-                Generate with AI
-              </button>
+        <div class="modal-body vocab-form-body">
+
+          <!-- Left: word fields -->
+          <div class="vocab-form-fields">
+            <div class="form-row vocab-form-row-main">
+              <div class="form-group">
+                <label class="form-label" for="input-english">English</label>
+                <input class="form-input" type="text" id="input-english" placeholder="e.g. accomplish" required />
+                <p id="english-lowercase-warn" class="lowercase-warn hidden">This word will be converted to lowercase when added.</p>
+                <button type="button" id="btn-ai-fill" class="btn btn-accent btn-sm word-ai-btn">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                       fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                  </svg>
+                  Generate with AI
+                </button>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="input-vietnamese">Vietnamese</label>
+                <input class="form-input" type="text" id="input-vietnamese" placeholder="e.g. hoàn thành" required />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="input-ipa-us">IPA (US)</label>
+                <input class="form-input" type="text" id="input-ipa-us" placeholder="e.g. /əˈkɑːm.plɪʃ/" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="input-ipa-uk">IPA (UK)</label>
+                <input class="form-input" type="text" id="input-ipa-uk" placeholder="e.g. /əˈkʌm.plɪʃ/" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="input-word-type">Word Type</label>
+                <select class="form-select" id="input-word-type">
+                  <option value="" selected>Auto-detect</option>
+                  <option value="noun">Noun</option>
+                  <option value="verb">Verb</option>
+                  <option value="adj">Adjective</option>
+                  <option value="adv">Adverb</option>
+                  <option value="phrase">Phrase</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
             </div>
             <div class="form-group">
-              <label class="form-label" for="input-vietnamese">Vietnamese</label>
-              <input class="form-input" type="text" id="input-vietnamese" placeholder="e.g. hoàn thành" required />
+              <label class="form-label" for="input-description">Description (Vietnamese)</label>
+              <textarea class="form-textarea" id="input-description" rows="2"
+                        placeholder="e.g. Đạt được mục tiêu hoặc hoàn thành nhiệm vụ"></textarea>
             </div>
           </div>
 
-          <!-- AI meaning selector (shown when a word has multiple common meanings) -->
-          <div id="meaning-selector" class="meaning-selector hidden">
+          <!-- Right: AI meaning selector (shown when a word has multiple common meanings) -->
+          <aside id="meaning-selector" class="meaning-selector hidden">
             <div class="meaning-selector-head">
               <span class="meaning-selector-title">
                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
@@ -455,38 +488,10 @@
               </span>
               <span class="meaning-selector-count" id="meaning-selector-count"></span>
             </div>
-            <div class="meaning-list" id="meaning-list"></div>
-          </div>
+            <div class="meaning-list" id="meaning-list" role="radiogroup" aria-label="Word meanings"></div>
+            <p class="meaning-selector-hint">The most common meaning is selected by default — pick another if you meant something else.</p>
+          </aside>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label" for="input-ipa-us">IPA (US)</label>
-              <input class="form-input" type="text" id="input-ipa-us" placeholder="e.g. /əˈkɑːm.plɪʃ/" />
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="input-ipa-uk">IPA (UK)</label>
-              <input class="form-input" type="text" id="input-ipa-uk" placeholder="e.g. /əˈkʌm.plɪʃ/" />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label" for="input-word-type">Word Type</label>
-              <select class="form-select" id="input-word-type">
-                <option value="" selected>Auto-detect</option>
-                <option value="noun">Noun</option>
-                <option value="verb">Verb</option>
-                <option value="adj">Adjective</option>
-                <option value="adv">Adverb</option>
-                <option value="phrase">Phrase</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="input-description">Description (Vietnamese)</label>
-            <textarea class="form-textarea" id="input-description" rows="2"
-                      placeholder="e.g. Đạt được mục tiêu hoặc hoàn thành nhiệm vụ"></textarea>
-          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-ghost" data-close-modal>Cancel</button>
