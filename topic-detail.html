@@ -542,7 +542,7 @@
         <!-- Step 2: Preview results -->
         <div id="bulk-step-preview" class="hidden">
           <!-- Spelling correction notice (shown when AI corrected one or more words) -->
-          <div id="bulk-correction-notice" class="hidden" style="background:rgba(242,208,122,0.15);border-left:3px solid var(--color-warning,#F2D07A);border-radius:6px;padding:10px 14px;margin-bottom:12px;font-size:0.85rem;line-height:1.6;"></div>
+          <div id="bulk-correction-notice" class="bulk-correction-notice hidden"></div>
           <div class="ws-toolbar">
             <span class="ws-counter" id="bulk-counter">0 / 0 selected</span>
             <div class="ws-toolbar-btns">
@@ -550,20 +550,7 @@
               <button type="button" class="btn btn-ghost btn-sm" id="bulk-deselect-all">Deselect All</button>
             </div>
           </div>
-          <div class="bulk-preview-table-wrapper">
-            <table class="bulk-preview-table">
-              <thead>
-                <tr>
-                  <th style="width:36px"></th>
-                  <th>English</th>
-                  <th>Vietnamese</th>
-                  <th>IPA (US)</th>
-                  <th>Type</th>
-                </tr>
-              </thead>
-              <tbody id="bulk-preview-tbody"></tbody>
-            </table>
-          </div>
+          <div class="bulk-preview-list" id="bulk-preview-list"></div>
         </div>
 
         <!-- Adding progress -->

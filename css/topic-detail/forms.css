@@ -243,30 +243,149 @@
   color: var(--color-text-light);
 }
 
-/* Per-row meaning dropdown in the bulk preview table */
-.bulk-meaning-select {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 100%;
-  max-width: 260px;
-  padding: 5px 28px 5px var(--sp-2);
-  font-size: var(--fs-sm);
-  font-family: var(--font-sans);
-  color: var(--color-text);
-  background-color: var(--color-surface);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237A7A7A' d='M6 8.825a.5.5 0 0 1-.354-.146l-3.5-3.5a.5.5 0 1 1 .708-.708L6 7.618l3.146-3.147a.5.5 0 1 1 .708.708l-3.5 3.5A.5.5 0 0 1 6 8.825z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 8px center;
-  border: 1.5px solid var(--color-border);
+/* ---------- Word Bulk Preview — row list ---------- */
+.bulk-correction-notice {
+  background: rgba(242, 208, 122, .15);
+  border-left: 3px solid var(--color-warning);
   border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+  padding: var(--sp-3) var(--sp-4);
+  margin-bottom: var(--sp-3);
+  font-size: var(--fs-sm);
+  line-height: 1.6;
 }
 
-.bulk-meaning-select:focus {
-  outline: none;
+.bulk-preview-list {
+  max-height: 380px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.bulk-word-row {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.bulk-word-row:last-child {
+  border-bottom: none;
+}
+
+.bulk-word-row.bulk-dupe-row {
+  background: rgba(242, 208, 122, .08);
+}
+
+.bulk-row-top {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4) 0;
+  cursor: pointer;
+}
+
+.bulk-row-sub {
+  padding: 2px var(--sp-4) var(--sp-3) calc(var(--sp-4) + 17px + var(--sp-2));
+  cursor: pointer;
+}
+
+.bulk-word-row:hover {
+  background: rgba(124, 158, 217, .05);
+}
+
+.bulk-word-row input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 17px;
+  height: 17px;
+  border: 1.8px solid var(--color-border);
+  border-radius: 5px;
+  background: var(--color-surface);
+  cursor: pointer;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.bulk-word-row input[type="checkbox"]:checked {
+  background: var(--color-primary);
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(124, 158, 217, .2);
+}
+
+.bulk-word-row input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 9px;
+  border: 2px solid #fff;
+  border-top: none;
+  border-left: none;
+  transform: translate(-50%, -58%) rotate(45deg);
+}
+
+.bulk-row-english {
+  font-weight: 600;
+  color: var(--color-primary-dark);
+}
+
+.bulk-row-ipa {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--color-text-light);
+}
+
+.bulk-row-ipa:empty {
+  display: none;
+}
+
+.bulk-row-vi {
+  font-size: var(--fs-sm);
+  color: var(--color-text);
+}
+
+.bulk-row-flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin-top: 2px;
+  font-size: var(--fs-xs);
+}
+
+.bulk-row-expand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  flex-shrink: 0;
+  margin-left: auto;
+  padding: 4px var(--sp-2);
+  font-family: var(--font-sans);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--color-primary-dark);
+  background: rgba(124, 158, 217, .12);
+  border: none;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: background var(--t-fast);
+}
+
+.bulk-row-expand:hover {
+  background: rgba(124, 158, 217, .22);
+}
+
+.bulk-row-expand svg {
+  transition: transform var(--t-fast);
+}
+
+.bulk-row-expand.expanded svg {
+  transform: rotate(180deg);
+}
+
+.bulk-row-meanings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: 0 var(--sp-4) var(--sp-4) calc(var(--sp-4) + 17px + var(--sp-2));
+  animation: meaningFade var(--t-fast);
 }
 
 /* ---------- Word Selection Modal ---------- */
