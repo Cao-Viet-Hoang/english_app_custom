@@ -47,6 +47,146 @@
   margin-top: var(--sp-4);
 }
 
+/* ---------- Meaning Selector (multiple AI meanings) ---------- */
+.meaning-selector {
+  margin-top: var(--sp-4);
+  padding: var(--sp-3) var(--sp-4);
+  background: rgba(124, 158, 217, .06);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.meaning-selector-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
+}
+
+.meaning-selector-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--color-primary-dark);
+}
+
+.meaning-selector-count {
+  font-size: var(--fs-xs);
+  color: var(--color-text-light);
+}
+
+.meaning-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.meaning-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  width: 100%;
+  text-align: left;
+  padding: var(--sp-3);
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color var(--t-fast) var(--ease-out), background var(--t-fast) var(--ease-out);
+}
+
+.meaning-card:hover {
+  border-color: var(--color-primary-light);
+  background: rgba(124, 158, 217, .04);
+}
+
+.meaning-card.selected {
+  border-color: var(--color-primary);
+  background: rgba(124, 158, 217, .1);
+}
+
+.meaning-card-radio {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  border: 2px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-surface);
+  position: relative;
+  transition: border-color var(--t-fast) var(--ease-out);
+}
+
+.meaning-card.selected .meaning-card-radio {
+  border-color: var(--color-primary);
+}
+
+.meaning-card.selected .meaning-card-radio::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  transform: translate(-50%, -50%);
+}
+
+.meaning-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+
+.meaning-card-sense {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.meaning-card-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  font-size: var(--fs-xs);
+}
+
+.meaning-card-vi {
+  color: var(--color-text-light);
+}
+
+.meaning-card-ipa {
+  font-family: var(--font-mono);
+  color: var(--color-text-light);
+}
+
+/* Per-row meaning dropdown in the bulk preview table */
+.bulk-meaning-select {
+  width: 100%;
+  max-width: 240px;
+  padding: 4px var(--sp-2);
+  font-size: var(--fs-sm);
+  font-family: var(--font-sans);
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.bulk-meaning-select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
 /* ---------- Word Selection Modal ---------- */
 .ws-toolbar {
   display: flex;

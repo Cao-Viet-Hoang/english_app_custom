@@ -124,6 +124,12 @@ const inputDescription = document.getElementById('input-description');
 const btnWordSave      = document.getElementById('btn-word-save');
 const btnAiFill        = document.getElementById('btn-ai-fill');
 
+// Meaning selector (multiple common meanings from AI)
+const meaningSelector      = document.getElementById('meaning-selector');
+const meaningList          = document.getElementById('meaning-list');
+const meaningSelectorCount = document.getElementById('meaning-selector-count');
+let currentMeanings = [];
+
 const englishLowercaseWarn = document.getElementById('english-lowercase-warn');
 const bulkLowercaseWarn   = document.getElementById('bulk-lowercase-warn');
 
@@ -345,6 +351,66 @@ rdsBtnStart.addEventListener('click', () => {
   navigateTo(url);
 });
 
+// ---- Meaning selector (single-word form) ----
+function applyMeaningToForm(meaning) {
+  if (!meaning) return;
+  inputVietnamese.value  = meaning.vietnamese || '';
+  inputIpaUS.value       = meaning.ipaUS || '';
+  inputIpaUK.value       = meaning.ipaUK || '';
+  inputWordType.value    = meaning.wordType || 'other';
+  inputDescription.value = meaning.description || '';
+}
+
+function buildMeaningCardHtml(meaning, index, selectedIndex) {
+  const selected = index === selectedIndex;
+  const typeLabel = WORD_TYPE_LABELS[meaning.wordType] || meaning.wordType;
+  const ipa = meaning.ipaUS || meaning.ipaUK || '';
+  return `
+    <button type="button" class="meaning-card${selected ? ' selected' : ''}" data-index="${index}">
+      <span class="meaning-card-radio" aria-hidden="true"></span>
+      <span class="meaning-card-body">
+        ${meaning.sense ? `<span class="meaning-card-sense">${escapeHtml(meaning.sense)}</span>` : ''}
+        <span class="meaning-card-meta">
+          <span class="meaning-card-vi">${escapeHtml(meaning.vietnamese)}</span>
+          <span class="${badgeClass(meaning.wordType)}">${typeLabel}</span>
+          ${ipa ? `<span class="meaning-card-ipa">${escapeHtml(ipa)}</span>` : ''}
+        </span>
+      </span>
+    </button>`;
+}
+
+function renderMeaningSelector(meanings, selectedIndex = 0) {
+  currentMeanings = Array.isArray(meanings) ? meanings : [];
+  if (currentMeanings.length <= 1) {
+    hideMeaningSelector();
+    return;
+  }
+  meaningSelectorCount.textContent = `${currentMeanings.length} meanings`;
+  meaningList.innerHTML = currentMeanings
+    .map((m, i) => buildMeaningCardHtml(m, i, selectedIndex))
+    .join('');
+  meaningSelector.classList.remove('hidden');
+}
+
+function hideMeaningSelector() {
+  currentMeanings = [];
+  meaningList.innerHTML = '';
+  meaningSelector.classList.add('hidden');
+}
+
+meaningList.addEventListener('click', (e) => {
+  const card = e.target.closest('.meaning-card');
+  if (!card) return;
+  const index = parseInt(card.dataset.index, 10);
+  if (!Number.isFinite(index) || !currentMeanings[index]) return;
+  meaningList.querySelectorAll('.meaning-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  applyMeaningToForm(currentMeanings[index]);
+});
+
+// Editing the word invalidates any previously generated meanings
+inputEnglish.addEventListener('input', hideMeaningSelector);
+
 // ---- AI Auto-fill word fields ----
 btnAiFill.addEventListener('click', async () => {
   const word = inputEnglish.value.trim();
@@ -372,9 +438,12 @@ btnAiFill.addEventListener('click', async () => {
     inputIpaUK.value       = info.ipaUK;
     inputWordType.value    = info.wordType;
     inputDescription.value = info.description;
+    renderMeaningSelector(info.meanings, 0);
     if (info.correctedWord && info.correctedWord.toLowerCase() !== word.toLowerCase()) {
       inputEnglish.value = info.correctedWord;
       showToast(`Spelling corrected: "${word}" → "${info.correctedWord}"`, 'warning', 5000);
+    } else if (info.meanings && info.meanings.length > 1) {
+      showToast(`AI found ${info.meanings.length} meanings — pick the one you want.`, 'success');
     } else {
       showToast('Fields filled by AI!', 'success');
     }
@@ -434,6 +503,16 @@ function renderBulkPreview(results, duplicatesMap = new Map()) {
   showCorrectionNotice(results, bulkCorrectionNotice);
 
   bulkPreviewTbody.innerHTML = results.map((r, i) => {
+    // Ensure every row has at least one meaning and a stable selection.
+    if (!Array.isArray(r.meanings) || r.meanings.length === 0) {
+      r.meanings = [{
+        sense: '', vietnamese: r.vietnamese, ipaUS: r.ipaUS,
+        ipaUK: r.ipaUK, wordType: r.wordType, description: r.description,
+      }];
+    }
+    if (typeof r.selectedMeaning !== 'number') r.selectedMeaning = 0;
+    const sel = r.meanings[r.selectedMeaning] || r.meanings[0];
+
     const correctionHtml = buildCorrectionRowHtml(
       r.correctedWord && r.originalWord &&
       r.correctedWord.toLowerCase() !== r.originalWord.toLowerCase()
@@ -441,17 +520,52 @@ function renderBulkPreview(results, duplicatesMap = new Map()) {
     );
     const dupeLocations = duplicatesMap.get(r.english.toLowerCase());
     const dupeHtml = buildDupeRowHtml(dupeLocations);
+
+    const viCell = r.meanings.length > 1
+      ? `<select class="bulk-meaning-select" data-index="${i}" aria-label="Choose meaning for ${escapeHtml(r.english)}">
+          ${r.meanings.map((m, mi) =>
+            `<option value="${mi}"${mi === r.selectedMeaning ? ' selected' : ''}>${escapeHtml(m.vietnamese)}${m.sense ? ` — ${escapeHtml(m.sense)}` : ''}</option>`
+          ).join('')}
+        </select>`
+      : escapeHtml(sel.vietnamese);
+
     return `
     <tr${dupeLocations ? ' class="bulk-dupe-row"' : ''}>
       <td><input type="checkbox" data-index="${i}" checked /></td>
       <td class="vocab-english">${escapeHtml(r.english)}${correctionHtml}${dupeHtml}</td>
-      <td>${escapeHtml(r.vietnamese)}</td>
-      <td class="vocab-ipa">${escapeHtml(r.ipaUS)}</td>
-      <td><span class="${badgeClass(r.wordType)}">${WORD_TYPE_LABELS[r.wordType] || r.wordType}</span></td>
+      <td>${viCell}</td>
+      <td class="vocab-ipa" data-ipa-cell="${i}">${escapeHtml(sel.ipaUS)}</td>
+      <td data-type-cell="${i}"><span class="${badgeClass(sel.wordType)}">${WORD_TYPE_LABELS[sel.wordType] || sel.wordType}</span></td>
     </tr>`;
   }).join('');
   onBulkCountChange();
 }
+
+// Per-row meaning change in the bulk preview table.
+bulkPreviewTbody.addEventListener('change', (e) => {
+  const selectEl = e.target.closest('.bulk-meaning-select');
+  if (!selectEl) return;
+  const i = parseInt(selectEl.dataset.index, 10);
+  const result = bulkResults[i];
+  if (!result) return;
+  const mi = parseInt(selectEl.value, 10);
+  const meaning = result.meanings[mi];
+  if (!meaning) return;
+
+  result.selectedMeaning = mi;
+  result.vietnamese  = meaning.vietnamese;
+  result.ipaUS       = meaning.ipaUS;
+  result.ipaUK       = meaning.ipaUK;
+  result.wordType    = meaning.wordType;
+  result.description = meaning.description;
+
+  const ipaCell = bulkPreviewTbody.querySelector(`[data-ipa-cell="${i}"]`);
+  if (ipaCell) ipaCell.textContent = meaning.ipaUS || '';
+  const typeCell = bulkPreviewTbody.querySelector(`[data-type-cell="${i}"]`);
+  if (typeCell) {
+    typeCell.innerHTML = `<span class="${badgeClass(meaning.wordType)}">${WORD_TYPE_LABELS[meaning.wordType] || meaning.wordType}</span>`;
+  }
+});
 
 function resetBulkModal() {
   bulkWordsInput.value = '';
@@ -1169,6 +1283,7 @@ vocabTbody.addEventListener('click', (e) => {
   inputIpaUK.value       = word.ipaUK || '';
   inputWordType.value    = word.wordType || 'other';
   inputDescription.value = word.description || '';
+  hideMeaningSelector();
   showModal(modalWordOverlay);
 });
 
@@ -1327,6 +1442,7 @@ btnAddWord.addEventListener('click', () => {
   modalWordTitle.textContent = 'Add Word';
   btnWordSave.textContent = 'Add';
   formWord.reset();
+  hideMeaningSelector();
   showModal(modalWordOverlay);
 });
 
