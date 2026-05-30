@@ -124,6 +124,13 @@ const inputDescription = document.getElementById('input-description');
 const btnWordSave      = document.getElementById('btn-word-save');
 const btnAiFill        = document.getElementById('btn-ai-fill');
 
+// Meaning selector (multiple common meanings from AI)
+const modalWordDialog      = modalWordOverlay.querySelector('.modal-word-dialog');
+const meaningSelector      = document.getElementById('meaning-selector');
+const meaningList          = document.getElementById('meaning-list');
+const meaningSelectorCount = document.getElementById('meaning-selector-count');
+let currentMeanings = [];
+
 const englishLowercaseWarn = document.getElementById('english-lowercase-warn');
 const bulkLowercaseWarn   = document.getElementById('bulk-lowercase-warn');
 
@@ -345,6 +352,86 @@ rdsBtnStart.addEventListener('click', () => {
   navigateTo(url);
 });
 
+// ---- Meaning selector (single-word form) ----
+function applyMeaningToForm(meaning) {
+  if (!meaning) return;
+  inputVietnamese.value  = meaning.vietnamese || '';
+  inputIpaUS.value       = meaning.ipaUS || '';
+  inputIpaUK.value       = meaning.ipaUK || '';
+  inputWordType.value    = meaning.wordType || 'other';
+  inputDescription.value = meaning.description || '';
+}
+
+function buildMeaningCardHtml(meaning, index, selectedIndex) {
+  const selected = index === selectedIndex;
+  const typeLabel = WORD_TYPE_LABELS[meaning.wordType] || meaning.wordType;
+  const ipa = meaning.ipaUS || meaning.ipaUK || '';
+  const primaryTag = index === 0
+    ? `<span class="meaning-card-tag">
+         <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+              fill="currentColor" stroke="none">
+           <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+         </svg>
+         Most common
+       </span>`
+    : '';
+  const meta = [
+    meaning.sense ? `<span class="meaning-card-sense">${escapeHtml(meaning.sense)}</span>` : '',
+    `<span class="${badgeClass(meaning.wordType)}">${typeLabel}</span>`,
+    ipa ? `<span class="meaning-card-ipa">${escapeHtml(ipa)}</span>` : '',
+  ].join('');
+  return `
+    <button type="button" class="meaning-card${selected ? ' selected' : ''}" data-index="${index}"
+            role="radio" aria-checked="${selected}">
+      <span class="meaning-card-radio" aria-hidden="true"></span>
+      <span class="meaning-card-body">
+        <span class="meaning-card-head">
+          <span class="meaning-card-vi">${escapeHtml(meaning.vietnamese)}</span>
+          ${primaryTag}
+        </span>
+        <span class="meaning-card-meta">${meta}</span>
+      </span>
+    </button>`;
+}
+
+function renderMeaningSelector(meanings, selectedIndex = 0) {
+  currentMeanings = Array.isArray(meanings) ? meanings : [];
+  if (currentMeanings.length <= 1) {
+    hideMeaningSelector();
+    return;
+  }
+  meaningSelectorCount.textContent = `${currentMeanings.length} meanings`;
+  meaningList.innerHTML = currentMeanings
+    .map((m, i) => buildMeaningCardHtml(m, i, selectedIndex))
+    .join('');
+  meaningSelector.classList.remove('hidden');
+  if (modalWordDialog) modalWordDialog.classList.add('is-split');
+}
+
+function hideMeaningSelector() {
+  currentMeanings = [];
+  meaningList.innerHTML = '';
+  meaningSelector.classList.add('hidden');
+  if (modalWordDialog) modalWordDialog.classList.remove('is-split');
+}
+
+meaningList.addEventListener('click', (e) => {
+  const card = e.target.closest('.meaning-card');
+  if (!card) return;
+  const index = parseInt(card.dataset.index, 10);
+  if (!Number.isFinite(index) || !currentMeanings[index]) return;
+  meaningList.querySelectorAll('.meaning-card').forEach(c => {
+    c.classList.remove('selected');
+    c.setAttribute('aria-checked', 'false');
+  });
+  card.classList.add('selected');
+  card.setAttribute('aria-checked', 'true');
+  applyMeaningToForm(currentMeanings[index]);
+});
+
+// Editing the word invalidates any previously generated meanings
+inputEnglish.addEventListener('input', hideMeaningSelector);
+
 // ---- AI Auto-fill word fields ----
 btnAiFill.addEventListener('click', async () => {
   const word = inputEnglish.value.trim();
@@ -372,9 +459,12 @@ btnAiFill.addEventListener('click', async () => {
     inputIpaUK.value       = info.ipaUK;
     inputWordType.value    = info.wordType;
     inputDescription.value = info.description;
+    renderMeaningSelector(info.meanings, 0);
     if (info.correctedWord && info.correctedWord.toLowerCase() !== word.toLowerCase()) {
       inputEnglish.value = info.correctedWord;
       showToast(`Spelling corrected: "${word}" → "${info.correctedWord}"`, 'warning', 5000);
+    } else if (info.meanings && info.meanings.length > 1) {
+      showToast(`AI found ${info.meanings.length} meanings — pick the one you want.`, 'success');
     } else {
       showToast('Fields filled by AI!', 'success');
     }
@@ -405,7 +495,7 @@ const bulkProgressFill    = document.getElementById('bulk-progress-fill');
 const bulkProgressCount   = document.getElementById('bulk-progress-count');
 const bulkAdding          = document.getElementById('bulk-adding');
 const bulkAddingText      = document.getElementById('bulk-adding-text');
-const bulkPreviewTbody    = document.getElementById('bulk-preview-tbody');
+const bulkPreviewList     = document.getElementById('bulk-preview-list');
 const bulkCounter         = document.getElementById('bulk-counter');
 const bulkBtnGenerate     = document.getElementById('bulk-btn-generate');
 const bulkBtnAdd          = document.getElementById('bulk-btn-add');
@@ -424,7 +514,71 @@ const bulkCorrectionNotice = document.getElementById('bulk-correction-notice');
 let bulkDuplicatesMap = new Map();
 
 function onBulkCountChange() {
-  updateBulkCounter(bulkPreviewTbody, bulkCounter, bulkBtnAdd);
+  updateBulkCounter(bulkPreviewList, bulkCounter, bulkBtnAdd);
+}
+
+function buildBulkRowHtml(r, i, duplicatesMap) {
+  // Ensure every row has at least one meaning and a stable selection.
+  if (!Array.isArray(r.meanings) || r.meanings.length === 0) {
+    r.meanings = [{
+      sense: '', vietnamese: r.vietnamese, ipaUS: r.ipaUS,
+      ipaUK: r.ipaUK, wordType: r.wordType, description: r.description,
+    }];
+  }
+  if (typeof r.selectedMeaning !== 'number') r.selectedMeaning = 0;
+  const sel = r.meanings[r.selectedMeaning] || r.meanings[0];
+  const multi = r.meanings.length > 1;
+
+  const typeLabel = WORD_TYPE_LABELS[sel.wordType] || sel.wordType;
+  const ipa = sel.ipaUS || sel.ipaUK || '';
+
+  const corrected = r.correctedWord && r.originalWord &&
+    r.correctedWord.toLowerCase() !== r.originalWord.toLowerCase();
+  const dupeLocations = duplicatesMap.get(r.english.toLowerCase());
+
+  const flags = [];
+  if (corrected) {
+    flags.push(`<span class="bulk-correction-warn"><s>${escapeHtml(r.originalWord)}</s> → corrected</span>`);
+  }
+  if (dupeLocations) {
+    const locs = dupeLocations
+      .map(l => escapeHtml(l.name) + (l.isCurrent ? ' (current)' : ''))
+      .join(', ');
+    flags.push(`<span class="bulk-dupe-warn">Exists in: ${locs}</span>`);
+  }
+  const flagsHtml = flags.length ? `<div class="bulk-row-flags">${flags.join('')}</div>` : '';
+
+  const expandBtn = multi
+    ? `<button type="button" class="bulk-row-expand" aria-expanded="false" aria-label="Choose meaning for ${escapeHtml(r.english)}">
+        ${r.meanings.length} meanings
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </button>`
+    : '';
+
+  const meaningsHtml = multi
+    ? `<div class="bulk-row-meanings hidden">
+        ${r.meanings.map((m, mi) => buildMeaningCardHtml(m, mi, r.selectedMeaning)).join('')}
+      </div>`
+    : '';
+
+  return `
+  <div class="bulk-word-row${dupeLocations ? ' bulk-dupe-row' : ''}" data-index="${i}">
+    <div class="bulk-row-top">
+      <input type="checkbox" data-index="${i}" checked />
+      <span class="bulk-row-english">${escapeHtml(r.english)}</span>
+      <span class="bulk-row-ipa">${escapeHtml(ipa)}</span>
+      <span class="${badgeClass(sel.wordType)}">${typeLabel}</span>
+      ${expandBtn}
+    </div>
+    <div class="bulk-row-sub">
+      <div class="bulk-row-vi">${escapeHtml(sel.vietnamese)}</div>
+      ${flagsHtml}
+    </div>
+    ${meaningsHtml}
+  </div>`;
 }
 
 function renderBulkPreview(results, duplicatesMap = new Map()) {
@@ -433,25 +587,60 @@ function renderBulkPreview(results, duplicatesMap = new Map()) {
 
   showCorrectionNotice(results, bulkCorrectionNotice);
 
-  bulkPreviewTbody.innerHTML = results.map((r, i) => {
-    const correctionHtml = buildCorrectionRowHtml(
-      r.correctedWord && r.originalWord &&
-      r.correctedWord.toLowerCase() !== r.originalWord.toLowerCase()
-        ? r.originalWord : null
-    );
-    const dupeLocations = duplicatesMap.get(r.english.toLowerCase());
-    const dupeHtml = buildDupeRowHtml(dupeLocations);
-    return `
-    <tr${dupeLocations ? ' class="bulk-dupe-row"' : ''}>
-      <td><input type="checkbox" data-index="${i}" checked /></td>
-      <td class="vocab-english">${escapeHtml(r.english)}${correctionHtml}${dupeHtml}</td>
-      <td>${escapeHtml(r.vietnamese)}</td>
-      <td class="vocab-ipa">${escapeHtml(r.ipaUS)}</td>
-      <td><span class="${badgeClass(r.wordType)}">${WORD_TYPE_LABELS[r.wordType] || r.wordType}</span></td>
-    </tr>`;
-  }).join('');
+  bulkPreviewList.innerHTML = results.map((r, i) => buildBulkRowHtml(r, i, duplicatesMap)).join('');
   onBulkCountChange();
 }
+
+// Expand/collapse a row's meaning list, and pick a meaning from the cards.
+bulkPreviewList.addEventListener('click', (e) => {
+  const expandBtn = e.target.closest('.bulk-row-expand');
+  if (expandBtn) {
+    const row = expandBtn.closest('.bulk-word-row');
+    const panel = row?.querySelector('.bulk-row-meanings');
+    if (!panel) return;
+    const open = panel.classList.toggle('hidden');
+    expandBtn.classList.toggle('expanded', !open);
+    expandBtn.setAttribute('aria-expanded', String(!open));
+    return;
+  }
+
+  const card = e.target.closest('.meaning-card');
+  if (card) {
+    const row = card.closest('.bulk-word-row');
+    if (!row) return;
+    const wi = parseInt(row.dataset.index, 10);
+    const mi = parseInt(card.dataset.index, 10);
+    const result = bulkResults[wi];
+    const meaning = result?.meanings[mi];
+    if (!meaning) return;
+
+    result.selectedMeaning = mi;
+    result.vietnamese  = meaning.vietnamese;
+    result.ipaUS       = meaning.ipaUS;
+    result.ipaUK       = meaning.ipaUK;
+    result.wordType    = meaning.wordType;
+    result.description = meaning.description;
+
+    // Update the row summary
+    const ipaEl = row.querySelector('.bulk-row-ipa');
+    if (ipaEl) ipaEl.textContent = meaning.ipaUS || meaning.ipaUK || '';
+    const viEl = row.querySelector('.bulk-row-vi');
+    if (viEl) viEl.textContent = meaning.vietnamese || '';
+    const badgeEl = row.querySelector('.bulk-row-top .badge');
+    if (badgeEl) {
+      badgeEl.className = badgeClass(meaning.wordType);
+      badgeEl.textContent = WORD_TYPE_LABELS[meaning.wordType] || meaning.wordType;
+    }
+
+    // Move the selected highlight
+    row.querySelectorAll('.meaning-card').forEach(c => {
+      c.classList.remove('selected');
+      c.setAttribute('aria-checked', 'false');
+    });
+    card.classList.add('selected');
+    card.setAttribute('aria-checked', 'true');
+  }
+});
 
 function resetBulkModal() {
   bulkWordsInput.value = '';
@@ -477,7 +666,7 @@ btnBulkAdd.addEventListener('click', () => {
 });
 
 setupBulkPreviewHandlers({
-  tbodyEl: bulkPreviewTbody,
+  tbodyEl: bulkPreviewList,
   selectAllBtn: bulkSelectAll,
   deselectAllBtn: bulkDeselectAll,
   onCountChange: onBulkCountChange,
@@ -547,7 +736,7 @@ bulkBtnGenerate.addEventListener('click', async () => {
 
 bulkBtnAdd.addEventListener('click', async () => {
   const selectedIndices = Array.from(
-    bulkPreviewTbody.querySelectorAll('input[type=checkbox]:checked')
+    bulkPreviewList.querySelectorAll('input[type=checkbox]:checked')
   ).map(cb => parseInt(cb.dataset.index));
 
   if (selectedIndices.length === 0) return;
@@ -1169,6 +1358,7 @@ vocabTbody.addEventListener('click', (e) => {
   inputIpaUK.value       = word.ipaUK || '';
   inputWordType.value    = word.wordType || 'other';
   inputDescription.value = word.description || '';
+  hideMeaningSelector();
   showModal(modalWordOverlay);
 });
 
@@ -1327,6 +1517,7 @@ btnAddWord.addEventListener('click', () => {
   modalWordTitle.textContent = 'Add Word';
   btnWordSave.textContent = 'Add';
   formWord.reset();
+  hideMeaningSelector();
   showModal(modalWordOverlay);
 });
 

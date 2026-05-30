@@ -20,6 +20,16 @@ Full project context is in CLAUDE.md at the repo root.
 | `js/ai/feedback-builder.js`| Score badges, error cards, diff HTML builders                                                                              |
 | `js/core/ai-client.js`    | Shared HTTP client: callAzureOpenAI(), streamAzureOpenAI()                                                                  |
 
+### Word info return shape
+
+`generateWordInfo()` and each item from `generateBulkWordInfo()` return a `meanings`
+array, ordered most-common-first, where each entry is
+`{ sense, vietnamese, ipaUS, ipaUK, wordType, description }`. The primary meaning
+(`meanings[0]`) is also mirrored onto the top-level `vietnamese/ipaUS/ipaUK/wordType/description`
+fields for convenience. The AI is instructed to rank the most common everyday meaning
+first and only list genuinely distinct common meanings (≤4 single, ≤3 bulk). The UI lets
+users pick a meaning (selectable cards in the word form, per-row dropdown in bulk add).
+
 ## AI Call Pattern
 
 All AI calls go through the shared client in `js/core/ai-client.js`:

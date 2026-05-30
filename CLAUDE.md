@@ -207,8 +207,8 @@ Body: { messages, temperature, max_tokens, response_format: { type: "json_object
 
 | Function                         | File              | Purpose                                                     |
 | -------------------------------- | ----------------- | ----------------------------------------------------------- |
-| `generateWordInfo()`             | ai/word-ai.js     | Auto-fill word details (vietnamese, IPA, type, description) |
-| `generateBulkWordInfo()`         | ai/word-ai.js     | Same, batched for multiple words (max ~6)                   |
+| `generateWordInfo()`             | ai/word-ai.js     | Auto-fill word details; returns ranked `meanings[]` (most common first) for sense selection |
+| `generateBulkWordInfo()`         | ai/word-ai.js     | Same, batched for multiple words (max ~6); each item carries `meanings[]` |
 | `generateParagraph()`            | ai/word-ai.js     | Create paragraph from vocabulary words                      |
 | `generateWordInsights()`         | ai/word-ai.js     | Synonyms, antonyms, collocations, examples                  |
 | `generateVerbInfo()`             | ai/word-ai.js     | V2/V3 forms, Vietnamese meaning, IPA for a single verb      |

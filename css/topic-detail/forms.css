@@ -47,6 +47,347 @@
   margin-top: var(--sp-4);
 }
 
+/* ---------- Word Modal: split layout when meanings are shown ---------- */
+.modal-word-dialog {
+  max-width: 560px;
+  transition: max-width var(--t-normal);
+}
+
+.modal-word-dialog.is-split {
+  max-width: 900px;
+}
+
+.vocab-form-body {
+  display: block;
+}
+
+.modal-word-dialog.is-split .vocab-form-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: var(--sp-5);
+  align-items: stretch;
+}
+
+.vocab-form-fields {
+  min-width: 0;
+}
+
+/* Stack the two panels on narrow screens */
+@media (max-width: 720px) {
+  .modal-word-dialog.is-split .vocab-form-body {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Meaning Selector (multiple AI meanings) ---------- */
+.meaning-selector {
+  display: flex;
+  flex-direction: column;
+  padding: var(--sp-4);
+  background: rgba(124, 158, 217, .06);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  animation: meaningFade var(--t-normal);
+}
+
+@keyframes meaningFade {
+  from { opacity: 0; transform: translateX(8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.meaning-selector-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
+}
+
+.meaning-selector-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--color-primary-dark);
+}
+
+.meaning-selector-count {
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--color-text-light);
+}
+
+.meaning-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.meaning-selector-hint {
+  margin-top: var(--sp-3);
+  margin-bottom: 0;
+  font-size: var(--fs-xs);
+  color: var(--color-text-light);
+}
+
+.meaning-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  width: 100%;
+  text-align: left;
+  padding: var(--sp-3);
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color var(--t-fast), background var(--t-fast), box-shadow var(--t-fast);
+}
+
+.meaning-card:hover {
+  border-color: var(--color-primary-light);
+  background: rgba(124, 158, 217, .04);
+}
+
+.meaning-card:focus-visible {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(124, 158, 217, .2);
+}
+
+.meaning-card.selected {
+  border-color: var(--color-primary);
+  background: rgba(124, 158, 217, .1);
+  box-shadow: var(--shadow-sm);
+}
+
+.meaning-card-radio {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  border: 2px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-surface);
+  position: relative;
+  transition: border-color var(--t-fast);
+}
+
+.meaning-card.selected .meaning-card-radio {
+  border-color: var(--color-primary);
+}
+
+.meaning-card.selected .meaning-card-radio::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  transform: translate(-50%, -50%);
+}
+
+.meaning-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-width: 0;
+  flex: 1;
+}
+
+.meaning-card-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.meaning-card-vi {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.meaning-card-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px var(--sp-2);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  border-radius: 100px;
+  background: rgba(124, 158, 217, .18);
+  color: var(--color-primary-dark);
+}
+
+.meaning-card-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  font-size: var(--fs-xs);
+}
+
+.meaning-card-sense {
+  color: var(--color-text-light);
+}
+
+.meaning-card-ipa {
+  font-family: var(--font-mono);
+  color: var(--color-text-light);
+}
+
+/* ---------- Word Bulk Preview — row list ---------- */
+.bulk-correction-notice {
+  background: rgba(242, 208, 122, .15);
+  border-left: 3px solid var(--color-warning);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-3) var(--sp-4);
+  margin-bottom: var(--sp-3);
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+}
+
+.bulk-preview-list {
+  max-height: 380px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.bulk-word-row {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.bulk-word-row:last-child {
+  border-bottom: none;
+}
+
+.bulk-word-row.bulk-dupe-row {
+  background: rgba(242, 208, 122, .08);
+}
+
+.bulk-row-top {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4) 0;
+  cursor: pointer;
+}
+
+.bulk-row-sub {
+  padding: 2px var(--sp-4) var(--sp-3) calc(var(--sp-4) + 17px + var(--sp-2));
+  cursor: pointer;
+}
+
+.bulk-word-row:hover {
+  background: rgba(124, 158, 217, .05);
+}
+
+.bulk-word-row input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 17px;
+  height: 17px;
+  border: 1.8px solid var(--color-border);
+  border-radius: 5px;
+  background: var(--color-surface);
+  cursor: pointer;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.bulk-word-row input[type="checkbox"]:checked {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.bulk-word-row input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 9px;
+  border: 2px solid #fff;
+  border-top: none;
+  border-left: none;
+  transform: translate(-50%, -58%) rotate(45deg);
+}
+
+.bulk-row-english {
+  font-weight: 600;
+  color: var(--color-primary-dark);
+}
+
+.bulk-row-ipa {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--color-text-light);
+}
+
+.bulk-row-ipa:empty {
+  display: none;
+}
+
+.bulk-row-vi {
+  font-size: var(--fs-sm);
+  color: var(--color-text);
+}
+
+.bulk-row-flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin-top: 2px;
+  font-size: var(--fs-xs);
+}
+
+.bulk-row-expand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  flex-shrink: 0;
+  margin-left: auto;
+  padding: 4px var(--sp-2);
+  font-family: var(--font-sans);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--color-primary-dark);
+  background: rgba(124, 158, 217, .12);
+  border: none;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: background var(--t-fast);
+}
+
+.bulk-row-expand:hover {
+  background: rgba(124, 158, 217, .22);
+}
+
+.bulk-row-expand svg {
+  transition: transform var(--t-fast);
+}
+
+.bulk-row-expand.expanded svg {
+  transform: rotate(180deg);
+}
+
+.bulk-row-meanings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: 0 var(--sp-4) var(--sp-4) calc(var(--sp-4) + 17px + var(--sp-2));
+  animation: meaningFade var(--t-fast);
+}
+
 /* ---------- Word Selection Modal ---------- */
 .ws-toolbar {
   display: flex;

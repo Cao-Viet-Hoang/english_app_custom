@@ -96,8 +96,9 @@ export function setupBulkPreviewHandlers({ tbodyEl, selectAllBtn, deselectAllBtn
   if (tbodyEl) {
     tbodyEl.addEventListener('change', onCountChange);
     tbodyEl.addEventListener('click', (e) => {
-      if (e.target.type === 'checkbox') return;
-      const row = e.target.closest('tr');
+      // Ignore clicks on interactive controls (checkbox, meaning dropdown, etc.)
+      if (e.target.closest('input, select, option, button, label')) return;
+      const row = e.target.closest('tr, .bulk-word-row');
       if (!row) return;
       const cb = row.querySelector('input[type=checkbox]');
       if (cb) { cb.checked = !cb.checked; onCountChange(); }

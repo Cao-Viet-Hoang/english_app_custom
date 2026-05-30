@@ -86,35 +86,86 @@ Return your response as JSON:
 }
 
 /**
+ * Normalise a raw AI meaning object into the canonical shape, sanitising
+ * the word type to a known value.
+ *
+ * @param {Object} raw
+ * @returns {{ sense: string, vietnamese: string, ipaUS: string, ipaUK: string, wordType: string, description: string }}
+ */
+function normalizeMeaning(raw) {
+  const m = raw && typeof raw === 'object' ? raw : {};
+  return {
+    sense:       (m.sense || '').trim(),
+    vietnamese:  m.vietnamese || '',
+    ipaUS:       m.ipaUS || '',
+    ipaUK:       m.ipaUK || '',
+    wordType:    VALID_WORD_TYPES.includes(m.wordType) ? m.wordType : 'other',
+    description: m.description || '',
+  };
+}
+
+/**
+ * Coerce an AI payload into a non-empty meanings array (most common first).
+ * Falls back to top-level fields when no array was returned, so older
+ * single-meaning responses keep working.
+ *
+ * @param {Object} parsed
+ * @returns {Array<Object>}
+ */
+function extractMeanings(parsed) {
+  const list = Array.isArray(parsed?.meanings) ? parsed.meanings : [];
+  const meanings = list.map(normalizeMeaning).filter(m => m.vietnamese || m.sense);
+  if (meanings.length === 0) {
+    // Defensive fallback: build a single meaning from any flat fields.
+    meanings.push(normalizeMeaning(parsed));
+  }
+  return meanings.slice(0, 4);
+}
+
+/**
  * Call Azure OpenAI to auto-fill word details for a given English word.
+ *
+ * Returns a ranked list of common meanings (most common first) so the UI
+ * can let the user pick the intended sense. The first meaning is also
+ * mirrored onto the top-level fields for convenience.
  *
  * @param {string} englishWord
  * @param {string} [topicName]
  * @param {{ wordType?: string, vietnamese?: string }} [hints]
- * @returns {Promise<{ correctedWord: string|null, vietnamese: string, ipaUS: string, ipaUK: string, wordType: string, description: string }>}
+ * @returns {Promise<{ correctedWord: string|null, vietnamese: string, ipaUS: string, ipaUK: string, wordType: string, description: string, meanings: Array<{ sense: string, vietnamese: string, ipaUS: string, ipaUK: string, wordType: string, description: string }> }>}
  */
 export async function generateWordInfo(englishWord, topicName, hints = {}) {
   const topicContext = topicName
-    ? `\nThis word is being added to a vocabulary topic called "${topicName}". First, evaluate whether this topic name represents a genuine vocabulary domain or category (e.g. "Business English", "Medical Terms", "Travel", "Phrasal Verbs"). If the topic name appears to be a placeholder, random characters, or too vague to indicate a specific vocabulary domain (e.g. "abc", "test", "my topic", single letters, numbers), ignore it and provide the most common/general meaning instead. Only use the topic context to choose the relevant meaning if the topic name clearly indicates a real subject area.`
+    ? `\nThis word is being added to a vocabulary topic called "${topicName}". First, evaluate whether this topic name represents a genuine vocabulary domain or category (e.g. "Business English", "Medical Terms", "Travel", "Phrasal Verbs"). If the topic name appears to be a placeholder, random characters, or too vague to indicate a specific vocabulary domain (e.g. "abc", "test", "my topic", single letters, numbers), ignore it and rank by the most common/general meaning instead. Only use the topic context to decide which meaning to rank first if the topic name clearly indicates a real subject area.`
     : '';
 
   const hintWordType = hints.wordType && VALID_WORD_TYPES.includes(hints.wordType) ? hints.wordType : '';
   const hintVietnamese = (hints.vietnamese || '').trim();
   const hintsContext = (hintWordType || hintVietnamese)
-    ? `\nThe user has provided the following hints to identify the correct meaning — treat these as strong signals:${hintWordType ? `\n- Intended word type: ${hintWordType}` : ''}${hintVietnamese ? `\n- Intended Vietnamese meaning (approximate): "${hintVietnamese}"` : ''}`
+    ? `\nThe user has provided the following hints about the intended meaning — treat these as strong signals and rank the matching meaning FIRST:${hintWordType ? `\n- Intended word type: ${hintWordType}` : ''}${hintVietnamese ? `\n- Intended Vietnamese meaning (approximate): "${hintVietnamese}"` : ''}`
     : '';
 
   const systemPrompt = `You are an English-Vietnamese dictionary assistant.
-Given an English word or phrase, return a JSON object with these fields:
+Given an English word or phrase, identify its common meanings and return a JSON object with these fields:
 - "correctedWord": if the input word is misspelled, provide the correct English spelling here; if spelling is correct, set to null
-- "vietnamese": the most common Vietnamese translation (short, 1-5 words)
-- "ipaUS": the IPA pronunciation for American English (e.g. /əˈkɑːm.plɪʃ/)
-- "ipaUK": the IPA pronunciation for British English (e.g. /əˈkʌm.plɪʃ/)
+- "meanings": an array of the word's distinct common meanings, ORDERED FROM MOST COMMON / EVERYDAY TO LESS COMMON. The FIRST element must be the meaning a typical Vietnamese learner is most likely to intend.
+
+Each element of "meanings" is an object with:
+- "sense": a SHORT English gloss (2-6 words) that distinguishes this meaning from the others (e.g. "a financial institution", "the land beside a river", "to tilt sideways"). Even when the word has a single meaning, give a short defining gloss.
+- "vietnamese": the Vietnamese translation for THIS specific meaning (short, 1-5 words)
+- "ipaUS": the IPA pronunciation for American English (e.g. /bæŋk/) — it may differ between meanings for heteronyms
+- "ipaUK": the IPA pronunciation for British English
 - "wordType": one of exactly: noun, verb, adj, adv, phrase, other
-- "description": a brief Vietnamese description or usage note (1-2 short sentences)
+- "description": a brief Vietnamese description or usage note for this meaning (1-2 short sentences)
+
+RULES FOR CHOOSING MEANINGS:
+- Rank by how frequently the meaning is used in EVERYDAY English by a general learner, considering ALL parts of speech together. Do NOT assume a part of speech — the most common meaning may be a verb even if noun senses also exist.
+  Example: for "run", the verb sense "to move fast on foot" (chạy) is by far the most common and MUST be first, before noun senses like "a series" or "a trip". For "book", the noun "a written work" (sách) comes before the verb "to reserve".
+- Only list meanings that are genuinely common AND distinct (a different definition or a different part of speech). Do NOT split subtle shades of the same meaning into separate entries.
+- Include AT MOST 4 meanings. If the word realistically has only one common meaning, return a single-element array.
 ${topicContext}${hintsContext}
 IMPORTANT:
-- If the input word appears to be misspelled (e.g. "acomplish", "beutiful"), detect the most likely intended English word, provide all field values for that corrected word, and set "correctedWord" to the corrected spelling.
+- If the input word appears to be misspelled (e.g. "acomplish", "beutiful"), detect the most likely intended English word, return meanings for that corrected word, and set "correctedWord" to the corrected spelling.
 - If the spelling is correct, set "correctedWord" to null.
 - Return ONLY valid JSON, no markdown code blocks, no extra text.
 - Use standard IPA notation with slashes for both US and UK pronunciations.`;
@@ -124,11 +175,9 @@ IMPORTANT:
 Return JSON:
 {
   "correctedWord": null,
-  "vietnamese": "...",
-  "ipaUS": "...",
-  "ipaUK": "...",
-  "wordType": "...",
-  "description": "..."
+  "meanings": [
+    { "sense": "...", "vietnamese": "...", "ipaUS": "...", "ipaUK": "...", "wordType": "...", "description": "..." }
+  ]
 }`;
 
   const parsed = await callAzureOpenAI(
@@ -136,18 +185,20 @@ Return JSON:
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
-    { temperature: 0.5, maxTokens: 300 },
+    { temperature: 0.5, maxTokens: 900 },
   );
 
-  const wordType = VALID_WORD_TYPES.includes(parsed.wordType) ? parsed.wordType : 'other';
+  const meanings = extractMeanings(parsed);
+  const primary = meanings[0];
 
   return {
     correctedWord: parsed.correctedWord || null,
-    vietnamese: parsed.vietnamese || '',
-    ipaUS: parsed.ipaUS || '',
-    ipaUK: parsed.ipaUK || '',
-    wordType,
-    description: parsed.description || '',
+    vietnamese: primary.vietnamese,
+    ipaUS: primary.ipaUS,
+    ipaUK: primary.ipaUK,
+    wordType: primary.wordType,
+    description: primary.description,
+    meanings,
   };
 }
 
@@ -257,14 +308,23 @@ async function requestBulkWordInfoBatch(englishWords, topicName) {
 Given a list of English words or phrases, return a JSON array where each element has these fields:
 - "english": the correctly spelled English word/phrase (if the input has a typo, correct it here)
 - "correctedWord": if the input word was misspelled, provide the corrected spelling here; if spelling was correct, set to null
-- "vietnamese": the most common Vietnamese translation (short, 1-5 words)
-- "ipaUS": the IPA pronunciation for American English (e.g. /əˈkɑːm.plɪʃ/)
-- "ipaUK": the IPA pronunciation for British English (e.g. /əˈkʌm.plɪʃ/)
+- "meanings": an array of the word's distinct common meanings, ORDERED FROM MOST COMMON / EVERYDAY TO LESS COMMON. The FIRST element must be the meaning a typical Vietnamese learner is most likely to intend.
+
+Each element of "meanings" is an object with:
+- "sense": a SHORT English gloss (2-6 words) distinguishing this meaning (e.g. "a financial institution", "the land beside a river")
+- "vietnamese": the Vietnamese translation for THIS specific meaning (short, 1-5 words)
+- "ipaUS": IPA for American English (e.g. /bæŋk/) — may differ between meanings for heteronyms
+- "ipaUK": IPA for British English
 - "wordType": one of exactly: noun, verb, adj, adv, phrase, other
-- "description": a brief Vietnamese description or usage note (1-2 short sentences)
+- "description": a brief Vietnamese usage note for this meaning (1-2 short sentences)
+
+RULES FOR CHOOSING MEANINGS:
+- Rank by how frequently the meaning is used in EVERYDAY English, considering ALL parts of speech together. Do NOT assume a part of speech — the most common meaning may be a verb even if noun senses also exist (e.g. for "run", the verb "to move fast on foot" / chạy comes first, before noun senses like "a series").
+- Only list meanings that are genuinely common AND distinct (different definition or part of speech). Do NOT split subtle shades of the same meaning.
+- Include AT MOST 3 meanings per word. If a word has only one common meaning, return a single-element array.
 ${topicContext}
 IMPORTANT:
-- For each word: if it appears misspelled, correct it, return data for the corrected word, and set "correctedWord" to the corrected spelling. If spelling is correct, set "correctedWord" to null.
+- For each word: if it appears misspelled, correct it, return meanings for the corrected word, and set "correctedWord" to the corrected spelling. If spelling is correct, set "correctedWord" to null.
 - Return ONLY a valid JSON array, no markdown code blocks, no extra text.
 - The array must have exactly one element per input word, in the same order.
 - Use standard IPA notation with slashes for both US and UK pronunciations.`;
@@ -273,11 +333,16 @@ IMPORTANT:
 
 Return a JSON array:
 [
-  { "english": "...", "correctedWord": null, "vietnamese": "...", "ipaUS": "...", "ipaUK": "...", "wordType": "...", "description": "..." },
+  {
+    "english": "...", "correctedWord": null,
+    "meanings": [
+      { "sense": "...", "vietnamese": "...", "ipaUS": "...", "ipaUK": "...", "wordType": "...", "description": "..." }
+    ]
+  },
   ...
 ]`;
 
-  const maxTokens = Math.min(englishWords.length * 300, 4096);
+  const maxTokens = Math.min(englishWords.length * 600, 8000);
 
   const parsed = await callAzureOpenAI(
     [
@@ -296,15 +361,18 @@ Return a JSON array:
   return englishWords.map((originalWord, i) => {
     const item = arr[i] && typeof arr[i] === 'object' ? arr[i] : {};
     const corrected = item.correctedWord || null;
+    const meanings = extractMeanings(item);
+    const primary = meanings[0];
     return {
       english: corrected || item.english || originalWord || '',
       originalWord: originalWord,
       correctedWord: corrected,
-      vietnamese: item.vietnamese || '',
-      ipaUS: item.ipaUS || '',
-      ipaUK: item.ipaUK || '',
-      wordType: VALID_WORD_TYPES.includes(item.wordType) ? item.wordType : 'other',
-      description: item.description || '',
+      vietnamese: primary.vietnamese,
+      ipaUS: primary.ipaUS,
+      ipaUK: primary.ipaUK,
+      wordType: primary.wordType,
+      description: primary.description,
+      meanings,
     };
   });
 }
