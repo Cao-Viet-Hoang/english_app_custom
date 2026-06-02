@@ -159,7 +159,7 @@ function openWordSelectModal() {
   }
   wsListEl.innerHTML = allWords.map((w, i) => `
     <label class="ws-item">
-      <input type="checkbox" value="${escapeHtml(w.english)}" checked />
+      <input type="checkbox" value="${escapeHtml(w.english)}"${w.learned ? ' checked' : ''} />
       <span class="ws-word">${escapeHtml(w.english)}</span>
       <span class="ws-word-vi">${escapeHtml(w.vietnamese)}</span>
     </label>
