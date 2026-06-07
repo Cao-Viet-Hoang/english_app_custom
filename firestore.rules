@@ -196,6 +196,7 @@ service cloud.firestore {
               .hasOnly([
                 'date', 'wordsLearned', 'practiceCount',
                 'irregularVerbsLearned', 'irregularVerbPracticeCount',
+                'wordFormsLearned', 'wordFormPracticeCount',
                 'firstActionAt', 'lastActionAt'
               ]);
 
@@ -221,6 +222,30 @@ service cloud.firestore {
             .hasOnly([
               'base', 'pastSimple', 'pastParticiple',
               'vietnamese', 'ipaBase', 'pattern',
+              'learned', 'learnedAt',
+              'orderKey', 'updatedAt'
+            ]);
+
+        allow delete: if true;
+      }
+
+      // ------------------------------------------------------
+      // Word Forms
+      // users/{username}/wordForms/{formId}
+      // ------------------------------------------------------
+      match /wordForms/{formId} {
+        allow read: if true;
+
+        allow create: if
+          isNonEmptyString(request.resource.data.baseType)
+          && request.resource.data.baseType in ['noun', 'verb', 'adjective', 'adverb']
+          && request.resource.data.orderKey is number;
+
+        allow update: if
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly([
+              'baseType',
+              'noun', 'verb', 'adjective', 'adverb',
               'learned', 'learnedAt',
               'orderKey', 'updatedAt'
             ]);

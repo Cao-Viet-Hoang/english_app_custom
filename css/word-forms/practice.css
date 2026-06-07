@@ -1,0 +1,359 @@
+/* ============================================================
+   WORD FORMS — Practice Tab
+   Practice card, form fields, results, word selection modal
+   ============================================================ */
+
+/* ---------- Practice Empty State ---------- */
+.practice-empty {
+  text-align: center;
+  padding: var(--sp-8) var(--sp-5);
+  color: var(--color-text-light);
+}
+
+.practice-empty svg {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto var(--sp-4);
+  stroke: var(--color-border);
+}
+
+.practice-empty h3 {
+  color: var(--color-text);
+  margin-bottom: var(--sp-2);
+}
+
+/* ---------- Practice Start View ---------- */
+.wf-practice-start {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-8) var(--sp-5);
+  text-align: center;
+}
+
+.wf-practice-start p {
+  color: var(--color-text-light);
+  max-width: 400px;
+}
+
+/* ---------- Progress Bar ---------- */
+.wf-progress {
+  margin-bottom: var(--sp-5);
+}
+
+.wf-progress-track {
+  width: 100%;
+  height: 8px;
+  background: var(--color-surface-alt);
+  border-radius: 100px;
+  overflow: hidden;
+  margin-bottom: var(--sp-2);
+}
+
+.wf-progress-fill {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: 100px;
+  transition: width 0.4s ease;
+}
+
+.wf-progress-text {
+  font-size: var(--fs-xs);
+  color: var(--color-text-light);
+  text-align: right;
+}
+
+/* ---------- Practice Card ---------- */
+.wf-practice-card {
+  max-width: 600px;
+  margin: 0 auto;
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-6);
+  text-align: center;
+  margin-bottom: var(--sp-5);
+  box-shadow: var(--shadow-sm);
+}
+
+.wf-practice-word-label {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-text-light);
+  margin-bottom: var(--sp-2);
+}
+
+.wf-practice-word {
+  font-size: var(--fs-2xl);
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  margin-bottom: var(--sp-3);
+}
+
+.wf-practice-type-row {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--sp-5);
+}
+
+/* ---------- Forms Grid (3 columns for the 3 non-base types) ---------- */
+.wf-forms-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-4);
+  align-items: start;
+  text-align: left;
+}
+
+.wf-form-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.wf-form-col-label {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-light);
+  text-align: center;
+}
+
+.wf-form-input {
+  width: 100%;
+  font-size: var(--fs-md);
+  font-weight: 600;
+  text-align: center;
+  padding: var(--sp-2) var(--sp-3);
+  border: 2px solid var(--color-primary-light);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  transition: border-color var(--t-fast), box-shadow var(--t-fast), background var(--t-fast);
+}
+
+.wf-form-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(124, 158, 217, 0.2);
+}
+
+/* ---------- Field States ---------- */
+.wf-field-correct .wf-form-input {
+  border-color: var(--color-success);
+  background: rgba(130, 201, 161, 0.08);
+  color: var(--color-text);
+}
+
+.wf-field-wrong .wf-form-input {
+  border-color: var(--color-danger);
+  background: rgba(232, 139, 139, 0.08);
+}
+
+/* ---------- Correct Answer Display ---------- */
+.wf-correct-answer {
+  font-size: var(--fs-xs);
+  color: var(--color-danger);
+  font-weight: 600;
+  margin-top: 2px;
+  min-height: var(--sp-4);
+  text-align: center;
+}
+
+/* ---------- N/A field (non-editable) ---------- */
+.wf-form-na {
+  width: 100%;
+  min-height: 42px;
+  font-size: var(--fs-md);
+  font-weight: 600;
+  text-align: center;
+  padding: var(--sp-2) var(--sp-3);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-alt);
+  color: var(--color-text-light);
+  font-style: italic;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------- Practice Actions ---------- */
+.wf-practice-actions {
+  display: flex;
+  gap: var(--sp-3);
+  justify-content: center;
+  margin-top: var(--sp-5);
+}
+
+/* ---------- Results Screen ---------- */
+.wf-results {
+  max-width: 560px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.wf-results-score {
+  font-size: var(--fs-2xl);
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  margin-bottom: var(--sp-2);
+}
+
+.wf-results-label {
+  font-size: var(--fs-md);
+  color: var(--color-text-light);
+  margin-bottom: var(--sp-5);
+}
+
+.wf-results-wrong-list {
+  text-align: left;
+  margin-bottom: var(--sp-5);
+}
+
+.wf-results-wrong-list h4 {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--sp-3);
+}
+
+.wf-wrong-item {
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--sp-2);
+}
+
+.wf-wrong-item-word {
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  font-size: var(--fs-md);
+  margin-bottom: var(--sp-2);
+}
+
+.wf-wrong-item-forms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  font-size: var(--fs-sm);
+  color: var(--color-text-light);
+}
+
+.wf-wrong-item-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.wf-wrong-item-form-label {
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.wf-wrong-item-form-value {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.wf-wrong-item-form-value.na {
+  color: var(--color-text-light);
+  font-style: italic;
+}
+
+.wf-results-actions {
+  display: flex;
+  gap: var(--sp-3);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ---------- Word Selection Modal ---------- */
+.wf-word-select-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  max-height: 320px;
+  overflow-y: auto;
+  padding: var(--sp-1) 0;
+}
+
+.wf-word-select-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--t-fast), border-color var(--t-fast);
+}
+
+.wf-word-select-item:hover {
+  background: var(--color-surface-alt);
+  border-color: var(--color-primary-light);
+}
+
+.wf-word-select-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-primary);
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.wf-word-select-word {
+  font-weight: 600;
+  color: var(--color-text);
+  flex: 1;
+}
+
+.ws-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-3);
+  flex-wrap: wrap;
+}
+
+.ws-counter {
+  font-size: var(--fs-sm);
+  color: var(--color-text-light);
+  font-weight: 500;
+}
+
+.ws-toolbar-btns {
+  display: flex;
+  gap: var(--sp-2);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 540px) {
+  .wf-forms-grid {
+    grid-template-columns: 1fr;
+    gap: var(--sp-3);
+  }
+
+  .wf-practice-word {
+    font-size: var(--fs-xl);
+  }
+
+  .wf-practice-card {
+    padding: var(--sp-5) var(--sp-4);
+  }
+
+  .wf-results-actions {
+    flex-direction: column;
+  }
+}

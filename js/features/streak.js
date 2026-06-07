@@ -50,7 +50,13 @@ const ACTIVITY_FIELD_MAP = {
     learn: 'irregularVerbsLearned',
     practice: 'irregularVerbPracticeCount',
   },
+  wordForm: {
+    learn: 'wordFormsLearned',
+    practice: 'wordFormPracticeCount',
+  },
 };
+
+const KNOWN_SOURCES = new Set(['vocabulary', 'irregularVerb', 'wordForm']);
 
 function normalizeActivityOptions(activity = 'learn') {
   if (typeof activity === 'string') {
@@ -60,9 +66,10 @@ function normalizeActivityOptions(activity = 'learn') {
     };
   }
 
+  const source = KNOWN_SOURCES.has(activity?.source) ? activity.source : 'vocabulary';
   return {
     type: activity?.type === 'practice' ? 'practice' : 'learn',
-    source: activity?.source === 'irregularVerb' ? 'irregularVerb' : 'vocabulary',
+    source,
   };
 }
 
@@ -74,16 +81,20 @@ function getActivityField(activity = 'learn') {
 export function summarizeActivityEntry(entry = {}) {
   const vocabularyLearned = entry.wordsLearned || 0;
   const irregularVerbsLearned = entry.irregularVerbsLearned || 0;
+  const wordFormsLearned = entry.wordFormsLearned || 0;
   const vocabularyPractice = entry.practiceCount || 0;
   const irregularVerbPractice = entry.irregularVerbPracticeCount || 0;
-  const learned = vocabularyLearned + irregularVerbsLearned;
-  const practiced = vocabularyPractice + irregularVerbPractice;
+  const wordFormPractice = entry.wordFormPracticeCount || 0;
+  const learned = vocabularyLearned + irregularVerbsLearned + wordFormsLearned;
+  const practiced = vocabularyPractice + irregularVerbPractice + wordFormPractice;
 
   return {
     vocabularyLearned,
     irregularVerbsLearned,
+    wordFormsLearned,
     vocabularyPractice,
     irregularVerbPractice,
+    wordFormPractice,
     learned,
     practiced,
     total: learned + practiced,
