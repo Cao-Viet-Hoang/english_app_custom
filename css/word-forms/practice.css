@@ -99,35 +99,41 @@
   margin-bottom: var(--sp-5);
 }
 
-/* ---------- Forms Grid (3 columns for the 3 non-base types) ---------- */
+/* ---------- Forms Grid (3 stacked rows for the 3 non-base types) ---------- */
 .wf-forms-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--sp-4);
-  align-items: start;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
   text-align: left;
 }
 
 .wf-form-col {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-2);
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  grid-template-areas:
+    "label input"
+    "label answer";
+  align-items: center;
+  column-gap: var(--sp-3);
+  row-gap: 2px;
 }
 
 .wf-form-col-label {
+  grid-area: label;
   font-size: var(--fs-xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--color-text-light);
-  text-align: center;
+  text-align: left;
 }
 
 .wf-form-input {
+  grid-area: input;
   width: 100%;
   font-size: var(--fs-md);
   font-weight: 600;
-  text-align: center;
+  text-align: left;
   padding: var(--sp-2) var(--sp-3);
   border: 2px solid var(--color-primary-light);
   border-radius: var(--radius-md);
@@ -157,12 +163,12 @@
 
 /* ---------- Correct Answer Display ---------- */
 .wf-correct-answer {
+  grid-area: answer;
   font-size: var(--fs-xs);
   color: var(--color-danger);
   font-weight: 600;
-  margin-top: 2px;
   min-height: var(--sp-4);
-  text-align: center;
+  text-align: left;
 }
 
 /* ---------- N/A field (non-editable) ---------- */
@@ -278,45 +284,8 @@
 }
 
 /* ---------- Word Selection Modal ---------- */
-.wf-word-select-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-2);
-  max-height: 320px;
-  overflow-y: auto;
-  padding: var(--sp-1) 0;
-}
-
-.wf-word-select-item {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-3);
-  padding: var(--sp-3) var(--sp-4);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: background var(--t-fast), border-color var(--t-fast);
-}
-
-.wf-word-select-item:hover {
-  background: var(--color-surface-alt);
-  border-color: var(--color-primary-light);
-}
-
-.wf-word-select-item input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--color-primary);
-  flex-shrink: 0;
-  cursor: pointer;
-}
-
-.wf-word-select-word {
-  font-weight: 600;
-  color: var(--color-text);
-  flex: 1;
-}
+/* The word list reuses the shared .ws-list / .ws-item / .ws-word styles
+   from css/topic-detail/forms.css to match the main app. */
 
 .ws-toolbar {
   display: flex;
@@ -340,9 +309,12 @@
 
 /* ---------- Responsive ---------- */
 @media (max-width: 540px) {
-  .wf-forms-grid {
+  .wf-form-col {
     grid-template-columns: 1fr;
-    gap: var(--sp-3);
+    grid-template-areas:
+      "label"
+      "input"
+      "answer";
   }
 
   .wf-practice-word {

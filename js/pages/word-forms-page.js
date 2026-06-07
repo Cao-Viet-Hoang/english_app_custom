@@ -82,7 +82,6 @@ const wfEmpty            = document.getElementById('wf-empty');
 const wfTableWrapper     = document.getElementById('wf-table-wrapper');
 const wfTbody            = document.getElementById('wf-tbody');
 const wfSearchInput      = document.getElementById('wf-search-input');
-const wfTypeFilter       = document.getElementById('wf-type-filter');
 const wfSortSelect       = document.getElementById('wf-sort-select');
 const btnAddWordForm     = document.getElementById('btn-add-word-form');
 const btnBulkWordForm    = document.getElementById('btn-bulk-word-form');
@@ -182,6 +181,16 @@ function typeBadgeHtml(baseType) {
   const cls = TYPE_CLASS_MAP[t] || 'wf-type-noun';
   const label = TYPE_LABELS[t] || escapeHtml(t);
   return `<span class="wf-type-badge ${cls}">${label}</span>`;
+}
+
+/**
+ * The representative form of an entry (its base type), with a fallback chain
+ * so the value is never blank. Used for word lists and result review.
+ * @param {Object} form
+ * @returns {string}
+ */
+function baseForm(form) {
+  return form[form.baseType] || form.baseWord || form.noun || form.verb || form.adjective || form.adverb || '';
 }
 
 // ============================================================
@@ -300,17 +309,14 @@ function buildWordFormRowHtml(form) {
 
 function computeFilteredForms() {
   const query = wfSearchInput ? wfSearchInput.value.trim().toLowerCase() : '';
-  const typeFilter = wfTypeFilter ? wfTypeFilter.value : '';
   const sort = wfSortSelect ? wfSortSelect.value : 'input-order';
 
   let result = allWordForms.filter(f => {
-    const matchesQuery = !query ||
+    return !query ||
       (f.noun      || '').toLowerCase().includes(query) ||
       (f.verb      || '').toLowerCase().includes(query) ||
       (f.adjective || '').toLowerCase().includes(query) ||
       (f.adverb    || '').toLowerCase().includes(query);
-    const matchesType = !typeFilter || f.baseType === typeFilter;
-    return matchesQuery && matchesType;
   });
 
   if (sort === 'name-az') {
@@ -332,7 +338,7 @@ function renderFilteredForms() {
   if (filteredWordForms.length === 0) {
     if (wfEmpty) {
       wfEmpty.classList.remove('hidden');
-      const hasFilter = (wfSearchInput && wfSearchInput.value.trim()) || (wfTypeFilter && wfTypeFilter.value);
+      const hasFilter = wfSearchInput && wfSearchInput.value.trim();
       const emptyTitle = wfEmpty.querySelector('h3');
       const emptyDesc = wfEmpty.querySelector('p');
       const emptyBtn = wfEmpty.querySelector('#btn-add-word-form-empty');
@@ -377,7 +383,6 @@ async function loadForms() {
 
 // ---- Search / filter / sort ----
 if (wfSearchInput)  wfSearchInput.addEventListener('input', renderFilteredForms);
-if (wfTypeFilter)   wfTypeFilter.addEventListener('change', renderFilteredForms);
 if (wfSortSelect)   wfSortSelect.addEventListener('change', renderFilteredForms);
 
 // ============================================================
@@ -976,9 +981,9 @@ function openWordSelectModal() {
   if (!wfWordSelectList) return;
 
   wfWordSelectList.innerHTML = allWordForms.map(f => `
-    <label class="wf-word-select-item">
+    <label class="ws-item">
       <input type="checkbox" data-id="${f.id}" checked />
-      <span class="wf-word-select-word">${escapeHtml(f.baseWord)}</span>
+      <span class="ws-word">${escapeHtml(baseForm(f))}</span>
       ${typeBadgeHtml(f.baseType)}
     </label>
   `).join('');
@@ -1003,13 +1008,6 @@ function updateSelectCounter() {
 
 if (wfWordSelectList) {
   wfWordSelectList.addEventListener('change', updateSelectCounter);
-  wfWordSelectList.addEventListener('click', (e) => {
-    if (e.target.closest('input')) return;
-    const item = e.target.closest('.wf-word-select-item');
-    if (!item) return;
-    const cb = item.querySelector('input[type=checkbox]');
-    if (cb) { cb.checked = !cb.checked; updateSelectCounter(); }
-  });
 }
 
 if (wfSelectAll) {
@@ -1090,15 +1088,20 @@ function renderPracticeCard() {
   if (wfProgressFill) wfProgressFill.style.width = `${pct}%`;
   if (wfProgressText) wfProgressText.textContent = `${practiceIndex + 1} / ${total}`;
 
-  // Determine which 3 types to show (exclude base type)
-  const otherTypes = FORM_TYPES.filter(t => t !== word.baseType);
+  // Pick a random base type among the forms that have a value, then ask
+  // for the other three.
+  const availableTypes = FORM_TYPES.filter(t => (word[t] || '').trim() !== '');
+  const baseType = availableTypes.length
+    ? availableTypes[Math.floor(Math.random() * availableTypes.length)]
+    : 'noun';
+  const otherTypes = FORM_TYPES.filter(t => t !== baseType);
 
-  const rootForm = escapeHtml(word[word.baseType] || word.noun || word.verb || word.adjective || word.adverb || '');
+  const rootForm = escapeHtml(word[baseType] || baseForm(word));
   wfPracticeCard.innerHTML = `
     <div class="wf-practice-word-label">What are the word forms of…</div>
     <div class="wf-practice-word">${rootForm}</div>
     <div class="wf-practice-type-row">
-      ${typeBadgeHtml(word.baseType)}
+      ${typeBadgeHtml(baseType)}
     </div>
     <div class="wf-forms-grid" id="wf-forms-grid">
       ${otherTypes.map(t => `
@@ -1232,7 +1235,7 @@ function showPracticeResults() {
       }).join('');
       return `
         <div class="wf-wrong-item">
-          <div class="wf-wrong-item-word">${escapeHtml(w.baseWord)} ${typeBadgeHtml(w.baseType)}</div>
+          <div class="wf-wrong-item-word">${escapeHtml(baseForm(w))} ${typeBadgeHtml(w.baseType)}</div>
           <div class="wf-wrong-item-forms">${forms}</div>
         </div>
       `;
