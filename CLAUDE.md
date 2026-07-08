@@ -22,6 +22,7 @@ Users provide their own Firebase + Azure OpenAI credentials via JSON — no sign
 ├── writing.html                        # Writing (4 AI modes)
 ├── irregular-verbs.html                # Irregular Verbs (verb table + 5 practice modes)
 ├── listen-and-fill.html                # Listen and Fill (AI dictation passage with blanks)
+├── word-forms.html                     # Word Forms (noun/verb/adj/adv forms table + 1 practice mode)
 │
 ├── css/
 │   ├── base.css                        # CSS vars, resets, shared components
@@ -57,9 +58,12 @@ Users provide their own Firebase + Azure OpenAI credentials via JSON — no sign
 │   │   ├── layout.css                  # Page shell, breadcrumb, tabs, header
 │   │   ├── verb-table.css              # Verb table, pattern badges, swipe-delete
 │   │   └── practice.css                # Mode selector + all 5 practice mode styles
-│   └── listen-and-fill/                # Listen and Fill tool
-│       ├── layout.css                  # Page shell, breadcrumb, header, setup chips
-│       └── practice.css                # Audio controls, passage, blanks, result review
+│   ├── listen-and-fill/                # Listen and Fill tool
+│   │   ├── layout.css                  # Page shell, breadcrumb, header, setup chips
+│   │   └── practice.css                # Audio controls, passage, blanks, result review
+│   └── word-forms/                     # Word Forms tool
+│       ├── layout.css                  # Page shell, breadcrumb, tabs, type badges
+│       └── practice.css                # Practice card, form fields, results, word selection
 │
 └── js/
     ├── core/                           # Foundation — no business logic
@@ -90,10 +94,12 @@ Users provide their own Firebase + Azure OpenAI credentials via JSON — no sign
     │   ├── vocabulary.js               # Word add/edit/delete, AI fill, duplicates
     │   ├── paragraphs.js               # Paragraph generation and management
     │   ├── streak.js                   # Daily streak tracking, milestones, heatmap
-    │   └── irregular-verbs.js          # Irregular verbs CRUD, pattern detection, stats
+    │   ├── irregular-verbs.js          # Irregular verbs CRUD, pattern detection, stats
+    │   └── word-forms.js               # Word forms CRUD, learned toggle, stats
     │
     ├── ai/                             # AI integration layer
     │   ├── word-ai.js                  # Word info, bulk info, insights, paragraph gen, verb info
+    │   ├── word-forms-ai.js            # Word form detection + bulk generation (4 POS forms)
     │   ├── reading-ai.js               # Reading passage generation
     │   ├── writing-ai.js               # Writing evaluators, dictation
     │   ├── chat-ai.js                  # Chat streaming + 2-layer cache
@@ -113,6 +119,7 @@ Users provide their own Firebase + Azure OpenAI credentials via JSON — no sign
         ├── writing-page.js             # Writing page controller
         ├── irregular-verbs-page.js     # Irregular Verbs page (table + 5 practice modes)
         ├── listen-and-fill-page.js     # Listen and Fill tool (AI dictation + blanks)
+        ├── word-forms-page.js          # Word Forms tool (table + fill-in-the-forms practice)
         ├── reading-modes/
         │   ├── comprehension.js
         │   └── truefalse.js
@@ -181,6 +188,12 @@ users/{username}/
 │   ├── learned: boolean, learnedAt: timestamp | null
 │   ├── orderKey: number (Date.now() * 1000 — stable sort key)
 │   └── createdAt: timestamp
+├── wordForms/{formId}/
+│   ├── baseWord: string, baseType: string ("noun" | "verb" | "adjective" | "adverb")
+│   ├── noun: string, verb: string, adjective: string, adverb: string (empty = N/A)
+│   ├── learned: boolean, learnedAt: timestamp | null
+│   ├── orderKey: number (Date.now() * 1000 — stable sort key)
+│   └── createdAt: timestamp
 └── streak/main/
     ├── currentStreak: number, longestStreak: number
     ├── lastActiveDate: string (YYYY-MM-DD), totalActiveDays: number
@@ -211,9 +224,11 @@ Body: { messages, temperature, max_tokens, response_format: { type: "json_object
 | `generateBulkWordInfo()`         | ai/word-ai.js     | Same, batched for multiple words (max ~6); each item carries `meanings[]` |
 | `generateParagraph()`            | ai/word-ai.js     | Create paragraph from vocabulary words                      |
 | `generateWordInsights()`         | ai/word-ai.js     | Synonyms, antonyms, collocations, examples                  |
-| `generateVerbInfo()`             | ai/word-ai.js     | V2/V3 forms, Vietnamese meaning, IPA for a single verb      |
-| `generateBulkVerbInfo()`         | ai/word-ai.js     | Same, batched (10 verbs per call) with optional progress CB |
-| `generateReadingPassage()`       | ai/reading-ai.js  | Passage + MCQ or T/F questions                              |
+| `generateVerbInfo()`             | ai/word-ai.js        | V2/V3 forms, Vietnamese meaning, IPA for a single verb      |
+| `generateBulkVerbInfo()`         | ai/word-ai.js        | Same, batched (10 verbs per call) with optional progress CB |
+| `generateWordFormInfo()`         | ai/word-forms-ai.js  | Detect baseType + all 4 POS forms for a single word         |
+| `generateBulkWordFormInfo()`     | ai/word-forms-ai.js  | Same, batched (6 words per call) with optional progress CB  |
+| `generateReadingPassage()`       | ai/reading-ai.js     | Passage + MCQ or T/F questions                              |
 | `evaluateSentence()`             | ai/writing-ai.js  | Score grammar/usage/naturalness                             |
 | `evaluateParagraph()`            | ai/writing-ai.js  | Score grammar/coherence                                     |
 | `generateTranslationChallenge()` | ai/writing-ai.js  | Vietnamese→English exercise                                 |
@@ -279,6 +294,7 @@ Body: { messages, temperature, max_tokens, response_format: { type: "json_object
 | Irregular Verbs modes  | `js/pages/irregular-verb-modes/`, `css/irregular-verbs/practice.css`                 |
 | Irregular Verbs data   | `js/features/irregular-verbs.js`, `firestore.rules`                                  |
 | Listen and Fill tool   | `listen-and-fill.html`, `js/pages/listen-and-fill-page.js`, `css/listen-and-fill/`, `js/ai/writing-ai.js` (`generateListenAndFillPassage`) |
+| Word Forms tool        | `word-forms.html`, `js/pages/word-forms-page.js`, `css/word-forms/`, `js/features/word-forms.js`, `js/ai/word-forms-ai.js` |
 
 ## Keyboard Shortcuts
 
