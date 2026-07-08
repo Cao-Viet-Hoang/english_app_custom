@@ -21,7 +21,14 @@ export function getAzureConfig() {
   }
 
   const { endpoint, apiKey, deploymentName, apiVersion } = session.azureOpenAI;
-  const baseUrl = endpoint.replace(/\/+$/, '');
+  // Extract just the origin (scheme + host) to handle Azure AI Foundry endpoints
+  // that include paths like /openai/v1/response or /api/projects/...
+  let baseUrl;
+  try {
+    baseUrl = new URL(endpoint).origin;
+  } catch {
+    baseUrl = endpoint.replace(/\/+$/, '');
+  }
   const version = apiVersion || '2024-08-01-preview';
 
   return { baseUrl, apiKey, deploymentName, version };
@@ -29,9 +36,23 @@ export function getAzureConfig() {
 
 /**
  * Build the full Azure OpenAI Chat Completions URL.
+ * Azure AI Foundry (services.ai.azure.com) uses /openai/v1/chat/completions with model in body.
+ * Azure OpenAI (cognitiveservices.azure.com / openai.azure.com) uses /openai/deployments/{name}/chat/completions.
  */
 function buildUrl({ baseUrl, deploymentName, version }) {
+  if (baseUrl.includes('services.ai.azure.com')) {
+    // Azure AI Foundry v1 endpoint — no api-version param, model goes in request body
+    return `${baseUrl}/openai/v1/chat/completions`;
+  }
   return `${baseUrl}/openai/deployments/${deploymentName}/chat/completions?api-version=${version}`;
+}
+
+function buildBody({ config, messages, temperature, maxTokens, extra = {} }) {
+  const body = { messages, temperature, max_completion_tokens: maxTokens, ...extra };
+  if (config.baseUrl.includes('services.ai.azure.com')) {
+    body.model = config.deploymentName;
+  }
+  return body;
 }
 
 // ----------------------------------------------------------------
@@ -60,11 +81,7 @@ export async function callAzureOpenAI(messages, { temperature = 0.7, maxTokens =
       'Content-Type': 'application/json',
       'api-key': config.apiKey,
     },
-    body: JSON.stringify({
-      messages,
-      temperature,
-      max_completion_tokens: maxTokens,
-    }),
+    body: JSON.stringify(buildBody({ config, messages, temperature, maxTokens })),
   });
 
   if (!response.ok) {
@@ -115,12 +132,7 @@ export async function streamAzureOpenAI(messages, { temperature = 0.7, maxTokens
       'Content-Type': 'application/json',
       'api-key': config.apiKey,
     },
-    body: JSON.stringify({
-      messages,
-      temperature,
-      max_completion_tokens: maxTokens,
-      stream: true,
-    }),
+    body: JSON.stringify(buildBody({ config, messages, temperature, maxTokens, extra: { stream: true } })),
   });
 
   if (!response.ok) {
