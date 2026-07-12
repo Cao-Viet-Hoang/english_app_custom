@@ -52,6 +52,9 @@ const speakBtn     = document.getElementById('rv-speak-btn');
 const actionsEl    = document.getElementById('rv-actions');
 const progressFill = document.getElementById('rv-progress-fill');
 const progressText = document.getElementById('rv-progress-text');
+const cardWrapper  = document.querySelector('.rv-card-wrapper');
+const passedEl     = document.getElementById('rv-passed');
+const lapsedEl     = document.getElementById('rv-lapsed');
 
 const frontWord  = document.getElementById('rv-front-word');
 const frontTopic = document.getElementById('rv-front-topic');
@@ -119,6 +122,7 @@ document.getElementById('btn-start-review')?.addEventListener('click', () => {
   lapsed = 0;
   if (sessionTotal === 0) return;
 
+  updateTally();
   dashboardEl.classList.add('hidden');
   resultsEl.classList.add('hidden');
   sessionEl.classList.remove('hidden');
@@ -169,6 +173,14 @@ function showCard() {
     return;
   }
 
+  // Hide the deck stack on the last card; replay the entrance animation.
+  if (cardWrapper) {
+    cardWrapper.classList.toggle('rv-no-deck', queue.length - index <= 1);
+    cardWrapper.classList.remove('rv-enter');
+    void cardWrapper.offsetWidth; // force reflow so the animation restarts
+    cardWrapper.classList.add('rv-enter');
+  }
+
   const w = queue[index];
   frontWord.textContent = w.english || '';
   frontTopic.textContent = w.topicName || '';
@@ -215,9 +227,15 @@ async function rate(rating) {
 
   if (rating === RATING.AGAIN) lapsed++;
   else passed++;
+  updateTally();
 
   index++;
   showCard();
+}
+
+function updateTally() {
+  if (passedEl) passedEl.textContent = String(passed);
+  if (lapsedEl) lapsedEl.textContent = String(lapsed);
 }
 
 function setActionsDisabled(disabled) {

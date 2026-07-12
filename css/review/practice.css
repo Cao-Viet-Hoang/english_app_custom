@@ -14,7 +14,7 @@
 
 .rv-progress-track {
   flex: 1;
-  height: 8px;
+  height: 10px;
   background: var(--color-surface-alt);
   border-radius: 100px;
   overflow: hidden;
@@ -23,24 +23,97 @@
 .rv-progress-fill {
   height: 100%;
   width: 0%;
-  background: var(--color-primary);
+  background: linear-gradient(90deg,
+              var(--color-primary-light) 0%,
+              var(--color-primary) 100%);
   border-radius: 100px;
   transition: width var(--t-normal) var(--ease-out);
 }
 
 .rv-progress-text {
-  font-size: var(--fs-sm);
-  font-weight: 600;
-  color: var(--color-text-light);
+  flex-shrink: 0;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--color-primary-dark);
   white-space: nowrap;
+  padding: var(--sp-1) var(--sp-3);
+  background: var(--color-primary-light);
+  border-radius: 100px;
+}
+
+/* ---------- Live tally ---------- */
+.rv-tally {
+  display: flex;
+  justify-content: center;
+  gap: var(--sp-3);
+  margin: 0 auto var(--sp-3);
+}
+
+.rv-tally-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  padding: var(--sp-1) var(--sp-3);
+  border-radius: 100px;
+}
+
+.rv-tally-chip svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.rv-tally-pass {
+  color: color-mix(in srgb, var(--color-success) 70%, var(--color-text));
+  background: color-mix(in srgb, var(--color-success) 16%, var(--color-surface));
+}
+
+.rv-tally-again {
+  color: color-mix(in srgb, var(--color-danger) 70%, var(--color-text));
+  background: color-mix(in srgb, var(--color-danger) 14%, var(--color-surface));
 }
 
 /* ---------- Flashcard ---------- */
 .rv-card-wrapper {
+  position: relative;
   perspective: 1000px;
   width: 100%;
   max-width: 520px;
   margin: 0 auto var(--sp-5);
+}
+
+/* Stacked "deck" cards behind the current one, hinting at the remaining pile */
+.rv-card-wrapper::before,
+.rv-card-wrapper::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: var(--radius-lg);
+  border: 2px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.rv-card-wrapper::after  { transform: translateY(6px) scale(0.97); opacity: 0.7; }
+.rv-card-wrapper::before { transform: translateY(13px) scale(0.94); opacity: 0.45; }
+
+.rv-card-wrapper.rv-no-deck::before,
+.rv-card-wrapper.rv-no-deck::after { display: none; }
+
+/* Each new card animates in */
+@keyframes rvCardIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.rv-card-wrapper.rv-enter {
+  animation: rvCardIn var(--t-normal) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rv-card-wrapper.rv-enter { animation: none; }
 }
 
 .rv-card {
@@ -73,7 +146,19 @@
   text-align: center;
 }
 
-.rv-front { z-index: 2; }
+.rv-front {
+  z-index: 2;
+  background: linear-gradient(160deg,
+              var(--color-surface) 0%,
+              var(--color-surface) 55%,
+              var(--color-primary-light) 160%);
+  transition: border-color var(--t-fast), box-shadow var(--t-normal);
+}
+
+.rv-card-wrapper:hover .rv-front {
+  border-color: var(--color-primary-light);
+  box-shadow: var(--shadow-lg);
+}
 
 .rv-back {
   transform: rotateY(180deg);
@@ -84,15 +169,44 @@
   font-size: var(--fs-2xl);
   font-weight: 700;
   color: var(--color-primary-dark);
-  margin-bottom: var(--sp-2);
+  letter-spacing: -0.01em;
+  margin-bottom: var(--sp-4);
   word-break: break-word;
 }
 
-.rv-hint {
-  font-size: var(--fs-xs);
-  color: var(--color-text-light);
-  opacity: 0.6;
+/* Flip affordance pill on the front */
+.rv-flip-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
   margin-top: var(--sp-2);
+  padding: var(--sp-2) var(--sp-4);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--color-text-light);
+  background: var(--color-surface-alt);
+  border-radius: 100px;
+}
+
+.rv-flip-hint svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* "Answer" tag on the back */
+.rv-back-tag {
+  position: absolute;
+  top: var(--sp-3);
+  right: var(--sp-3);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px var(--sp-2);
+  border-radius: 100px;
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
 }
 
 .rv-word-sm {
@@ -130,11 +244,16 @@
 }
 
 .rv-meaning {
-  font-size: var(--fs-md);
-  font-weight: 500;
+  font-size: var(--fs-xl);
+  font-weight: 700;
   color: var(--color-text);
+  line-height: 1.3;
   margin-bottom: var(--sp-3);
   word-break: break-word;
+}
+
+.rv-meaning:empty {
+  display: none;
 }
 
 .rv-description {
@@ -143,6 +262,14 @@
   line-height: 1.5;
   max-width: 420px;
   word-break: break-word;
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.rv-description:empty {
+  display: none;
 }
 
 /* ---------- Topic badge ---------- */
@@ -249,6 +376,16 @@
 .rv-rate-good  { background: var(--color-primary); }
 .rv-rate-easy  { background: var(--color-success); }
 
+.rv-rate-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.rv-rate-label {
+  font-weight: 600;
+}
+
 .rv-rate-key {
   font-size: var(--fs-xs);
   font-weight: 700;
@@ -257,6 +394,33 @@
   border-radius: var(--radius-sm);
   padding: 0 6px;
   line-height: 1.4;
+}
+
+/* ---------- Keyboard hint ---------- */
+.rv-kbd-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  max-width: 520px;
+  margin: var(--sp-4) auto 0;
+  font-size: var(--fs-xs);
+  color: var(--color-text-light);
+}
+
+.rv-kbd-sep {
+  opacity: 0.6;
+}
+
+.rv-kbd-hint kbd {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-sm);
+  padding: 1px var(--sp-2);
 }
 
 /* ---------- Results ---------- */
