@@ -18,7 +18,7 @@ Full project context is in CLAUDE.md at the repo root.
 | `css/base.css`               | CSS variables, resets, shared components          |
 | `css/login.css`              | Login page                                       |
 | `css/topics.css`             | Topics grid                                      |
-| `css/streak.css`             | Streak dashboard, heatmap                        |
+| `css/streak.css`             | Streak dashboard, heatmap, freeze icon/indicator, frozen-day dots |
 | `css/chat.css`               | Chat widget                                      |
 | `css/reading.css`            | Reading page                                     |
 | `css/topic-detail/layout.css`     | Breadcrumb, header, learned progress        |
@@ -56,6 +56,7 @@ Full project context is in CLAUDE.md at the repo root.
 | `js/ui/modal.js`  | `showModal()`, `closeModal()`, `setupModalClose()` |
 | `js/ui/confirm.js`| `confirmDialog()`, `confirmDialogHtml()`          |
 | `js/ui/milestone.js` | `showMilestoneModal()`                         |
+| `js/ui/freeze.js` | `showStreakFreezeModal()` — "streak freeze used" notice |
 | `js/ui/utils.js`  | `escapeHtml()`, `formatDate()`                    |
 
 ## Design System (base.css variables)

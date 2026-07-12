@@ -14,6 +14,7 @@ import {
   showToast, confirmDialog, confirmDialogHtml, formatDate, escapeHtml
 } from '../ui/index.js';
 import { loadStreak } from '../features/streak.js';
+import { maybeNotifyFreezeUsed } from '../shared/streak-handler.js';
 import { initChatWidget } from '../chat/chat-ui.js';
 import {
   parseBulkInput,
@@ -57,6 +58,7 @@ function updateStreakBadge() {
     } else {
       el.style.display = 'none';
     }
+    maybeNotifyFreezeUsed(data);
   }).catch(() => {});
 }
 updateStreakBadge();

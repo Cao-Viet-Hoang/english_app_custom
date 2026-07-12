@@ -7,4 +7,5 @@ export { showToast } from './toast.js';
 export { showModal, closeModal, setupModalClose } from './modal.js';
 export { confirmDialog, confirmDialogHtml } from './confirm.js';
 export { showMilestoneModal } from './milestone.js';
+export { showStreakFreezeModal } from './freeze.js';
 export { escapeHtml, escapeAttr, formatDate } from './utils.js';

@@ -16,6 +16,8 @@ paths:
 - Handle timestamps both ways: `ts?.toDate?.() || new Date(ts)`
 - Streak activity: pass `{ type, source }` to `recordActivity`/`removeActivity` for non-vocabulary sources (e.g. `{ type: 'learn', source: 'irregularVerb' }`); legacy string form (`'learn'`/`'practice'`) defaults source to `vocabulary`
 - Use `summarizeActivityEntry(dailyDoc)` to aggregate counters across sources — never sum `wordsLearned` + `practiceCount` manually
+- Streak freezes: keep new streak math in the pure module `js/features/streak-logic.js` (no Firestore/DOM) so it stays unit-testable; `recordActivity()` returns `freezeEarned`, `loadStreak()` returns `freezesConsumed`/`frozenDates`. After a `loadStreak()`, call `maybeNotifyFreezeUsed(streakData)` (from `js/shared/streak-handler.js`) to surface the freeze-used modal
+- Tests: pure logic gets a `test/*.test.js` file using `test/harness.js`; run with `node test/<name>.test.js` (no npm/build)
 
 ## Style in JS
 - Never set colors/fonts/spacing via `element.style.*` — use CSS classes instead

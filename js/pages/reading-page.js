@@ -9,6 +9,7 @@ import { getTopic } from '../features/topics.js';
 import { loadWords } from '../features/vocabulary.js';
 import { showToast, escapeHtml } from '../ui/index.js';
 import { loadStreak } from '../features/streak.js';
+import { maybeNotifyFreezeUsed } from '../shared/streak-handler.js';
 import { initComprehensionMode } from './reading-modes/comprehension.js';
 import { initTrueFalseMode } from './reading-modes/truefalse.js';
 import { initChatWidget } from '../chat/chat-ui.js';
@@ -29,6 +30,7 @@ loadStreak().then(data => {
     countEl.textContent = data.currentStreak;
     el.style.display = '';
   }
+  maybeNotifyFreezeUsed(data);
 }).catch(() => {});
 
 // ---- Topic ID from URL ----

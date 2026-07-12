@@ -65,7 +65,7 @@ Users provide their own Firebase + Azure OpenAI credentials via JSON — no sign
 │       ├── layout.css                  # Page shell, breadcrumb, tabs, type badges
 │       └── practice.css                # Practice card, form fields, results, word selection
 │
-└── js/
+├── js/
     ├── core/                           # Foundation — no business logic
     │   ├── config.js                   # DEV_MODE flag, test credentials
     │   ├── router.js                   # Query param routing, guardAuth(), navigateTo()
@@ -77,6 +77,7 @@ Users provide their own Firebase + Azure OpenAI credentials via JSON — no sign
     │   ├── modal.js                    # showModal(), closeModal(), setupModalClose()
     │   ├── confirm.js                  # confirmDialog(), confirmDialogHtml()
     │   ├── milestone.js                # showMilestoneModal()
+    │   ├── freeze.js                   # showStreakFreezeModal() — "streak freeze used" notice
     │   ├── utils.js                    # escapeHtml(), formatDate()
     │   └── index.js                    # Barrel re-export of all ui/*
     │
@@ -93,7 +94,8 @@ Users provide their own Firebase + Azure OpenAI credentials via JSON — no sign
     │   ├── topics.js                   # Topics CRUD, word management
     │   ├── vocabulary.js               # Word add/edit/delete, AI fill, duplicates
     │   ├── paragraphs.js               # Paragraph generation and management
-    │   ├── streak.js                   # Daily streak tracking, milestones, heatmap
+    │   ├── streak.js                   # Daily streak tracking, milestones, heatmap, freeze earn/consume
+    │   ├── streak-logic.js             # Pure streak math (freeze earning, gap reconciliation) — unit-tested
     │   ├── irregular-verbs.js          # Irregular verbs CRUD, pattern detection, stats
     │   └── word-forms.js               # Word forms CRUD, learned toggle, stats
     │
@@ -134,7 +136,22 @@ Users provide their own Firebase + Azure OpenAI credentials via JSON — no sign
             ├── quiz.js                 # Multiple-choice conjugation quiz
             ├── matching.js             # Click-to-match V1 ↔ V2/V3
             └── speed-conjugation.js    # Timed typing (V2 + V3 per verb)
+│
+└── test/                               # Node-runnable unit tests (no npm/build)
+    ├── harness.js                      # Tiny zero-dependency test runner (describe/it/assert)
+    └── streak-logic.test.js            # Streak freeze earn/consume/reconcile logic tests
 ```
+
+## Testing
+
+No build tools — tests are plain ES modules runnable directly by Node's runtime.
+
+- **Run:** `node test/streak-logic.test.js` (exit code 0 = pass, 1 = fail)
+- **Write for:** pure logic modules with no Firestore/DOM/global dependencies
+  (e.g. `js/features/streak-logic.js`). Keep business rules in a pure module so
+  they can be tested without mocking Firebase.
+- **Harness:** import `describe`, `it`, `assertEqual`, `assertDeepEqual`,
+  `assertTrue`, `assertFalse`, and call `finish()` at the end to set the exit code.
 
 ## Folder Conventions
 
@@ -156,7 +173,7 @@ features/* ← core/firebase, ui/index
 ai/* ← core/ai-client
 chat/* ← chat/chat-state, ai/chat-ai, ui/index
 shared/* ← features/streak, ui/index
-ui/index ← ui/toast, ui/modal, ui/confirm, ui/milestone, ui/utils
+ui/index ← ui/toast, ui/modal, ui/confirm, ui/milestone, ui/freeze, ui/utils
 core/ai-client ← core/router (session)
 ```
 
@@ -197,12 +214,28 @@ users/{username}/
 └── streak/main/
     ├── currentStreak: number, longestStreak: number
     ├── lastActiveDate: string (YYYY-MM-DD), totalActiveDays: number
+    ├── streakFreezes: number (held freezes, 0..maxStreakFreezes; new/migrated users = 1)
+    ├── maxStreakFreezes: number (cap = 2)
+    ├── activeDaysToNextFreeze: number (0..7 — real study days accrued toward next freeze)
     └── dailyActivity/{YYYY-MM-DD}/
         ├── date: string (YYYY-MM-DD)
         ├── wordsLearned: number, practiceCount: number
         ├── irregularVerbsLearned: number, irregularVerbPracticeCount: number
+        ├── wordFormsLearned: number, wordFormPracticeCount: number
+        ├── frozen: boolean (true = day bridged by a streak freeze)
         ├── firstActionAt: timestamp, lastActionAt: timestamp
 ```
+
+### Streak freeze mechanic
+
+Missing a day no longer breaks the streak immediately. Users earn **1 freeze per
+7 real study days** (`FREEZE_EARN_THRESHOLD`), capped at **2** (`MAX_STREAK_FREEZES`);
+new and migrated users start with **1** (`NEW_USER_FREEZES`). On load, `loadStreak()`
+reconciles: each missed day is bridged by one freeze (streak held, not incremented,
+day marked `frozen`); the streak only breaks when freezes cannot cover the gap.
+Constants and pure math live in `js/features/streak-logic.js`. `recordActivity()`
+returns `freezeEarned`; `loadStreak()` returns `freezesConsumed`/`frozenDates`. Call
+`maybeNotifyFreezeUsed(streakData)` after a load to show the freeze-used modal.
 
 ## AI Integration
 
@@ -295,6 +328,7 @@ Body: { messages, temperature, max_tokens, response_format: { type: "json_object
 | Irregular Verbs data   | `js/features/irregular-verbs.js`, `firestore.rules`                                  |
 | Listen and Fill tool   | `listen-and-fill.html`, `js/pages/listen-and-fill-page.js`, `css/listen-and-fill/`, `js/ai/writing-ai.js` (`generateListenAndFillPassage`) |
 | Word Forms tool        | `word-forms.html`, `js/pages/word-forms-page.js`, `css/word-forms/`, `js/features/word-forms.js`, `js/ai/word-forms-ai.js` |
+| Streak / freeze logic  | `js/features/streak-logic.js` (pure math + `test/`), `js/features/streak.js`, `js/shared/streak-handler.js`, `js/ui/freeze.js`, `css/streak.css`, `firestore.rules` |
 
 ## Keyboard Shortcuts
 

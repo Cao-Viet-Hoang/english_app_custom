@@ -29,6 +29,7 @@ import {
   buildDuplicateWarningHtml,
 } from '../shared/bulk-add-utils.js';
 import { loadStreak, getMilestoneMessage } from '../features/streak.js';
+import { maybeNotifyFreezeUsed } from '../shared/streak-handler.js';
 import { initChatWidget } from '../chat/chat-ui.js';
 import { speakText } from '../shared/tts.js';
 import { initIVFlashcard } from './irregular-verb-modes/flashcard.js';
@@ -64,6 +65,7 @@ function updateStreakBadge() {
         el.style.display = 'none';
       }
     }
+    maybeNotifyFreezeUsed(data);
   }).catch(() => {});
 }
 updateStreakBadge();
