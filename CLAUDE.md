@@ -23,6 +23,7 @@ Users provide their own Firebase + Azure OpenAI credentials via JSON — no sign
 ├── irregular-verbs.html                # Irregular Verbs (verb table + 5 practice modes)
 ├── listen-and-fill.html                # Listen and Fill (AI dictation passage with blanks)
 ├── word-forms.html                     # Word Forms (noun/verb/adj/adv forms table + 1 practice mode)
+├── review.html                         # Review (spaced-repetition flashcard session across all topics)
 │
 ├── css/
 │   ├── base.css                        # CSS vars, resets, shared components
@@ -61,9 +62,12 @@ Users provide their own Firebase + Azure OpenAI credentials via JSON — no sign
 │   ├── listen-and-fill/                # Listen and Fill tool
 │   │   ├── layout.css                  # Page shell, breadcrumb, header, setup chips
 │   │   └── practice.css                # Audio controls, passage, blanks, result review
-│   └── word-forms/                     # Word Forms tool
-│       ├── layout.css                  # Page shell, breadcrumb, tabs, type badges
-│       └── practice.css                # Practice card, form fields, results, word selection
+│   ├── word-forms/                     # Word Forms tool
+│   │   ├── layout.css                  # Page shell, breadcrumb, tabs, type badges
+│   │   └── practice.css                # Practice card, form fields, results, word selection
+│   └── review/                         # Review (spaced repetition) tool
+│       ├── layout.css                  # Page shell, breadcrumb, header, dashboard stats
+│       └── practice.css                # Flashcard flip, rating actions, results
 │
 ├── js/
     ├── core/                           # Foundation — no business logic
@@ -92,7 +96,9 @@ Users provide their own Firebase + Azure OpenAI credentials via JSON — no sign
     ├── features/                       # Business logic — data layer
     │   ├── auth.js                     # Login/logout, session management
     │   ├── topics.js                   # Topics CRUD, word management
-    │   ├── vocabulary.js               # Word add/edit/delete, AI fill, duplicates
+    │   ├── vocabulary.js               # Word add/edit/delete, AI fill, duplicates, SRS seed on learn
+    │   ├── review.js                   # Spaced-repetition: global due queue, stats, submitReview
+    │   ├── srs-logic.js                # Pure SM-2 math (schedule, ease, due) — unit-tested
     │   ├── paragraphs.js               # Paragraph generation and management
     │   ├── streak.js                   # Daily streak tracking, milestones, heatmap, freeze earn/consume
     │   ├── streak-logic.js             # Pure streak math (freeze earning, gap reconciliation) — unit-tested
@@ -122,6 +128,7 @@ Users provide their own Firebase + Azure OpenAI credentials via JSON — no sign
         ├── irregular-verbs-page.js     # Irregular Verbs page (table + 5 practice modes)
         ├── listen-and-fill-page.js     # Listen and Fill tool (AI dictation + blanks)
         ├── word-forms-page.js          # Word Forms tool (table + fill-in-the-forms practice)
+        ├── review-page.js              # Review tool (due dashboard + SM-2 flashcard session)
         ├── reading-modes/
         │   ├── comprehension.js
         │   └── truefalse.js
@@ -139,7 +146,8 @@ Users provide their own Firebase + Azure OpenAI credentials via JSON — no sign
 │
 └── test/                               # Node-runnable unit tests (no npm/build)
     ├── harness.js                      # Tiny zero-dependency test runner (describe/it/assert)
-    └── streak-logic.test.js            # Streak freeze earn/consume/reconcile logic tests
+    ├── streak-logic.test.js            # Streak freeze earn/consume/reconcile logic tests
+    └── srs-logic.test.js               # SM-2 schedule/ease/due spaced-repetition logic tests
 ```
 
 ## Testing
@@ -184,11 +192,17 @@ users/{username}/
 ├── topics/{topicId}/
 │   ├── name: string, description: string, createdAt: timestamp
 │   ├── words/{wordId}/
-│   │   ├── english: string, vietnamese: string, iPA: string
-│   │   ├── type: string (noun/verb/adjective/adverb)
-│   │   ├── description: string, learned: boolean
-│   │   ├── orderKey: number (Date.now() — stable sort key)
-│   │   └── createdAt: timestamp
+│   │   ├── english: string, vietnamese: string, description: string
+│   │   ├── wordType: string (noun/verb/adjective/adverb/other)
+│   │   ├── ipaUS: string, ipaUK: string (legacy `ipa` migrated → ipaUS on read)
+│   │   ├── learned: boolean, learnedAt: timestamp | null (absent until first toggle)
+│   │   ├── srsRepetitions: number, srsEaseFactor: number (SM-2, default 2.5, floor 1.3)
+│   │   ├── srsInterval: number (days), srsDueDate: string (YYYY-MM-DD, local day)
+│   │   ├── srsLastReviewedAt: timestamp | null  (absolute UTC/GMT review instant)
+│   │   ├── srsTzOffset: number | null  (minutes east of UTC, e.g. GMT+7 → 420; all srs* null when un-learned)
+│   │   ├── aiInsights: object, aiInsightsGeneratedAt: timestamp (optional)
+│   │   ├── orderKey: number (Date.now()*1000 + counter — stable sort key)
+│   │   └── createdAt: timestamp, updatedAt: timestamp (after edit)
 │   └── paragraphs/{paraId}/
 │       ├── englishText: string, vietnameseText: string
 │       └── usedWords: string[]
@@ -329,6 +343,7 @@ Body: { messages, temperature, max_tokens, response_format: { type: "json_object
 | Listen and Fill tool   | `listen-and-fill.html`, `js/pages/listen-and-fill-page.js`, `css/listen-and-fill/`, `js/ai/writing-ai.js` (`generateListenAndFillPassage`) |
 | Word Forms tool        | `word-forms.html`, `js/pages/word-forms-page.js`, `css/word-forms/`, `js/features/word-forms.js`, `js/ai/word-forms-ai.js` |
 | Streak / freeze logic  | `js/features/streak-logic.js` (pure math + `test/`), `js/features/streak.js`, `js/shared/streak-handler.js`, `js/ui/freeze.js`, `css/streak.css`, `firestore.rules` |
+| Review / spaced repetition | `review.html`, `js/pages/review-page.js`, `css/review/`, `js/features/review.js`, `js/features/srs-logic.js` (pure SM-2 + `test/`), `js/features/vocabulary.js` (`toggleWordLearned` seeds srs*), `firestore.rules` |
 
 ## Keyboard Shortcuts
 

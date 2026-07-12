@@ -8,8 +8,19 @@ import { getDb } from '../core/firebase.js';
 import { getUsername } from '../core/router.js';
 import { updateWordCount, updateLearnedCount } from './topics.js';
 import { recordActivity, removeActivity, getDailyEncouragement } from './streak.js';
+import { initialSchedule } from './srs-logic.js';
 
 let localOrderCounter = 0;
+
+/** Today as a local "YYYY-MM-DD" string (matches the streak module's day boundary). */
+function getTodayDateString() {
+  return new Date().toLocaleDateString('en-CA');
+}
+
+/** Current UTC offset in minutes, east of UTC positive (e.g. GMT+7 → 420). */
+function getUtcOffsetMinutes() {
+  return -new Date().getTimezoneOffset();
+}
 
 function nextOrderKey() {
   localOrderCounter += 1;
@@ -148,9 +159,27 @@ export async function deleteWord(topicId, wordId, wasLearned = false) {
  * @param {boolean} learned
  */
 export async function toggleWordLearned(topicId, wordId, learned) {
+  // Learning a word enrolls it in the spaced-repetition queue (due today);
+  // un-learning clears the schedule so it leaves the queue.
+  const srsFields = learned
+    ? {
+        ...initialSchedule(getTodayDateString()),
+        srsLastReviewedAt: null,
+        srsTzOffset: getUtcOffsetMinutes(), // records the timezone srsDueDate was bucketed in
+      }
+    : {
+        srsRepetitions: null,
+        srsEaseFactor: null,
+        srsInterval: null,
+        srsDueDate: null,
+        srsLastReviewedAt: null,
+        srsTzOffset: null,
+      };
+
   await wordsRef(topicId).doc(wordId).update({
     learned: !!learned,
     learnedAt: learned ? firebase.firestore.FieldValue.serverTimestamp() : null,
+    ...srsFields,
   });
   await updateLearnedCount(topicId, learned ? 1 : -1);
 

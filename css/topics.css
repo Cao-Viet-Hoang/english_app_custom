@@ -314,6 +314,27 @@
   opacity: 1;
 }
 
+/* Always-visible count badge (e.g. words due for review) */
+.lt-tool-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  line-height: 1;
+  border-radius: 100px;
+  font-variant-numeric: tabular-nums;
+  box-shadow: var(--shadow-sm);
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 640px) {
   .topics-container {

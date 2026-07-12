@@ -107,6 +107,8 @@ service cloud.firestore {
                 'english', 'vietnamese', 'description', 'wordType',
                 'ipaUS', 'ipaUK', 'iPA',
                 'learned', 'learnedAt',
+                'srsRepetitions', 'srsEaseFactor', 'srsInterval',
+                'srsDueDate', 'srsLastReviewedAt', 'srsTzOffset',
                 'aiInsights', 'aiInsightsGeneratedAt',
                 'orderKey', 'updatedAt', 'type'
               ]);

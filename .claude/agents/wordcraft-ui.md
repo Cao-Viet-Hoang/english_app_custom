@@ -46,6 +46,8 @@ Full project context is in CLAUDE.md at the repo root.
 | `css/irregular-verbs/layout.css`   | Page shell, breadcrumb, tabs, header        |
 | `css/irregular-verbs/verb-table.css` | Verb table, pattern badges, swipe-delete  |
 | `css/irregular-verbs/practice.css` | Mode selector + 5 practice modes            |
+| `css/review/layout.css`            | Page shell, breadcrumb, header, dashboard stats |
+| `css/review/practice.css`          | Flashcard flip, rating actions, results     |
 
 ### JS UI modules
 

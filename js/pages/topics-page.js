@@ -7,6 +7,7 @@ import { guardAuth, logout, navigateTo } from '../core/router.js';
 import { initFirebase } from '../core/firebase.js';
 import { loadTopics, createTopic, renameTopic, deleteTopic } from '../features/topics.js';
 import { getVerbStats } from '../features/irregular-verbs.js';
+import { getReviewStats, getTodayDateString } from '../features/review.js';
 import { showModal, closeModal, setupModalClose, showToast, confirmDialog, formatDate, escapeHtml, showMilestoneModal } from '../ui/index.js';
 import {
   loadStreak,
@@ -492,7 +493,24 @@ async function initIrregularVerbsCard() {
   }
 }
 
+// ---- Review toolbar icon (words due for spaced-repetition review) ----
+async function initReviewCard() {
+  try {
+    const { dueCount } = await getReviewStats(getTodayDateString());
+    const labelEl = document.getElementById('review-tool-label');
+    const badgeEl = document.getElementById('review-tool-badge');
+    if (labelEl) labelEl.textContent = dueCount > 0 ? `Review · ${dueCount} due` : 'Review';
+    if (badgeEl) {
+      badgeEl.textContent = dueCount > 99 ? '99+' : String(dueCount);
+      badgeEl.classList.toggle('hidden', dueCount === 0);
+    }
+  } catch {
+    // silently ignore — badge stays hidden, label stays at default text
+  }
+}
+
 // ---- Initial load ----
 initStreak();
 initIrregularVerbsCard();
+initReviewCard();
 render();

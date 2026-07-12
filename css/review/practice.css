@@ -1,0 +1,274 @@
+/* ============================================================
+   REVIEW — Practice
+   Progress bar, flashcard flip, rating actions, results.
+   ============================================================ */
+
+/* ---------- Progress ---------- */
+.rv-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  max-width: 520px;
+  margin: 0 auto var(--sp-5);
+}
+
+.rv-progress-track {
+  flex: 1;
+  height: 8px;
+  background: var(--color-surface-alt);
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.rv-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--color-primary);
+  border-radius: 100px;
+  transition: width var(--t-normal) var(--ease-out);
+}
+
+.rv-progress-text {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--color-text-light);
+  white-space: nowrap;
+}
+
+/* ---------- Flashcard ---------- */
+.rv-card-wrapper {
+  perspective: 1000px;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto var(--sp-5);
+}
+
+.rv-card {
+  position: relative;
+  width: 100%;
+  min-height: 260px;
+  cursor: pointer;
+  transform-style: preserve-3d;
+  transition: transform 0.5s ease;
+  user-select: none;
+}
+
+.rv-card.flipped {
+  transform: rotateY(180deg);
+}
+
+.rv-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-6);
+  border-radius: var(--radius-lg);
+  border: 2px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+  text-align: center;
+}
+
+.rv-front { z-index: 2; }
+
+.rv-back {
+  transform: rotateY(180deg);
+  background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-surface) 55%, var(--color-surface-alt) 100%);
+}
+
+.rv-word {
+  font-size: var(--fs-2xl);
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  margin-bottom: var(--sp-2);
+  word-break: break-word;
+}
+
+.rv-hint {
+  font-size: var(--fs-xs);
+  color: var(--color-text-light);
+  opacity: 0.6;
+  margin-top: var(--sp-2);
+}
+
+.rv-word-sm {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  margin-bottom: var(--sp-2);
+  word-break: break-word;
+}
+
+.rv-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.rv-ipa {
+  font-size: var(--fs-sm);
+  color: var(--color-text-light);
+  font-family: var(--font-mono);
+}
+
+.rv-type-badge {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px var(--sp-2);
+  border-radius: 100px;
+  background: var(--color-accent-light);
+  color: var(--color-text);
+}
+
+.rv-meaning {
+  font-size: var(--fs-md);
+  font-weight: 500;
+  color: var(--color-text);
+  margin-bottom: var(--sp-3);
+  word-break: break-word;
+}
+
+.rv-description {
+  font-size: var(--fs-sm);
+  color: var(--color-text-light);
+  line-height: 1.5;
+  max-width: 420px;
+  word-break: break-word;
+}
+
+/* ---------- Topic badge ---------- */
+.rv-topic-badge {
+  position: absolute;
+  top: var(--sp-3);
+  left: var(--sp-3);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  padding: 2px var(--sp-2);
+  border-radius: 100px;
+  background: var(--color-surface-alt);
+  color: var(--color-text-light);
+  max-width: 60%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- Speak button ---------- */
+.rv-speak-btn {
+  position: absolute;
+  top: var(--sp-3);
+  right: var(--sp-3);
+  padding: var(--sp-2);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--color-text-light);
+  transition: color var(--t-fast), background var(--t-fast);
+}
+
+.rv-speak-btn:hover {
+  color: var(--color-primary);
+  background: var(--color-surface-alt);
+}
+
+/* ---------- Rating actions ---------- */
+.rv-actions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--sp-3);
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.rv-rate {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  color: var(--color-text-inverse);
+  font-weight: 600;
+}
+
+/* Tooltip explaining each rating + the next review interval for this card */
+.rv-rate-tip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 180px;
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--color-text);
+  color: var(--color-text-inverse);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  line-height: 1.4;
+  text-align: center;
+  white-space: normal;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--t-fast);
+  z-index: 10;
+}
+
+.rv-rate-tip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--color-text);
+}
+
+.rv-rate:hover .rv-rate-tip,
+.rv-rate:focus-visible .rv-rate-tip {
+  opacity: 1;
+}
+
+.rv-rate:hover {
+  filter: brightness(0.95);
+  transform: translateY(-1px);
+}
+
+.rv-rate-again { background: var(--color-danger); }
+.rv-rate-hard  { background: var(--color-warning); }
+.rv-rate-good  { background: var(--color-primary); }
+.rv-rate-easy  { background: var(--color-success); }
+
+.rv-rate-key {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  opacity: 0.75;
+  border: 1px solid currentColor;
+  border-radius: var(--radius-sm);
+  padding: 0 6px;
+  line-height: 1.4;
+}
+
+/* ---------- Results ---------- */
+.rv-results {
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 640px) {
+  .rv-actions {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .rv-word { font-size: var(--fs-xl); }
+}

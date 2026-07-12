@@ -70,6 +70,25 @@ Missing a day does not break the streak immediately. Freeze fields on `streak/ma
   (`node test/streak-logic.test.js`). Keep new streak rules in the pure module so they stay testable.
 - `maybeNotifyFreezeUsed(streakData)` (in `js/shared/streak-handler.js`) shows the freeze-used modal.
 
+## Spaced Repetition (SRS) Mechanic
+
+Learned words carry SM-2 scheduling fields so they can resurface for review. Fields on each
+`words/{wordId}` doc: `srsRepetitions`, `srsEaseFactor` (default 2.5, floor 1.3), `srsInterval`
+(days), `srsDueDate` (`YYYY-MM-DD` local day), `srsLastReviewedAt` (timestamp | null, absolute
+UTC/GMT), `srsTzOffset` (number | null, minutes east of UTC — e.g. GMT+7 → 420 — so the local day
+`srsDueDate` was bucketed in is reconstructible for correct time math).
+
+- **Seed/clear**: `toggleWordLearned()` (`js/features/vocabulary.js`) seeds srs* on learn (due today)
+  and sets all srs* to `null` on un-learn. A learned word with no `srsDueDate` (legacy) counts as due.
+- **Queue**: `js/features/review.js` builds a global due queue via topic fan-out
+  (`loadDueWords`), plus `getReviewStats`/`countDueWords`. There is no flat words collection and no
+  `collectionGroup` query — filtering is client-side by `srsDueDate <= today`.
+- **Schedule**: `submitReview(word, rating, today)` applies SM-2 and writes new srs* fields.
+- **Pure math**: `js/features/srs-logic.js` (`scheduleReview`, `reviewWord`, `isDue`,
+  `initialSchedule`); tests in `test/srs-logic.test.js` (`node test/srs-logic.test.js`).
+- **Rules**: the words `update` allow-list in `firestore.rules` must include all srs* keys — adding a
+  new srs field requires updating that `hasOnly([...])`.
+
 ## Key Gotchas
 
 1. **Compat SDK**: Use `firebase.firestore()`, NOT modular `getFirestore()`

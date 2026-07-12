@@ -1,0 +1,148 @@
+/* ============================================================
+   REVIEW — Layout
+   Page shell, breadcrumb, header, dashboard stats, start/empty.
+   ============================================================ */
+
+.review-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- Breadcrumb (reuse base pattern) ---------- */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-sm);
+  color: var(--color-text-light);
+  margin-bottom: var(--sp-5);
+}
+
+.breadcrumb a {
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.breadcrumb a:hover { text-decoration: underline; }
+
+.breadcrumb-separator {
+  color: var(--color-border);
+}
+
+/* ---------- Detail Header ---------- */
+.detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: var(--sp-5);
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+}
+
+.detail-title {
+  font-size: var(--fs-xl);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+
+.rv-header-icon {
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+/* ---------- Dashboard stats ---------- */
+.rv-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-6);
+}
+
+.rv-stat {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-5) var(--sp-4);
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.rv-stat-due {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+}
+
+.rv-stat-num {
+  font-size: var(--fs-2xl);
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1.1;
+}
+
+.rv-stat-due .rv-stat-num {
+  color: var(--color-primary-dark);
+}
+
+.rv-stat-label {
+  margin-top: var(--sp-2);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-light);
+}
+
+/* ---------- Start view ---------- */
+.rv-start {
+  text-align: center;
+  padding: var(--sp-6) var(--sp-4);
+}
+
+.rv-start-text {
+  font-size: var(--fs-md);
+  color: var(--color-text-light);
+  max-width: 480px;
+  margin: 0 auto var(--sp-5);
+  line-height: 1.6;
+}
+
+.rv-start-text strong {
+  color: var(--color-primary-dark);
+  font-weight: 700;
+}
+
+/* ---------- Empty state ---------- */
+.rv-empty {
+  text-align: center;
+  padding: var(--sp-8) var(--sp-4);
+}
+
+.rv-empty svg {
+  width: 56px;
+  height: 56px;
+  color: var(--color-success);
+  margin-bottom: var(--sp-4);
+}
+
+.rv-empty h3 {
+  font-size: var(--fs-lg);
+  margin-bottom: var(--sp-2);
+}
+
+.rv-empty p {
+  font-size: var(--fs-sm);
+  color: var(--color-text-light);
+  max-width: 420px;
+  margin: 0 auto var(--sp-5);
+  line-height: 1.6;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 640px) {
+  .rv-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
