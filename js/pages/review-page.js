@@ -25,6 +25,7 @@ let index = 0;              // current card index in the session
 let sessionTotal = 0;       // cards in the current session
 let passed = 0;             // cards rated Hard/Good/Easy (q >= 3)
 let lapsed = 0;             // cards rated Again (q < 3)
+let isFlipping = false;     // true while the card is animating back to its front face
 
 // ---- Chat widget ----
 initChatWidget(() => ({
@@ -160,8 +161,39 @@ function onKeyDown(e) {
 }
 
 function flip() {
+  if (isFlipping) return;
   const flipped = card.classList.toggle('flipped');
   actionsEl.classList.toggle('hidden', !flipped);
+}
+
+/**
+ * Flip the card back to its front face and wait for the 3D rotation to
+ * finish before the caller swaps in the next word — avoids the new word's
+ * content flashing into view mid-rotation.
+ * @returns {Promise<void>}
+ */
+function resetCardFlip() {
+  return new Promise((resolve) => {
+    if (!card.classList.contains('flipped')) {
+      resolve();
+      return;
+    }
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      card.removeEventListener('transitionend', onTransitionEnd);
+      resolve();
+    };
+    function onTransitionEnd(e) {
+      if (e.target === card && e.propertyName === 'transform') finish();
+    }
+    card.addEventListener('transitionend', onTransitionEnd);
+    card.classList.remove('flipped');
+    actionsEl.classList.add('hidden');
+    // Fallback in case the transition event never fires (e.g. reduced motion, backgrounded tab).
+    setTimeout(finish, 550);
+  });
 }
 
 function showCard() {
@@ -209,7 +241,7 @@ function showCard() {
 }
 
 async function rate(rating) {
-  if (!card.classList.contains('flipped')) return;
+  if (!card.classList.contains('flipped') || isFlipping) return;
   const w = queue[index];
   if (!w) return;
 
@@ -223,11 +255,17 @@ async function rate(rating) {
     setActionsDisabled(false);
     return;
   }
-  setActionsDisabled(false);
 
   if (rating === RATING.AGAIN) lapsed++;
   else passed++;
   updateTally();
+
+  // Let the card visually flip back to its front face before loading the
+  // next word, so the new content doesn't flash in mid-rotation.
+  isFlipping = true;
+  await resetCardFlip();
+  isFlipping = false;
+  setActionsDisabled(false);
 
   index++;
   showCard();
