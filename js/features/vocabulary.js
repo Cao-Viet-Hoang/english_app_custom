@@ -6,7 +6,7 @@
 
 import { getDb } from '../core/firebase.js';
 import { getUsername } from '../core/router.js';
-import { updateWordCount, updateLearnedCount } from './topics.js';
+import { topicDocRef } from './topics.js';
 import { recordActivity, removeActivity, getDailyEncouragement } from './streak.js';
 import { initialSchedule } from './srs-logic.js';
 
@@ -98,7 +98,13 @@ export async function loadWords(topicId) {
  * @returns {Promise<string>}  The new word ID
  */
 export async function addWord(topicId, data) {
-  const docRef = await wordsRef(topicId).add({
+  const wordRef = wordsRef(topicId).doc();
+
+  // Batch the word creation with the topic's wordCount increment so both
+  // writes commit atomically — a partial write (e.g. page navigating away
+  // mid-request) can no longer leave the cached count out of sync.
+  const batch = getDb().batch();
+  batch.set(wordRef, {
     english:     (data.english     || '').trim(),
     vietnamese:  (data.vietnamese  || '').trim(),
     description: (data.description || '').trim(),
@@ -108,10 +114,11 @@ export async function addWord(topicId, data) {
     createdAt:   firebase.firestore.FieldValue.serverTimestamp(),
     orderKey:    nextOrderKey(),
   });
-
-  // Increment topic wordCount
-  await updateWordCount(topicId, 1);
-  return docRef.id;
+  batch.update(topicDocRef(topicId), {
+    wordCount: firebase.firestore.FieldValue.increment(1),
+  });
+  await batch.commit();
+  return wordRef.id;
 }
 
 /**
@@ -139,11 +146,14 @@ export async function updateWord(topicId, wordId, data) {
  * @param {string} wordId
  */
 export async function deleteWord(topicId, wordId, wasLearned = false) {
-  await wordsRef(topicId).doc(wordId).delete();
-  await updateWordCount(topicId, -1);
+  const batch = getDb().batch();
+  batch.delete(wordsRef(topicId).doc(wordId));
+  const counterUpdate = { wordCount: firebase.firestore.FieldValue.increment(-1) };
   if (wasLearned) {
-    await updateLearnedCount(topicId, -1);
+    counterUpdate.learnedCount = firebase.firestore.FieldValue.increment(-1);
   }
+  batch.update(topicDocRef(topicId), counterUpdate);
+  await batch.commit();
 }
 
 /**
@@ -176,12 +186,16 @@ export async function toggleWordLearned(topicId, wordId, learned) {
         srsTzOffset: null,
       };
 
-  await wordsRef(topicId).doc(wordId).update({
+  const batch = getDb().batch();
+  batch.update(wordsRef(topicId).doc(wordId), {
     learned: !!learned,
     learnedAt: learned ? firebase.firestore.FieldValue.serverTimestamp() : null,
     ...srsFields,
   });
-  await updateLearnedCount(topicId, learned ? 1 : -1);
+  batch.update(topicDocRef(topicId), {
+    learnedCount: firebase.firestore.FieldValue.increment(learned ? 1 : -1),
+  });
+  await batch.commit();
 
   // Track streak on positive learning actions; reverse on un-learn
   if (learned) {

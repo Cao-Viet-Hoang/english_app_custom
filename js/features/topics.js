@@ -83,26 +83,29 @@ export async function deleteTopic(topicId) {
 }
 
 /**
- * Update the cached wordCount on a topic doc.
- * Called after adding / deleting vocabulary words.
+ * Get the Firestore doc reference for a topic.
+ * Exposed so callers (e.g. vocabulary.js) can batch a word write with a
+ * counter update in a single atomic commit.
  * @param {string} topicId
- * @param {number} delta   +1 or -1
+ * @returns {firebase.firestore.DocumentReference}
  */
-export async function updateWordCount(topicId, delta) {
-  await topicsRef().doc(topicId).update({
-    wordCount: firebase.firestore.FieldValue.increment(delta),
-  });
+export function topicDocRef(topicId) {
+  return topicsRef().doc(topicId);
 }
 
 /**
- * Update the cached learnedCount on a topic doc.
+ * Recompute wordCount/learnedCount on a topic doc from the actual words
+ * subcollection. Self-heals drift caused by interrupted writes (e.g. the
+ * page navigating away between the word write and the counter update).
  * @param {string} topicId
- * @param {number} delta   +1 or -1
+ * @returns {Promise<{ wordCount: number, learnedCount: number }>}
  */
-export async function updateLearnedCount(topicId, delta) {
-  await topicsRef().doc(topicId).update({
-    learnedCount: firebase.firestore.FieldValue.increment(delta),
-  });
+export async function recalculateWordCounts(topicId) {
+  const wordsSnap = await topicsRef().doc(topicId).collection('words').get();
+  const wordCount = wordsSnap.size;
+  const learnedCount = wordsSnap.docs.filter((d) => !!d.data().learned).length;
+  await topicsRef().doc(topicId).update({ wordCount, learnedCount });
+  return { wordCount, learnedCount };
 }
 
 /**
