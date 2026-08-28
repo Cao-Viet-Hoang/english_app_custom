@@ -9,6 +9,7 @@ import { getTopic } from '../features/topics.js';
 import { loadWords } from '../features/vocabulary.js';
 import { showToast, escapeHtml, showMilestoneModal, setupModalClose, showModal, closeModal } from '../ui/index.js';
 import { loadStreak } from '../features/streak.js';
+import { maybeNotifyFreezeUsed } from '../shared/streak-handler.js';
 import { initSentenceMode } from './writing-modes/sentence.js';
 import { initParagraphMode } from './writing-modes/paragraph.js';
 import { initTranslationMode } from './writing-modes/translation.js';
@@ -32,6 +33,7 @@ loadStreak().then(data => {
     countEl.textContent = data.currentStreak;
     el.style.display = '';
   }
+  maybeNotifyFreezeUsed(data);
 }).catch(() => {});
 
 // ---- Topic ID from URL ----

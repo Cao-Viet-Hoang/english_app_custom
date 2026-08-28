@@ -13,7 +13,7 @@ import { initChatWidget } from '../chat/chat-ui.js';
 import { shuffle } from '../shared/shuffle.js';
 import { speakText } from '../shared/tts.js';
 import { buildResultHtml } from '../shared/result-builder.js';
-import { handleStreakRecord } from '../shared/streak-handler.js';
+import { handleStreakRecord, maybeNotifyFreezeUsed } from '../shared/streak-handler.js';
 
 // ---- Auth & Firebase ----
 const session = guardAuth();
@@ -43,6 +43,7 @@ loadStreak().then(data => {
     countEl.textContent = data.currentStreak;
     el.style.display = '';
   }
+  maybeNotifyFreezeUsed(data);
 }).catch(() => {});
 
 // ---- Topic ID from URL ----

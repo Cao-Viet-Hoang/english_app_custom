@@ -107,6 +107,8 @@ service cloud.firestore {
                 'english', 'vietnamese', 'description', 'wordType',
                 'ipaUS', 'ipaUK', 'iPA',
                 'learned', 'learnedAt',
+                'srsRepetitions', 'srsEaseFactor', 'srsInterval',
+                'srsDueDate', 'srsLastReviewedAt', 'srsTzOffset',
                 'aiInsights', 'aiInsightsGeneratedAt',
                 'orderKey', 'updatedAt', 'type'
               ]);
@@ -174,6 +176,7 @@ service cloud.firestore {
             .hasOnly([
               'currentStreak', 'longestStreak',
               'lastActiveDate', 'totalActiveDays',
+              'streakFreezes', 'maxStreakFreezes', 'activeDaysToNextFreeze',
               'createdAt'
             ]);
 
@@ -197,6 +200,7 @@ service cloud.firestore {
                 'date', 'wordsLearned', 'practiceCount',
                 'irregularVerbsLearned', 'irregularVerbPracticeCount',
                 'wordFormsLearned', 'wordFormPracticeCount',
+                'frozen',
                 'firstActionAt', 'lastActionAt'
               ]);
 

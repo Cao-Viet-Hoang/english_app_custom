@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WordCraft — Review</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/practice/results.css" />
+  <link rel="stylesheet" href="css/review/layout.css" />
+  <link rel="stylesheet" href="css/review/practice.css" />
+  <link rel="stylesheet" href="css/streak.css" />
+  <link rel="stylesheet" href="css/chat.css" />
+</head>
+<body class="review-page">
+
+  <!-- ===== Navbar ===== -->
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a class="navbar-brand" href="topics.html">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+        </svg>
+        WordCraft
+      </a>
+      <div class="navbar-spacer"></div>
+      <div class="navbar-right">
+        <span id="navbar-streak" class="navbar-streak" style="display:none">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M8 16c3.314 0 6-2 6-5.5 0-1.5-.5-4-2.5-6 .25 1.5-1.25 2-1.25 2C11 4 9 .5 8 0 7.5 2 5.5 4 4.75 4.75 4.75 4.75 3.25 4.25 3.5 2.75 1.5 4.75 1 7.25 1 8.75 1 12.25 4.686 16 8 16zm0-1c-1.657 0-3-1-3-2.75 0-.75.25-2 1.25-3 .125.75 1 1.25 1 1.25S8 9 8 8c.5 1 1.5 2 2 3 .75.75 1 1.5 1 2.25C11 14 9.657 15 8 15z"/>
+          </svg>
+          <span id="navbar-streak-count">0</span>
+        </span>
+        <div class="navbar-user-info">
+          <span class="navbar-avatar" id="nav-avatar"></span>
+          <span class="navbar-username" id="nav-username"></span>
+        </div>
+        <div class="navbar-vdivider"></div>
+        <button id="btn-logout" class="btn-signout">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          Sign out
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ===== Main Content ===== -->
+  <main class="container">
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+      <a href="topics.html">My Topics</a>
+      <span class="breadcrumb-separator">›</span>
+      <span>Review</span>
+    </div>
+
+    <!-- Header -->
+    <div class="detail-header">
+      <h2 class="detail-title">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             class="rv-header-icon">
+          <polyline points="23 4 23 10 17 10"/>
+          <polyline points="1 20 1 14 7 14"/>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+        </svg>
+        Review
+      </h2>
+    </div>
+
+    <!-- Loading -->
+    <div id="rv-loading" class="text-center" style="padding:var(--sp-8)">
+      <div class="spinner spinner-lg"></div>
+    </div>
+
+    <!-- Content (hidden until data loaded) -->
+    <div id="rv-content" class="hidden">
+
+      <!-- ===== Dashboard ===== -->
+      <div id="rv-dashboard">
+        <div class="rv-stats">
+          <div class="rv-stat rv-stat-due">
+            <span class="rv-stat-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </span>
+            <div class="rv-stat-body">
+              <div class="rv-stat-num" id="rv-stat-due">0</div>
+              <div class="rv-stat-label">Due today</div>
+            </div>
+          </div>
+          <div class="rv-stat rv-stat-tomorrow">
+            <span class="rv-stat-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 18a5 5 0 0 0-10 0"/>
+                <line x1="12" y1="2" x2="12" y2="9"/>
+                <line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/>
+                <line x1="1" y1="18" x2="3" y2="18"/>
+                <line x1="21" y1="18" x2="23" y2="18"/>
+                <line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/>
+                <line x1="23" y1="22" x2="1" y2="22"/>
+                <polyline points="8 6 12 2 16 6"/>
+              </svg>
+            </span>
+            <div class="rv-stat-body">
+              <div class="rv-stat-num" id="rv-stat-tomorrow">0</div>
+              <div class="rv-stat-label">Due tomorrow</div>
+            </div>
+          </div>
+          <div class="rv-stat rv-stat-upcoming">
+            <span class="rv-stat-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+            </span>
+            <div class="rv-stat-body">
+              <div class="rv-stat-num" id="rv-stat-upcoming">0</div>
+              <div class="rv-stat-label">Next 7 days</div>
+            </div>
+          </div>
+          <div class="rv-stat rv-stat-learned">
+            <span class="rv-stat-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="8" r="7"/>
+                <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>
+              </svg>
+            </span>
+            <div class="rv-stat-body">
+              <div class="rv-stat-num" id="rv-stat-learned">0</div>
+              <div class="rv-stat-label">Words learned</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Start view (has due words) -->
+        <div id="rv-start" class="rv-start hidden">
+          <span class="rv-start-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+              <polyline points="2 17 12 22 22 17"/>
+              <polyline points="2 12 12 17 22 12"/>
+            </svg>
+          </span>
+          <h3 class="rv-start-title">Ready to review</h3>
+          <p class="rv-start-text">
+            You have <strong id="rv-start-count">0</strong> words to review. Flip each card, recall
+            the meaning, then rate how well you knew it.
+          </p>
+          <button id="btn-start-review" class="btn btn-primary btn-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+            Start Review
+          </button>
+        </div>
+
+        <!-- Empty state (nothing due) -->
+        <div id="rv-empty" class="rv-empty hidden">
+          <span class="rv-empty-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          </span>
+          <h3>You're all caught up! 🎉</h3>
+          <p id="rv-empty-msg">No words are due for review right now. Learn more words or come back later.</p>
+          <a class="btn btn-primary" href="topics.html">Back to Topics</a>
+        </div>
+      </div>
+
+      <!-- ===== Review session (hidden until started) ===== -->
+      <div id="rv-session" class="hidden">
+        <!-- Live tally -->
+        <div class="rv-tally">
+          <span class="rv-tally-chip rv-tally-pass">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <strong id="rv-passed">0</strong> remembered
+          </span>
+          <span class="rv-tally-chip rv-tally-again">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+            <strong id="rv-lapsed">0</strong> to relearn
+          </span>
+        </div>
+
+        <!-- Progress -->
+        <div class="rv-progress">
+          <div class="rv-progress-track">
+            <div class="rv-progress-fill" id="rv-progress-fill"></div>
+          </div>
+          <div class="rv-progress-text" id="rv-progress-text">0 / 0</div>
+        </div>
+
+        <!-- Flashcard -->
+        <div class="rv-card-wrapper">
+          <div class="rv-card" id="rv-card">
+            <!-- Front -->
+            <div class="rv-face rv-front">
+              <span class="rv-topic-badge" id="rv-front-topic"></span>
+              <button class="rv-speak-btn" id="rv-speak-btn" type="button" title="Pronounce">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                </svg>
+              </button>
+              <div class="rv-word" id="rv-front-word"></div>
+              <div class="rv-flip-hint">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="23 4 23 10 17 10"/>
+                  <polyline points="1 20 1 14 7 14"/>
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                </svg>
+                Tap or press Space to flip
+              </div>
+            </div>
+            <!-- Back -->
+            <div class="rv-face rv-back">
+              <span class="rv-back-tag">Answer</span>
+              <div class="rv-word-sm" id="rv-back-word"></div>
+              <div class="rv-meta">
+                <span class="rv-type-badge hidden" id="rv-back-type"></span>
+                <span class="rv-ipa" id="rv-back-ipa"></span>
+              </div>
+              <div class="rv-meaning" id="rv-back-meaning"></div>
+              <div class="rv-description" id="rv-back-desc"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rating actions (revealed after flip) -->
+        <div class="rv-actions hidden" id="rv-actions">
+          <button class="btn rv-rate rv-rate-again" data-rating="again" type="button">
+            <svg class="rv-rate-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="1 4 1 10 7 10"/>
+              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+            </svg>
+            <span class="rv-rate-label">Again</span>
+            <span class="rv-rate-key">1</span>
+            <span class="rv-rate-tip" id="rv-tip-again"></span>
+          </button>
+          <button class="btn rv-rate rv-rate-hard" data-rating="hard" type="button">
+            <svg class="rv-rate-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <span class="rv-rate-label">Hard</span>
+            <span class="rv-rate-key">2</span>
+            <span class="rv-rate-tip" id="rv-tip-hard"></span>
+          </button>
+          <button class="btn rv-rate rv-rate-good" data-rating="good" type="button">
+            <svg class="rv-rate-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <span class="rv-rate-label">Good</span>
+            <span class="rv-rate-key">3</span>
+            <span class="rv-rate-tip" id="rv-tip-good"></span>
+          </button>
+          <button class="btn rv-rate rv-rate-easy" data-rating="easy" type="button">
+            <svg class="rv-rate-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+            <span class="rv-rate-label">Easy</span>
+            <span class="rv-rate-key">4</span>
+            <span class="rv-rate-tip" id="rv-tip-easy"></span>
+          </button>
+        </div>
+
+        <!-- Keyboard hint -->
+        <div class="rv-kbd-hint">
+          <span><kbd>Space</kbd> to flip</span>
+          <span class="rv-kbd-sep">·</span>
+          <span><kbd>1</kbd>–<kbd>4</kbd> to rate</span>
+        </div>
+      </div>
+
+      <!-- ===== Results (hidden until done) ===== -->
+      <div id="rv-results" class="rv-results hidden"></div>
+
+    </div><!-- /#rv-content -->
+  </main>
+
+  <!-- ===== Firebase SDK ===== -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+  <!-- ===== App Script ===== -->
+  <script type="module" src="js/pages/review-page.js"></script>
+</body>
+</html>

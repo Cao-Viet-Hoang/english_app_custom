@@ -23,6 +23,7 @@ Users provide their own Firebase + Azure OpenAI credentials via JSON — no sign
 ├── irregular-verbs.html                # Irregular Verbs (verb table + 5 practice modes)
 ├── listen-and-fill.html                # Listen and Fill (AI dictation passage with blanks)
 ├── word-forms.html                     # Word Forms (noun/verb/adj/adv forms table + 1 practice mode)
+├── review.html                         # Review (spaced-repetition flashcard session across all topics)
 │
 ├── css/
 │   ├── base.css                        # CSS vars, resets, shared components
@@ -61,11 +62,14 @@ Users provide their own Firebase + Azure OpenAI credentials via JSON — no sign
 │   ├── listen-and-fill/                # Listen and Fill tool
 │   │   ├── layout.css                  # Page shell, breadcrumb, header, setup chips
 │   │   └── practice.css                # Audio controls, passage, blanks, result review
-│   └── word-forms/                     # Word Forms tool
-│       ├── layout.css                  # Page shell, breadcrumb, tabs, type badges
-│       └── practice.css                # Practice card, form fields, results, word selection
+│   ├── word-forms/                     # Word Forms tool
+│   │   ├── layout.css                  # Page shell, breadcrumb, tabs, type badges
+│   │   └── practice.css                # Practice card, form fields, results, word selection
+│   └── review/                         # Review (spaced repetition) tool
+│       ├── layout.css                  # Page shell, breadcrumb, header, dashboard stats
+│       └── practice.css                # Flashcard flip, rating actions, results
 │
-└── js/
+├── js/
     ├── core/                           # Foundation — no business logic
     │   ├── config.js                   # DEV_MODE flag, test credentials
     │   ├── router.js                   # Query param routing, guardAuth(), navigateTo()
@@ -77,6 +81,7 @@ Users provide their own Firebase + Azure OpenAI credentials via JSON — no sign
     │   ├── modal.js                    # showModal(), closeModal(), setupModalClose()
     │   ├── confirm.js                  # confirmDialog(), confirmDialogHtml()
     │   ├── milestone.js                # showMilestoneModal()
+    │   ├── freeze.js                   # showStreakFreezeModal() — "streak freeze used" notice
     │   ├── utils.js                    # escapeHtml(), formatDate()
     │   └── index.js                    # Barrel re-export of all ui/*
     │
@@ -91,9 +96,12 @@ Users provide their own Firebase + Azure OpenAI credentials via JSON — no sign
     ├── features/                       # Business logic — data layer
     │   ├── auth.js                     # Login/logout, session management
     │   ├── topics.js                   # Topics CRUD, word management
-    │   ├── vocabulary.js               # Word add/edit/delete, AI fill, duplicates
+    │   ├── vocabulary.js               # Word add/edit/delete, AI fill, duplicates, SRS seed on learn
+    │   ├── review.js                   # Spaced-repetition: global due queue, stats, submitReview
+    │   ├── srs-logic.js                # Pure SM-2 math (schedule, ease, due) — unit-tested
     │   ├── paragraphs.js               # Paragraph generation and management
-    │   ├── streak.js                   # Daily streak tracking, milestones, heatmap
+    │   ├── streak.js                   # Daily streak tracking, milestones, heatmap, freeze earn/consume
+    │   ├── streak-logic.js             # Pure streak math (freeze earning, gap reconciliation) — unit-tested
     │   ├── irregular-verbs.js          # Irregular verbs CRUD, pattern detection, stats
     │   └── word-forms.js               # Word forms CRUD, learned toggle, stats
     │
@@ -120,6 +128,7 @@ Users provide their own Firebase + Azure OpenAI credentials via JSON — no sign
         ├── irregular-verbs-page.js     # Irregular Verbs page (table + 5 practice modes)
         ├── listen-and-fill-page.js     # Listen and Fill tool (AI dictation + blanks)
         ├── word-forms-page.js          # Word Forms tool (table + fill-in-the-forms practice)
+        ├── review-page.js              # Review tool (due dashboard + SM-2 flashcard session)
         ├── reading-modes/
         │   ├── comprehension.js
         │   └── truefalse.js
@@ -134,7 +143,23 @@ Users provide their own Firebase + Azure OpenAI credentials via JSON — no sign
             ├── quiz.js                 # Multiple-choice conjugation quiz
             ├── matching.js             # Click-to-match V1 ↔ V2/V3
             └── speed-conjugation.js    # Timed typing (V2 + V3 per verb)
+│
+└── test/                               # Node-runnable unit tests (no npm/build)
+    ├── harness.js                      # Tiny zero-dependency test runner (describe/it/assert)
+    ├── streak-logic.test.js            # Streak freeze earn/consume/reconcile logic tests
+    └── srs-logic.test.js               # SM-2 schedule/ease/due spaced-repetition logic tests
 ```
+
+## Testing
+
+No build tools — tests are plain ES modules runnable directly by Node's runtime.
+
+- **Run:** `node test/streak-logic.test.js` (exit code 0 = pass, 1 = fail)
+- **Write for:** pure logic modules with no Firestore/DOM/global dependencies
+  (e.g. `js/features/streak-logic.js`). Keep business rules in a pure module so
+  they can be tested without mocking Firebase.
+- **Harness:** import `describe`, `it`, `assertEqual`, `assertDeepEqual`,
+  `assertTrue`, `assertFalse`, and call `finish()` at the end to set the exit code.
 
 ## Folder Conventions
 
@@ -156,7 +181,7 @@ features/* ← core/firebase, ui/index
 ai/* ← core/ai-client
 chat/* ← chat/chat-state, ai/chat-ai, ui/index
 shared/* ← features/streak, ui/index
-ui/index ← ui/toast, ui/modal, ui/confirm, ui/milestone, ui/utils
+ui/index ← ui/toast, ui/modal, ui/confirm, ui/milestone, ui/freeze, ui/utils
 core/ai-client ← core/router (session)
 ```
 
@@ -167,11 +192,17 @@ users/{username}/
 ├── topics/{topicId}/
 │   ├── name: string, description: string, createdAt: timestamp
 │   ├── words/{wordId}/
-│   │   ├── english: string, vietnamese: string, iPA: string
-│   │   ├── type: string (noun/verb/adjective/adverb)
-│   │   ├── description: string, learned: boolean
-│   │   ├── orderKey: number (Date.now() — stable sort key)
-│   │   └── createdAt: timestamp
+│   │   ├── english: string, vietnamese: string, description: string
+│   │   ├── wordType: string (noun/verb/adjective/adverb/other)
+│   │   ├── ipaUS: string, ipaUK: string (legacy `ipa` migrated → ipaUS on read)
+│   │   ├── learned: boolean, learnedAt: timestamp | null (absent until first toggle)
+│   │   ├── srsRepetitions: number, srsEaseFactor: number (SM-2, default 2.5, floor 1.3)
+│   │   ├── srsInterval: number (days), srsDueDate: string (YYYY-MM-DD, local day)
+│   │   ├── srsLastReviewedAt: timestamp | null  (absolute UTC/GMT review instant)
+│   │   ├── srsTzOffset: number | null  (minutes east of UTC, e.g. GMT+7 → 420; all srs* null when un-learned)
+│   │   ├── aiInsights: object, aiInsightsGeneratedAt: timestamp (optional)
+│   │   ├── orderKey: number (Date.now()*1000 + counter — stable sort key)
+│   │   └── createdAt: timestamp, updatedAt: timestamp (after edit)
 │   └── paragraphs/{paraId}/
 │       ├── englishText: string, vietnameseText: string
 │       └── usedWords: string[]
@@ -197,12 +228,28 @@ users/{username}/
 └── streak/main/
     ├── currentStreak: number, longestStreak: number
     ├── lastActiveDate: string (YYYY-MM-DD), totalActiveDays: number
+    ├── streakFreezes: number (held freezes, 0..maxStreakFreezes; new/migrated users = 1)
+    ├── maxStreakFreezes: number (cap = 2)
+    ├── activeDaysToNextFreeze: number (0..7 — real study days accrued toward next freeze)
     └── dailyActivity/{YYYY-MM-DD}/
         ├── date: string (YYYY-MM-DD)
         ├── wordsLearned: number, practiceCount: number
         ├── irregularVerbsLearned: number, irregularVerbPracticeCount: number
+        ├── wordFormsLearned: number, wordFormPracticeCount: number
+        ├── frozen: boolean (true = day bridged by a streak freeze)
         ├── firstActionAt: timestamp, lastActionAt: timestamp
 ```
+
+### Streak freeze mechanic
+
+Missing a day no longer breaks the streak immediately. Users earn **1 freeze per
+7 real study days** (`FREEZE_EARN_THRESHOLD`), capped at **2** (`MAX_STREAK_FREEZES`);
+new and migrated users start with **1** (`NEW_USER_FREEZES`). On load, `loadStreak()`
+reconciles: each missed day is bridged by one freeze (streak held, not incremented,
+day marked `frozen`); the streak only breaks when freezes cannot cover the gap.
+Constants and pure math live in `js/features/streak-logic.js`. `recordActivity()`
+returns `freezeEarned`; `loadStreak()` returns `freezesConsumed`/`frozenDates`. Call
+`maybeNotifyFreezeUsed(streakData)` after a load to show the freeze-used modal.
 
 ## AI Integration
 
@@ -295,6 +342,8 @@ Body: { messages, temperature, max_tokens, response_format: { type: "json_object
 | Irregular Verbs data   | `js/features/irregular-verbs.js`, `firestore.rules`                                  |
 | Listen and Fill tool   | `listen-and-fill.html`, `js/pages/listen-and-fill-page.js`, `css/listen-and-fill/`, `js/ai/writing-ai.js` (`generateListenAndFillPassage`) |
 | Word Forms tool        | `word-forms.html`, `js/pages/word-forms-page.js`, `css/word-forms/`, `js/features/word-forms.js`, `js/ai/word-forms-ai.js` |
+| Streak / freeze logic  | `js/features/streak-logic.js` (pure math + `test/`), `js/features/streak.js`, `js/shared/streak-handler.js`, `js/ui/freeze.js`, `css/streak.css`, `firestore.rules` |
+| Review / spaced repetition | `review.html`, `js/pages/review-page.js`, `css/review/`, `js/features/review.js`, `js/features/srs-logic.js` (pure SM-2 + `test/`), `js/features/vocabulary.js` (`toggleWordLearned` seeds srs*), `firestore.rules` |
 
 ## Keyboard Shortcuts
 

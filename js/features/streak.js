@@ -7,6 +7,13 @@
 
 import { getDb } from '../core/firebase.js';
 import { getUsername } from '../core/router.js';
+import {
+  FREEZE_EARN_THRESHOLD,
+  MAX_STREAK_FREEZES,
+  NEW_USER_FREEZES,
+  reconcileStreak,
+  earnFreezeOnActiveDay,
+} from './streak-logic.js';
 
 // In-memory cache to avoid redundant reads within same page session
 let _cachedStreak = null;
@@ -162,6 +169,9 @@ function defaultStreakData() {
     longestStreak: 0,
     lastActiveDate: '',
     totalActiveDays: 0,
+    streakFreezes: NEW_USER_FREEZES,
+    maxStreakFreezes: MAX_STREAK_FREEZES,
+    activeDaysToNextFreeze: 0,
   };
 }
 
@@ -169,49 +179,91 @@ function defaultStreakData() {
 
 /**
  * Load the current streak data from Firestore.
- * Creates default document if it does not exist.
- * Checks if streak is broken and resets if needed.
+ * Creates a default document if it does not exist, lazily migrates missing
+ * freeze fields, and reconciles the streak — consuming freezes to bridge
+ * missed days or breaking the streak when freezes run out.
  * @param {boolean} [forceRefresh=false]  Skip cache
- * @returns {Promise<Object>}  StreakData with computed flags
+ * @returns {Promise<Object>}  StreakData with computed flags. When freezes are
+ *   consumed on this load, `freezesConsumed > 0` and `frozenDates` list the days.
  */
 export async function loadStreak(forceRefresh = false) {
   if (_cachedStreak && !forceRefresh) return _cachedStreak;
 
-  const doc = await streakRef().get();
+  const ref = streakRef();
+  const doc = await ref.get();
   let data;
 
   if (!doc.exists) {
-    // First time — create defaults
+    // First time — create defaults (already includes freeze fields, no gap).
     const defaults = defaultStreakData();
-    await streakRef().set({
+    await ref.set({
       ...defaults,
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
     data = { ...defaults };
-  } else {
-    data = doc.data();
+    data.isActiveToday = false;
+    data.isStreakAtRisk = false;
+    data.justBroke = false;
+    data.freezesConsumed = 0;
+    data.frozenDates = [];
+    _cachedStreak = data;
+    return data;
   }
 
+  data = doc.data();
   const today = getTodayDateString();
   const yesterday = getYesterdayDateString();
 
-  // Compute flags
-  data.isActiveToday = data.lastActiveDate === today;
-  data.isStreakAtRisk = data.lastActiveDate === yesterday && !data.isActiveToday;
-
-  // Check if streak is broken (last active is older than yesterday)
-  const justBroke = data.currentStreak > 0
-    && data.lastActiveDate !== ''
-    && data.lastActiveDate !== today
-    && data.lastActiveDate !== yesterday;
-
-  if (justBroke) {
-    data.previousStreak = data.currentStreak;
-    data.currentStreak = 0;
-    // Persist the reset
-    await streakRef().update({ currentStreak: 0 });
+  // ---- Migration: existing users without freeze fields get NEW_USER_FREEZES ----
+  const migration = {};
+  if (typeof data.streakFreezes !== 'number') {
+    data.streakFreezes = NEW_USER_FREEZES;
+    migration.streakFreezes = NEW_USER_FREEZES;
   }
-  data.justBroke = justBroke;
+  if (typeof data.maxStreakFreezes !== 'number') {
+    data.maxStreakFreezes = MAX_STREAK_FREEZES;
+    migration.maxStreakFreezes = MAX_STREAK_FREEZES;
+  }
+  if (typeof data.activeDaysToNextFreeze !== 'number') {
+    data.activeDaysToNextFreeze = 0;
+    migration.activeDaysToNextFreeze = 0;
+  }
+
+  // ---- Reconcile: bridge missed days with freezes, or break the streak ----
+  const rec = reconcileStreak({
+    lastActiveDate: data.lastActiveDate || '',
+    today,
+    yesterday,
+    currentStreak: data.currentStreak || 0,
+    streakFreezes: data.streakFreezes,
+  });
+
+  data.currentStreak = rec.currentStreak;
+  data.streakFreezes = rec.streakFreezes;
+  data.lastActiveDate = rec.lastActiveDate;
+  data.isActiveToday = rec.isActiveToday;
+  data.isStreakAtRisk = rec.isStreakAtRisk;
+  data.justBroke = rec.justBroke;
+  data.freezesConsumed = rec.freezesConsumed;
+  data.frozenDates = rec.frozenDates;
+  if (rec.justBroke) data.previousStreak = rec.previousStreak;
+
+  // ---- Persist migration + reconciliation changes in one batch ----
+  if (Object.keys(migration).length > 0 || rec.changed) {
+    const batch = getDb().batch();
+    const update = { ...migration };
+    if (rec.changed) {
+      update.currentStreak = rec.currentStreak;
+      update.streakFreezes = rec.streakFreezes;
+      update.lastActiveDate = rec.lastActiveDate;
+    }
+    batch.update(ref, update);
+    // Mark each bridged day so the calendar/heatmap can show it as frozen.
+    rec.frozenDates.forEach((dateStr) => {
+      batch.set(dailyActivityRef().doc(dateStr), { date: dateStr, frozen: true }, { merge: true });
+    });
+    await batch.commit();
+  }
 
   _cachedStreak = data;
   return data;
@@ -246,11 +298,21 @@ export async function recordActivity(activity = 'learn') {
     const newLongest = Math.max(data.longestStreak || 0, newStreak);
     const newTotalActive = (data.totalActiveDays || 0) + 1;
 
+    // Freeze earning — one real study day accrues toward the next freeze.
+    const earn = earnFreezeOnActiveDay({
+      streakFreezes: typeof data.streakFreezes === 'number' ? data.streakFreezes : NEW_USER_FREEZES,
+      activeDaysToNextFreeze: data.activeDaysToNextFreeze || 0,
+      maxStreakFreezes: typeof data.maxStreakFreezes === 'number' ? data.maxStreakFreezes : MAX_STREAK_FREEZES,
+    });
+
     const streakUpdate = {
       currentStreak: newStreak,
       longestStreak: newLongest,
       lastActiveDate: today,
       totalActiveDays: newTotalActive,
+      streakFreezes: earn.streakFreezes,
+      maxStreakFreezes: typeof data.maxStreakFreezes === 'number' ? data.maxStreakFreezes : MAX_STREAK_FREEZES,
+      activeDaysToNextFreeze: earn.activeDaysToNextFreeze,
     };
 
     if (!doc.exists) {
@@ -278,11 +340,13 @@ export async function recordActivity(activity = 'learn') {
       isActiveToday: true,
       isStreakAtRisk: false,
       justBroke: false,
+      freezesConsumed: 0,
+      frozenDates: [],
     };
     _cachedStreak = data;
 
     const milestone = checkMilestone(newStreak);
-    return { streakData: data, isNewDay: true, milestone };
+    return { streakData: data, isNewDay: true, milestone, freezeEarned: earn.earned };
   } else {
     // Same day — just increment the appropriate counter
     batch.set(dailyActivityRef().doc(today), {
@@ -298,7 +362,7 @@ export async function recordActivity(activity = 'learn') {
     data.justBroke = false;
     _cachedStreak = data;
 
-    return { streakData: data, isNewDay: false, milestone: null };
+    return { streakData: data, isNewDay: false, milestone: null, freezeEarned: false };
   }
 }
 

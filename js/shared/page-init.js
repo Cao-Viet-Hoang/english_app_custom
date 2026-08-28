@@ -7,6 +7,7 @@
 import { guardAuth, logout, getQueryParam, navigateTo } from '../core/router.js';
 import { initFirebase } from '../core/firebase.js';
 import { loadStreak } from '../features/streak.js';
+import { maybeNotifyFreezeUsed } from './streak-handler.js';
 
 /**
  * Bootstrap a protected page.
@@ -36,6 +37,8 @@ export function initProtectedPage({ requireTopicId = false } = {}) {
       countEl.textContent = data.currentStreak;
       el.style.display = '';
     }
+    // Notify if a freeze was just used to protect the streak
+    maybeNotifyFreezeUsed(data);
   }).catch(() => {});
 
   // Topic ID

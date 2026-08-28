@@ -126,6 +126,30 @@
   animation: streakPulse 2s ease-in-out infinite;
 }
 
+.streak-week-dot.frozen {
+  background: var(--color-primary-light);
+  border-color: var(--color-primary);
+  border-style: dotted;
+}
+
+/* ---------- Inline Freeze Indicator ---------- */
+.streak-inline-freeze {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--color-primary);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.streak-inline-freeze svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+
 /* ---------- Streak Stats (used in activity log) ---------- */
 .streak-stat-value {
   font-weight: 600;
@@ -250,6 +274,10 @@
   background: var(--color-success);
 }
 
+.activity-day.frozen {
+  background: rgba(124, 158, 217, 0.4);
+}
+
 .activity-day.today {
   outline: 2px solid var(--color-accent);
   outline-offset: -1px;
@@ -334,6 +362,15 @@
   width: 36px;
   height: 36px;
   color: #c6970a;
+}
+
+/* Freeze variant of the celebration icon (icy periwinkle) */
+.milestone-icon.freeze-icon {
+  background: rgba(124, 158, 217, 0.18);
+}
+
+.milestone-icon.freeze-icon svg {
+  color: var(--color-primary);
 }
 
 .milestone-title {

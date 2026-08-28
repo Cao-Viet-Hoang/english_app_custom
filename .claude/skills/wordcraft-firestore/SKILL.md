@@ -78,6 +78,9 @@ const date = ts?.toDate?.() || new Date(ts);
 | `practiceCount`                | vocabulary practice      |
 | `irregularVerbsLearned`        | irregular verb learn     |
 | `irregularVerbPracticeCount`   | irregular verb practice  |
+| `wordFormsLearned`             | word form learn          |
+| `wordFormPracticeCount`        | word form practice       |
+| `frozen`                       | boolean (day bridged by a streak freeze) |
 | `firstActionAt`                | server timestamp         |
 | `lastActionAt`                 | server timestamp         |
 
@@ -100,6 +103,15 @@ await removeActivity({ type: 'learn', source: 'irregularVerb' });
 const { learned, practiced, total, vocabularyLearned, irregularVerbsLearned } =
   summarizeActivityEntry(dailyDoc);
 ```
+
+### Streak freezes
+
+`streak/main` also holds `streakFreezes` (0..2), `maxStreakFreezes` (2), and
+`activeDaysToNextFreeze` (0..7). Missing a day no longer breaks the streak instantly:
+`loadStreak()` bridges missed days with freezes (marking them `frozen`) and only breaks
+when freezes run out. Users earn 1 freeze per 7 study days; new/migrated users start with 1.
+Pure logic + constants: `js/features/streak-logic.js` (tested via `node test/streak-logic.test.js`).
+`recordActivity()` returns `freezeEarned`; `loadStreak()` returns `freezesConsumed`/`frozenDates`.
 
 When adding a new activity source:
 1. Add it to `ACTIVITY_FIELD_MAP` in `js/features/streak.js`

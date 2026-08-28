@@ -7,6 +7,7 @@ import { guardAuth, logout, navigateTo } from '../core/router.js';
 import { initFirebase } from '../core/firebase.js';
 import { loadTopics, createTopic, renameTopic, deleteTopic } from '../features/topics.js';
 import { getVerbStats } from '../features/irregular-verbs.js';
+import { getReviewStats, getTodayDateString } from '../features/review.js';
 import { showModal, closeModal, setupModalClose, showToast, confirmDialog, formatDate, escapeHtml, showMilestoneModal } from '../ui/index.js';
 import {
   loadStreak,
@@ -15,6 +16,7 @@ import {
   getDailyEncouragement,
   summarizeActivityEntry,
 } from '../features/streak.js';
+import { maybeNotifyFreezeUsed } from '../shared/streak-handler.js';
 import { initChatWidget } from '../chat/chat-ui.js';
 
 // ---- Guard & Init ----
@@ -47,6 +49,13 @@ const streakEl = document.getElementById('streak-inline');
 const FLAME_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
   <path d="M8 16c3.314 0 6-2 6-5.5 0-1.5-.5-4-2.5-6 .25 1.5-1.25 2-1.25 2C11 4 9 .5 8 0 7.5 2 5.5 4 4.75 4.75 4.75 4.75 3.25 4.25 3.5 2.75 1.5 4.75 1 7.25 1 8.75 1 12.25 4.686 16 8 16zm0-1c-1.657 0-3-1-3-2.75 0-.75.25-2 1.25-3 .125.75 1 1.25 1 1.25S8 9 8 8c.5 1 1.5 2 2 3 .75.75 1 1.5 1 2.25C11 14 9.657 15 8 15z"/>
 </svg>`;
+const SNOWFLAKE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <line x1="12" y1="2" x2="12" y2="22"/>
+  <line x1="2" y1="12" x2="22" y2="12"/>
+  <line x1="4.9" y1="4.9" x2="19.1" y2="19.1"/>
+  <line x1="19.1" y1="4.9" x2="4.9" y2="19.1"/>
+</svg>`;
 const DAY_LABELS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 
 function getWeekDates() {
@@ -75,10 +84,13 @@ function renderStreakInline(streakData, weekActivity) {
 
   const weekDotsHtml = weekDates.map((dateStr, i) => {
     const isToday = dateStr === today;
-    const isActive = summarizeActivityEntry(activityMap[dateStr]).total > 0;
+    const entry = activityMap[dateStr];
+    const isActive = summarizeActivityEntry(entry).total > 0;
+    const isFrozen = !isActive && entry?.frozen === true;
     let dotClass = 'streak-week-dot';
     if (isToday) dotClass += ' today';
     if (isActive) dotClass += ' active';
+    else if (isFrozen) dotClass += ' frozen';
     return `<div class="streak-week-day">
       <span class="streak-week-label">${DAY_LABELS[i]}</span>
       <span class="${dotClass}"></span>
@@ -95,9 +107,16 @@ function renderStreakInline(streakData, weekActivity) {
     ? `<div class="streak-inline-divider"></div><span class="streak-inline-encourage">${encouragement}</span>`
     : '';
 
+  const freezeCount = streakData.streakFreezes || 0;
+  const freezeHtml = freezeCount > 0
+    ? `<div class="streak-inline-divider"></div>
+       <span class="streak-inline-freeze" title="Streak freezes — each one saves a missed day">${SNOWFLAKE_SVG}${freezeCount}</span>`
+    : '';
+
   streakEl.innerHTML = `
     <div class="streak-inline-flame ${flameClass}">${FLAME_SVG}</div>
     <span class="streak-inline-count">${currentStreak}</span>
+    ${freezeHtml}
     <div class="streak-inline-divider"></div>
     <div class="streak-week">${weekDotsHtml}</div>
     ${encourageHtml}
@@ -158,6 +177,7 @@ async function openActivityLog() {
               if (total >= 5) levelClass = 'level-3';
               else if (total >= 2) levelClass = 'level-2';
               else if (total >= 1) levelClass = 'level-1';
+              else if (a?.frozen) levelClass = 'frozen';
               const todayClass = dayStr === todayStr ? ' today' : '';
               let title = dayStr;
               if (total > 0) {
@@ -167,6 +187,8 @@ async function openActivityLog() {
                 if (summary.vocabularyPractice > 0) parts.push(`${summary.vocabularyPractice} vocabulary practice`);
                 if (summary.irregularVerbPractice > 0) parts.push(`${summary.irregularVerbPractice} irregular verb practice`);
                 title = `${dayStr}: ${parts.join(', ')}`;
+              } else if (a?.frozen) {
+                title = `${dayStr}: Streak frozen (freeze used)`;
               }
               return `<div class="activity-day${levelClass ? ' ' + levelClass : ''}${todayClass}" title="${title}"></div>`;
             }).join('')}
@@ -185,6 +207,7 @@ async function openActivityLog() {
       <span class="activity-stat"><span class="streak-stat-value">${streakData.totalActiveDays || 0}</span> active</span>
       <span class="activity-stat">🔥 <span class="streak-stat-value">${streakData.currentStreak || 0}</span> streak</span>
       <span class="activity-stat">⭐ <span class="streak-stat-value">${streakData.longestStreak || 0}</span> best</span>
+      <span class="activity-stat">❄️ <span class="streak-stat-value">${streakData.streakFreezes || 0}</span> freezes</span>
     `;
   } catch (err) {
     console.error('Failed to load activity log:', err);
@@ -200,6 +223,9 @@ async function initStreak() {
     ]);
 
     renderStreakInline(streakData, weekHistory);
+
+    // Notify if a freeze was just used to protect the streak
+    maybeNotifyFreezeUsed(streakData);
 
     // Show broken streak toast
     if (streakData.justBroke && streakData.previousStreak > 0) {
@@ -467,7 +493,24 @@ async function initIrregularVerbsCard() {
   }
 }
 
+// ---- Review toolbar icon (words due for spaced-repetition review) ----
+async function initReviewCard() {
+  try {
+    const { dueCount } = await getReviewStats(getTodayDateString());
+    const labelEl = document.getElementById('review-tool-label');
+    const badgeEl = document.getElementById('review-tool-badge');
+    if (labelEl) labelEl.textContent = dueCount > 0 ? `Review · ${dueCount} due` : 'Review';
+    if (badgeEl) {
+      badgeEl.textContent = dueCount > 99 ? '99+' : String(dueCount);
+      badgeEl.classList.toggle('hidden', dueCount === 0);
+    }
+  } catch {
+    // silently ignore — badge stays hidden, label stays at default text
+  }
+}
+
 // ---- Initial load ----
 initStreak();
 initIrregularVerbsCard();
+initReviewCard();
 render();
