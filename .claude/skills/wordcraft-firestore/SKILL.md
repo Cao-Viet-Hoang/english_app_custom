@@ -17,6 +17,10 @@ paragraphsRef(topicId);     // users/{username}/topics/{topicId}/paragraphs
 streakRef();                // users/{username}/streak/main
 dailyActivityRef(date);     // users/{username}/streak/main/dailyActivity/{date}
 notesRef();                 // users/{username}/notes
+
+// js/features/sentence-topics.js
+sentenceTopicsRef();        // users/{username}/sentenceTopics
+sentencesRef(topicId);      // users/{username}/sentenceTopics/{topicId}/sentences
 ```
 
 ## CRUD Patterns
@@ -80,6 +84,8 @@ const date = ts?.toDate?.() || new Date(ts);
 | `irregularVerbPracticeCount`   | irregular verb practice  |
 | `wordFormsLearned`             | word form learn          |
 | `wordFormPracticeCount`        | word form practice       |
+| `sentencesLearned`             | sentence pattern learn   |
+| `sentencePracticeCount`        | sentence pattern practice |
 | `frozen`                       | boolean (day bridged by a streak freeze) |
 | `firstActionAt`                | server timestamp         |
 | `lastActionAt`                 | server timestamp         |
@@ -127,6 +133,7 @@ When adding a new activity source:
 | `js/features/vocabulary.js`| Word add/edit/delete, AI fill       |
 | `js/features/paragraphs.js`| Paragraph generation & management  |
 | `js/features/streak.js`   | Streak tracking, milestones          |
+| `js/features/sentence-topics.js` | Sentence topics + nested sentences CRUD, duplicate detection |
 
 ## Gotchas
 

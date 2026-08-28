@@ -20,6 +20,7 @@ Full project context is in CLAUDE.md at the repo root.
 | `js/features/topics.js` | Topics CRUD, word management                  |
 | `js/features/vocabulary.js` | Word add/edit/delete, AI fill, duplicates |
 | `js/features/paragraphs.js` | Paragraph generation and management       |
+| `js/features/sentence-topics.js` | Sentence topics + nested sentences CRUD, duplicate detection, learned toggle |
 
 ## Collection Reference Pattern
 
@@ -32,11 +33,13 @@ paragraphsRef(topicId);     // users/{username}/topics/{topicId}/paragraphs
 streakRef();                // users/{username}/streak/main
 dailyActivityRef(date);     // users/{username}/streak/main/dailyActivity/{date}
 notesRef();                 // users/{username}/notes
+sentenceTopicsRef();        // users/{username}/sentenceTopics
+sentencesRef(topicId);      // users/{username}/sentenceTopics/{topicId}/sentences
 ```
 
 ## Streak Activity API
 
-`dailyActivity/{date}` tracks four counters: `wordsLearned`, `practiceCount`, `irregularVerbsLearned`, `irregularVerbPracticeCount`. Use the helpers in `js/features/streak.js`:
+`dailyActivity/{date}` tracks counters: `wordsLearned`, `practiceCount`, `irregularVerbsLearned`, `irregularVerbPracticeCount`, `wordFormsLearned`, `wordFormPracticeCount`, `sentencesLearned`, `sentencePracticeCount`. Use the helpers in `js/features/streak.js`:
 
 ```js
 // recordActivity / removeActivity accept a string (legacy) or an object
@@ -44,9 +47,10 @@ await recordActivity('learn');                                   // vocabulary l
 await recordActivity('practice');                                // vocabulary practice
 await recordActivity({ type: 'learn', source: 'irregularVerb' });// irregular verb learn
 await removeActivity({ type: 'learn', source: 'irregularVerb' });// undo above
+await recordActivity({ type: 'learn', source: 'sentence' });     // sentence pattern learn
 
 // summarize a daily doc (sums across all sources)
-const { learned, practiced, total, vocabularyLearned, irregularVerbsLearned, ... } = summarizeActivityEntry(entry);
+const { learned, practiced, total, vocabularyLearned, irregularVerbsLearned, sentencesLearned, ... } = summarizeActivityEntry(entry);
 ```
 
 - `source` defaults to `'vocabulary'`; `type` defaults to `'learn'`.

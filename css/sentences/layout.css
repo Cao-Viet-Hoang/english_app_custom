@@ -1,0 +1,197 @@
+/* ============================================================
+   SENTENCE PATTERNS — Layout
+   Page shell, breadcrumb, detail header, tabs, table wrapper,
+   pattern/level/register badges.
+   Self-contained (mirrors word-forms/layout.css's convention of not
+   relying on topic-detail/layout.css) since the detail page only
+   links topic-detail/vocabulary.css + topic-detail/forms.css.
+   ============================================================ */
+
+.sp-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- Breadcrumb (shared pattern) ---------- */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-sm);
+  color: var(--color-text-light);
+  margin-bottom: var(--sp-5);
+  flex-wrap: wrap;
+}
+
+.breadcrumb a {
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.breadcrumb a:hover { text-decoration: underline; }
+
+.breadcrumb-separator {
+  color: var(--color-border);
+}
+
+/* ---------- Detail Header ---------- */
+.detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: var(--sp-5);
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+}
+
+.detail-title {
+  font-size: var(--fs-xl);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+
+.sp-header-icon {
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.detail-word-badge {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  padding: 2px var(--sp-3);
+  background: var(--color-surface-alt);
+  color: var(--color-text-light);
+  border: 1px solid var(--color-border);
+  border-radius: 100px;
+  line-height: 1.8;
+}
+
+/* ---------- Learned Progress ---------- */
+.learned-progress {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-xs);
+  color: var(--color-text-light);
+  padding: 3px var(--sp-3);
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: 100px;
+  line-height: 1.8;
+  vertical-align: middle;
+}
+
+.learned-progress-bar {
+  display: inline-block;
+  width: 60px;
+  height: 5px;
+  background: var(--color-border);
+  border-radius: 3px;
+  overflow: hidden;
+  vertical-align: middle;
+}
+
+.learned-progress-fill {
+  display: block;
+  height: 100%;
+  background: var(--color-success);
+  border-radius: 3px;
+  transition: width 0.4s var(--ease-out);
+}
+
+.learned-progress-text {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.learned-progress.completed {
+  border-color: var(--color-success);
+}
+
+.learned-progress.completed .learned-progress-text {
+  color: var(--color-success);
+}
+
+/* ---------- Tabs (tab-content only — .tabs/.tab-btn already in base.css) ---------- */
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* ---------- Table wrapper ---------- */
+.wf-table-wrapper {
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+}
+
+/* ---------- Learned row tint ---------- */
+.vocab-table tr.learned-row {
+  background: rgba(130, 201, 161, 0.05);
+}
+
+/* ---------- Pattern / Level / Register badges ---------- */
+.sp-level-badge {
+  display: inline-block;
+  padding: 2px var(--sp-2);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  background: rgba(124, 158, 217, 0.15);
+  color: var(--color-primary-dark);
+}
+
+.sp-pattern-cell {
+  color: var(--color-text-light);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+}
+
+/* ---------- AI-generated fields preview (Add/Edit modal) ---------- */
+.sp-variations {
+  margin-top: var(--sp-2);
+}
+
+.sp-variations-list {
+  list-style: none;
+  margin: var(--sp-2) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.sp-variations-list li {
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
+  color: var(--color-text);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 640px) {
+  .detail-title {
+    font-size: var(--fs-lg);
+  }
+
+  .tabs {
+    margin-bottom: var(--sp-4);
+  }
+
+  /* Hide pattern column on small screens */
+  .vocab-table th:nth-child(4),
+  .vocab-table td:nth-child(4) {
+    display: none;
+  }
+}

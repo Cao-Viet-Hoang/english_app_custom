@@ -139,6 +139,53 @@ service cloud.firestore {
       }
 
       // ------------------------------------------------------
+      // Sentence Topics
+      // users/{username}/sentenceTopics/{topicId}
+      // ------------------------------------------------------
+      match /sentenceTopics/{topicId} {
+        allow read: if true;
+
+        allow create: if
+          isNonEmptyString(request.resource.data.name)
+          && request.resource.data.name.size() <= 100
+          && request.resource.data.sentenceCount is int
+          && request.resource.data.learnedCount is int;
+
+        allow update: if
+          // Must include at least one valid field
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['name', 'sentenceCount', 'learnedCount', 'updatedAt'])
+          // name, if present, must be valid
+          && (!('name' in request.resource.data.diff(resource.data).affectedKeys())
+              || isNonEmptyString(request.resource.data.name));
+
+        allow delete: if true;
+
+        // --------------------------------------------------
+        // Sentences
+        // users/{username}/sentenceTopics/{topicId}/sentences/{sentenceId}
+        // --------------------------------------------------
+        match /sentences/{sentenceId} {
+          allow read: if true;
+
+          allow create: if
+            isNonEmptyString(request.resource.data.english)
+            && request.resource.data.orderKey is number;
+
+          allow update: if
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly([
+                'english', 'vietnamese', 'pattern', 'usage', 'notes',
+                'register', 'level', 'variations', 'aiInsightsGeneratedAt',
+                'learned', 'learnedAt',
+                'orderKey', 'updatedAt'
+              ]);
+
+          allow delete: if true;
+        }
+      }
+
+      // ------------------------------------------------------
       // Notes
       // users/{username}/notes/{noteId}
       // ------------------------------------------------------
@@ -200,6 +247,7 @@ service cloud.firestore {
                 'date', 'wordsLearned', 'practiceCount',
                 'irregularVerbsLearned', 'irregularVerbPracticeCount',
                 'wordFormsLearned', 'wordFormPracticeCount',
+                'sentencesLearned', 'sentencePracticeCount',
                 'frozen',
                 'firstActionAt', 'lastActionAt'
               ]);

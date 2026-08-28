@@ -34,6 +34,21 @@ description: Guide for adding a new feature to WordCraft (practice mode, writing
 3. Export the function
 4. Import and call from the appropriate page module
 
+## New Standalone Tool (topics-hub + detail pattern)
+
+For a tool with its own set of user-created topics (like Sentence Patterns), mirror the
+`topics.html`/`topic-detail.html` pair rather than a single flat page:
+
+1. Create a hub page (e.g. `sentences.html`) mirroring `topics.html`'s topic grid + New/Rename modal
+2. Create a detail page (e.g. `sentence-topic-detail.html`) mirroring `word-forms.html`'s tab structure (table tab + practice tab)
+3. Hub controller (`js/pages/sentences-page.js`) uses `initProtectedPage()` (no `requireTopicId`)
+4. Detail controller (`js/pages/{tool}-topic-detail-page.js`) uses `initProtectedPage({ requireTopicId: true })`
+5. Add CRUD/AI functions to a new `js/features/{tool}-topics.js` + `js/ai/{tool}-ai.js` (data layer)
+6. Add a `.lt-tool` chip to `.lt-toolbar` in `topics.html`, linking to the hub page, plus an `init{Tool}Card()` in `topics-page.js` mirroring `initReviewCard()`/`initIrregularVerbsCard()`
+7. Reuse existing table/bulk-add CSS (`css/topic-detail/vocabulary.css`, `css/topic-detail/forms.css`) and shared JS (`js/shared/bulk-add-utils.js`) wholesale where the shape matches; only add new page-specific CSS files for genuinely new UI (e.g. `css/sentences/`)
+8. **Caution**: `parseBulkInput()`/`setupLowercaseWarning()` from `bulk-add-utils.js` assume single lowercase words (they split on commas AND force-lowercase) — do NOT reuse them for multi-word/sentence bulk input; write a custom newline-only, case-preserving parser instead
+9. Reference: `sentences.html` + `sentence-topic-detail.html` + `js/pages/sentences-page.js` + `js/pages/sentence-topic-detail-page.js`
+
 ## Shared Modules to Use
 
 - `js/ui/index.js` — showToast, showModal, escapeHtml, formatDate

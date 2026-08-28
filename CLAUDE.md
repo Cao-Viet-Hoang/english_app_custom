@@ -24,6 +24,8 @@ Users provide their own Firebase + Azure OpenAI credentials via JSON — no sign
 ├── listen-and-fill.html                # Listen and Fill (AI dictation passage with blanks)
 ├── word-forms.html                     # Word Forms (noun/verb/adj/adv forms table + 1 practice mode)
 ├── review.html                         # Review (spaced-repetition flashcard session across all topics)
+├── sentences.html                      # Sentence Patterns hub (grid of sentence topics)
+├── sentence-topic-detail.html          # Sentence Patterns detail (sentence table + practice tab)
 │
 ├── css/
 │   ├── base.css                        # CSS vars, resets, shared components
@@ -65,9 +67,12 @@ Users provide their own Firebase + Azure OpenAI credentials via JSON — no sign
 │   ├── word-forms/                     # Word Forms tool
 │   │   ├── layout.css                  # Page shell, breadcrumb, tabs, type badges
 │   │   └── practice.css                # Practice card, form fields, results, word selection
-│   └── review/                         # Review (spaced repetition) tool
-│       ├── layout.css                  # Page shell, breadcrumb, header, dashboard stats
-│       └── practice.css                # Flashcard flip, rating actions, results
+│   ├── review/                         # Review (spaced repetition) tool
+│   │   ├── layout.css                  # Page shell, breadcrumb, header, dashboard stats
+│   │   └── practice.css                # Flashcard flip, rating actions, results
+│   └── sentences/                      # Sentence Patterns tool
+│       ├── layout.css                  # Page shell, breadcrumb, header, tabs, table wrapper, pattern/level badges
+│       └── practice.css                # Setup chips, question card, word-diff highlighting, accuracy badge, results
 │
 ├── js/
     ├── core/                           # Foundation — no business logic
@@ -103,11 +108,13 @@ Users provide their own Firebase + Azure OpenAI credentials via JSON — no sign
     │   ├── streak.js                   # Daily streak tracking, milestones, heatmap, freeze earn/consume
     │   ├── streak-logic.js             # Pure streak math (freeze earning, gap reconciliation) — unit-tested
     │   ├── irregular-verbs.js          # Irregular verbs CRUD, pattern detection, stats
-    │   └── word-forms.js               # Word forms CRUD, learned toggle, stats
+    │   ├── word-forms.js               # Word forms CRUD, learned toggle, stats
+    │   └── sentence-topics.js          # Sentence topics + nested sentences CRUD, duplicate detection, learned toggle
     │
     ├── ai/                             # AI integration layer
     │   ├── word-ai.js                  # Word info, bulk info, insights, paragraph gen, verb info
     │   ├── word-forms-ai.js            # Word form detection + bulk generation (4 POS forms)
+    │   ├── sentence-ai.js              # Sentence pattern analysis + bulk generation (auto EN/VI detection)
     │   ├── reading-ai.js               # Reading passage generation
     │   ├── writing-ai.js               # Writing evaluators, dictation
     │   ├── chat-ai.js                  # Chat streaming + 2-layer cache
@@ -129,6 +136,8 @@ Users provide their own Firebase + Azure OpenAI credentials via JSON — no sign
         ├── listen-and-fill-page.js     # Listen and Fill tool (AI dictation + blanks)
         ├── word-forms-page.js          # Word Forms tool (table + fill-in-the-forms practice)
         ├── review-page.js              # Review tool (due dashboard + SM-2 flashcard session)
+        ├── sentences-page.js           # Sentence Patterns hub (topic grid)
+        ├── sentence-topic-detail-page.js # Sentence Patterns detail (sentence table + practice session)
         ├── reading-modes/
         │   ├── comprehension.js
         │   └── truefalse.js
@@ -225,6 +234,16 @@ users/{username}/
 │   ├── learned: boolean, learnedAt: timestamp | null
 │   ├── orderKey: number (Date.now() * 1000 — stable sort key)
 │   └── createdAt: timestamp
+├── sentenceTopics/{topicId}/
+│   ├── name: string, sentenceCount: number, learnedCount: number
+│   ├── createdAt: timestamp, updatedAt: timestamp (after edit)
+│   └── sentences/{sentenceId}/
+│       ├── english: string, vietnamese: string, pattern: string, level: string (core fields, generated in the Add/Edit form)
+│       ├── usage: string, notes: string, register: string, variations: string[] (default [] — optional, lazily generated via the row's sparkle button, like vocab AI Insights)
+│       ├── aiInsightsGeneratedAt: timestamp (optional — set when the sparkle-triggered insights are generated)
+│       ├── learned: boolean, learnedAt: timestamp | null
+│       ├── orderKey: number (Date.now()*1000 + counter — stable sort key)
+│       └── createdAt: timestamp, updatedAt: timestamp (after edit)
 └── streak/main/
     ├── currentStreak: number, longestStreak: number
     ├── lastActiveDate: string (YYYY-MM-DD), totalActiveDays: number
@@ -236,6 +255,7 @@ users/{username}/
         ├── wordsLearned: number, practiceCount: number
         ├── irregularVerbsLearned: number, irregularVerbPracticeCount: number
         ├── wordFormsLearned: number, wordFormPracticeCount: number
+        ├── sentencesLearned: number, sentencePracticeCount: number
         ├── frozen: boolean (true = day bridged by a streak freeze)
         ├── firstActionAt: timestamp, lastActionAt: timestamp
 ```
@@ -275,6 +295,8 @@ Body: { messages, temperature, max_tokens, response_format: { type: "json_object
 | `generateBulkVerbInfo()`         | ai/word-ai.js        | Same, batched (10 verbs per call) with optional progress CB |
 | `generateWordFormInfo()`         | ai/word-forms-ai.js  | Detect baseType + all 4 POS forms for a single word         |
 | `generateBulkWordFormInfo()`     | ai/word-forms-ai.js  | Same, batched (6 words per call) with optional progress CB  |
+| `generateSentenceInfo()`         | ai/sentence-ai.js    | Auto-detect EN/VI input; return translation, pattern, usage, notes, register, level, variations |
+| `generateBulkSentenceInfo()`     | ai/sentence-ai.js    | Same, batched (3 sentences per call) with optional progress CB |
 | `generateReadingPassage()`       | ai/reading-ai.js     | Passage + MCQ or T/F questions                              |
 | `evaluateSentence()`             | ai/writing-ai.js  | Score grammar/usage/naturalness                             |
 | `evaluateParagraph()`            | ai/writing-ai.js  | Score grammar/coherence                                     |
@@ -344,6 +366,8 @@ Body: { messages, temperature, max_tokens, response_format: { type: "json_object
 | Word Forms tool        | `word-forms.html`, `js/pages/word-forms-page.js`, `css/word-forms/`, `js/features/word-forms.js`, `js/ai/word-forms-ai.js` |
 | Streak / freeze logic  | `js/features/streak-logic.js` (pure math + `test/`), `js/features/streak.js`, `js/shared/streak-handler.js`, `js/ui/freeze.js`, `css/streak.css`, `firestore.rules` |
 | Review / spaced repetition | `review.html`, `js/pages/review-page.js`, `css/review/`, `js/features/review.js`, `js/features/srs-logic.js` (pure SM-2 + `test/`), `js/features/vocabulary.js` (`toggleWordLearned` seeds srs*), `firestore.rules` |
+| Sentence Patterns hub/detail | `sentences.html`, `sentence-topic-detail.html`, `js/pages/sentences-page.js`, `js/pages/sentence-topic-detail-page.js`, `css/sentences/` |
+| Sentence Patterns data  | `js/features/sentence-topics.js` (topics + nested sentences CRUD, learned toggle records `source: 'sentence'` streak activity, duplicate detection), `js/features/sentence-grading.js` (pure exact-match/diff/accuracy grading, no Firestore/DOM), `js/features/streak.js` (`sentencesLearned`/`sentencePracticeCount`), `firestore.rules` (`sentenceTopics` + `sentences` + `dailyActivity` allow-list) |
 
 ## Keyboard Shortcuts
 

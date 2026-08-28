@@ -14,6 +14,8 @@ Full project context is in CLAUDE.md at the repo root.
 | File                       | Functions                                                                                                                   |
 | -------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | `js/ai/word-ai.js`        | generateWordInfo(), generateBulkWordInfo(), generateParagraph(), generateWordInsights()                                     |
+| `js/ai/word-forms-ai.js`  | generateWordFormInfo(), generateBulkWordFormInfo() — batch size 6                                                            |
+| `js/ai/sentence-ai.js`    | generateSentenceInfo() — core fields only (english/vietnamese/pattern/level), generateBulkSentenceInfo() — batch size 6, auto EN/VI detection, generateSentenceInsights() — lazy usage/notes/register/variations, sparkle-triggered |
 | `js/ai/reading-ai.js`     | generateReadingPassage()                                                                                                    |
 | `js/ai/writing-ai.js`     | evaluateSentence(), evaluateParagraph(), generateTranslationChallenge(), evaluateTranslation(), generateDictationSentence(), generateListenAndFillPassage() |
 | `js/ai/chat-ai.js`        | Chat streaming + 2-layer cache (L1 memory Map + L2 sessionStorage)                                                         |
@@ -32,24 +34,27 @@ users pick a meaning (selectable cards in the word form, per-row dropdown in bul
 
 ## AI Call Pattern
 
-All AI calls go through the shared client in `js/core/ai-client.js`:
+All AI calls go through the shared client in `js/core/ai-client.js`. Its actual
+signature is `callAzureOpenAI(messages, { temperature, maxTokens })` — it returns
+the already-parsed JSON object directly (not a raw HTTP response):
 
 ```js
 import { callAzureOpenAI } from '../core/ai-client.js';
 
-const result = await callAzureOpenAI({
-  messages: [{ role: 'system', content: '...' }, { role: 'user', content: '...' }],
-  temperature: 0.5,
-  max_tokens: 1000,
-  response_format: { type: 'json_object' }
-});
+const result = await callAzureOpenAI(
+  [{ role: 'system', content: '...' }, { role: 'user', content: '...' }],
+  { temperature: 0.5, maxTokens: 1000 },
+);
 ```
+
+`response_format: { type: 'json_object' }` and JSON-parsing/code-fence cleanup are
+handled internally by `callAzureOpenAI` — callers do not pass or parse it themselves.
 
 ## Rules
 
-- Always use `response_format: { type: "json_object" }`
-- All feedback text MUST be in Vietnamese
-- Temperature: 0.5 deterministic, 0.7-0.9 creative
-- Batch limit: ~6 words per AI call
+- Always rely on `callAzureOpenAI`'s built-in `response_format: { type: "json_object" }` handling
+- All feedback/explanation text shown on the frontend MUST be in English (per CLAUDE.md). Vietnamese is only allowed inside an actual Vietnamese-content field (e.g. a `vietnamese` translation), never in labels, notes, or other chrome text
+- Temperature: 0.5 deterministic, 0.3 for strict structured extraction (e.g. word forms, sentence patterns), 0.7-0.9 creative
+- Batch limit: ~6 words per AI call (fewer for richer per-item output, e.g. 3 for sentence patterns)
 - `escapeHtml()` on AI text before DOM insertion
-- Wrap JSON parse in try-catch; toast on failure
+- Wrap JSON parse/call in try-catch; toast on failure (single-item), or per-batch fallback to safe defaults (bulk)

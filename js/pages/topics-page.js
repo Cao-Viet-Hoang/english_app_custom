@@ -8,6 +8,7 @@ import { initFirebase } from '../core/firebase.js';
 import { loadTopics, createTopic, renameTopic, deleteTopic } from '../features/topics.js';
 import { getVerbStats } from '../features/irregular-verbs.js';
 import { getReviewStats, getTodayDateString } from '../features/review.js';
+import { loadSentenceTopics } from '../features/sentence-topics.js';
 import { showModal, closeModal, setupModalClose, showToast, confirmDialog, formatDate, escapeHtml, showMilestoneModal } from '../ui/index.js';
 import {
   loadStreak,
@@ -509,8 +510,23 @@ async function initReviewCard() {
   }
 }
 
+// ---- Sentence Patterns toolbar icon ----
+async function initSentencesCard() {
+  try {
+    const topics = await loadSentenceTopics();
+    const total = topics.reduce((sum, t) => sum + (t.sentenceCount || 0), 0);
+    const learned = topics.reduce((sum, t) => sum + (t.learnedCount || 0), 0);
+    const labelEl = document.getElementById('sp-tool-label');
+    if (!labelEl) return;
+    labelEl.textContent = total === 0 ? 'Sentence Patterns' : `Sentence Patterns · ${learned}/${total}`;
+  } catch {
+    // silently ignore — label stays at default text
+  }
+}
+
 // ---- Initial load ----
 initStreak();
 initIrregularVerbsCard();
 initReviewCard();
+initSentencesCard();
 render();
