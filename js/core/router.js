@@ -7,7 +7,7 @@ const SESSION_KEY = 'app_session';
 
 /**
  * Retrieve the current session from sessionStorage.
- * @returns {{ username: string, azureOpenAI: Object, firebase: Object } | null}
+ * @returns {{ username: string, litellm: Object, firebase: Object } | null}
  */
 export function getSession() {
   try {
@@ -51,7 +51,7 @@ export function logout() {
  * Guard function — call at the top of every protected page.
  * Redirects to login if no valid session exists.
  * Also initialises Firebase from session config.
- * @returns {{ username: string, azureOpenAI: Object, firebase: Object }}
+ * @returns {{ username: string, litellm: Object, firebase: Object }}
  */
 export function guardAuth() {
   const session = getSession();

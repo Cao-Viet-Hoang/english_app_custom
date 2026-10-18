@@ -4,7 +4,7 @@
 
 ## Quick Reference
 
-- **Stack**: Vanilla JS (ES Modules), Firebase Firestore Compat SDK v10.12.0, Azure OpenAI REST API
+- **Stack**: Vanilla JS (ES Modules), Firebase Firestore Compat SDK v10.12.0, LiteLLM (OpenAI-compatible REST API)
 - **No frameworks, no build tools, no npm** — static files only
 - **6 pages**: index.html (login), topics.html, topic-detail.html, practice.html, reading.html, writing.html
 - **16 JS modules** in `js/`, **8 CSS files** in `css/`

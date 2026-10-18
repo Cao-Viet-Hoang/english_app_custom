@@ -1,11 +1,11 @@
 ---
 name: wordcraft-ai
-description: "WordCraft AI integration specialist. Use proactively when the user asks to add or modify AI prompts, evaluation logic, scoring, Azure OpenAI API calls, word info generation, passage generation, translation challenges, dictation sentences, or any AI-powered feature. Also use when debugging AI response parsing errors."
+description: "WordCraft AI integration specialist. Use proactively when the user asks to add or modify AI prompts, evaluation logic, scoring, LiteLLM API calls, word info generation, passage generation, translation challenges, dictation sentences, or any AI-powered feature. Also use when debugging AI response parsing errors."
 tools: Read, Edit, Write, Bash, Grep, Glob
 model: inherit
 ---
 
-You work on AI integration in WordCraft: Azure OpenAI prompts, response parsing, and AI-powered learning features.
+You work on AI integration in WordCraft: LiteLLM prompts, response parsing, and AI-powered learning features.
 
 Full project context is in CLAUDE.md at the repo root.
 
@@ -20,7 +20,7 @@ Full project context is in CLAUDE.md at the repo root.
 | `js/ai/writing-ai.js`     | evaluateSentence(), evaluateParagraph(), generateTranslationChallenge(), evaluateTranslation(), generateDictationSentence(), generateListenAndFillPassage() |
 | `js/ai/chat-ai.js`        | Chat streaming + 2-layer cache (L1 memory Map + L2 sessionStorage)                                                         |
 | `js/ai/feedback-builder.js`| Score badges, error cards, diff HTML builders                                                                              |
-| `js/core/ai-client.js`    | Shared HTTP client: callAzureOpenAI(), streamAzureOpenAI()                                                                  |
+| `js/core/ai-client.js`    | Shared HTTP client: callAI(), streamAI()                                                                  |
 
 ### Word info return shape
 
@@ -35,24 +35,24 @@ users pick a meaning (selectable cards in the word form, per-row dropdown in bul
 ## AI Call Pattern
 
 All AI calls go through the shared client in `js/core/ai-client.js`. Its actual
-signature is `callAzureOpenAI(messages, { temperature, maxTokens })` — it returns
+signature is `callAI(messages, { temperature, maxTokens })` — it returns
 the already-parsed JSON object directly (not a raw HTTP response):
 
 ```js
-import { callAzureOpenAI } from '../core/ai-client.js';
+import { callAI } from '../core/ai-client.js';
 
-const result = await callAzureOpenAI(
+const result = await callAI(
   [{ role: 'system', content: '...' }, { role: 'user', content: '...' }],
   { temperature: 0.5, maxTokens: 1000 },
 );
 ```
 
 `response_format: { type: 'json_object' }` and JSON-parsing/code-fence cleanup are
-handled internally by `callAzureOpenAI` — callers do not pass or parse it themselves.
+handled internally by `callAI` — callers do not pass or parse it themselves.
 
 ## Rules
 
-- Always rely on `callAzureOpenAI`'s built-in `response_format: { type: "json_object" }` handling
+- Always rely on `callAI`'s built-in `response_format: { type: "json_object" }` handling
 - All feedback/explanation text shown on the frontend MUST be in English (per CLAUDE.md). Vietnamese is only allowed inside an actual Vietnamese-content field (e.g. a `vietnamese` translation), never in labels, notes, or other chrome text
 - Temperature: 0.5 deterministic, 0.3 for strict structured extraction (e.g. word forms, sentence patterns), 0.7-0.9 creative
 - Batch limit: ~6 words per AI call (fewer for richer per-item output, e.g. 3 for sentence patterns)

@@ -5,8 +5,8 @@ paths:
 
 # AI Module Rules
 
-- All AI calls use Azure OpenAI Chat Completions REST API
-- Shared HTTP client: `js/core/ai-client.js` (`callAzureOpenAI`, `streamAzureOpenAI`)
+- All AI calls use LiteLLM Chat Completions REST API
+- Shared HTTP client: `js/core/ai-client.js` (`callAI`, `streamAI`)
 - Always request `response_format: { type: "json_object" }` for structured responses
 - All feedback/explanation text shown on the frontend must be in English (per CLAUDE.md). Vietnamese is only appropriate inside an actual Vietnamese-language content field (e.g. a `vietnamese` translation field) — never in labels, notes, usage explanations, or other chrome text
 - Temperature: 0.5 for deterministic (word info, evaluation), 0.3 for strict structured extraction (word forms, sentence patterns), 0.7-0.9 for creative (paragraphs, passages)

@@ -1,5 +1,5 @@
 ---
-description: Guide for writing Azure OpenAI prompts and AI functions for WordCraft.
+description: Guide for writing LiteLLM prompts and AI functions for WordCraft.
 ---
 
 # Writing AI Prompts for WordCraft
@@ -9,14 +9,15 @@ description: Guide for writing Azure OpenAI prompts and AI functions for WordCra
 ```js
 async function yourFunction(input) {
   const session = JSON.parse(sessionStorage.getItem("wordcraft_session"));
-  const { endpoint, apiKey, deploymentName, apiVersion } = session.azureOpenAI;
+  const { endpoint, apiKey, model } = session.litellm;
 
   const response = await fetch(
-    `${endpoint}/openai/deployments/${deploymentName}/chat/completions?api-version=${apiVersion}`,
+    `${endpoint}/chat/completions`,
     {
       method: "POST",
-      headers: { "api-key": apiKey, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
+        model,
         messages: [
           { role: "system", content: "You are ..." },
           { role: "user", content: `...${input}...` },

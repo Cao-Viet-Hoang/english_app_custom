@@ -1,10 +1,10 @@
 /* ============================================================
    WRITING AI MODULE
-   Azure OpenAI integration for writing practice evaluation
+   LiteLLM integration for writing practice evaluation
    and content generation.
    ============================================================ */
 
-import { callAzureOpenAI } from '../core/ai-client.js';
+import { callAI } from '../core/ai-client.js';
 
 // ----------------------------------------------------------------
 // Sentence Writing — evaluate a user's sentence
@@ -108,7 +108,7 @@ Return JSON:
   "tips": ["..."]
 }`;
 
-  const parsed = await callAzureOpenAI(
+  const parsed = await callAI(
     [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
@@ -238,7 +238,7 @@ Return JSON:
   "suggestions": []
 }`;
 
-  const parsed = await callAzureOpenAI(
+  const parsed = await callAI(
     [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
@@ -310,7 +310,7 @@ Return JSON:
   "usedWords": ["word1", "word2"]
 }`;
 
-  const parsed = await callAzureOpenAI(
+  const parsed = await callAI(
     [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
@@ -419,7 +419,7 @@ Return JSON:
   "suggestedTranslation": "..."
 }`;
 
-  const parsed = await callAzureOpenAI(
+  const parsed = await callAI(
     [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
@@ -485,7 +485,7 @@ Return JSON:
   "usedWords": ["word1"]
 }`;
 
-  const parsed = await callAzureOpenAI(
+  const parsed = await callAI(
     [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
@@ -581,7 +581,7 @@ IMPORTANT:
   ]
 }`;
 
-  const parsed = await callAzureOpenAI(
+  const parsed = await callAI(
     [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },

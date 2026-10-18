@@ -1,15 +1,15 @@
 /* ============================================================
    WORD FORMS AI MODULE
-   Azure OpenAI integration — single word form generation and
+   LiteLLM integration — single word form generation and
    bulk word form generation (4 POS forms per word).
    ============================================================ */
 
-import { callAzureOpenAI } from '../core/ai-client.js';
+import { callAI } from '../core/ai-client.js';
 
 const BULK_FORM_BATCH_SIZE = 6;
 
 /**
- * Call Azure OpenAI to detect the base type and all 4 POS forms for a word.
+ * Call LiteLLM to detect the base type and all 4 POS forms for a word.
  *
  * @param {string} word - The word to look up
  * @returns {Promise<{ baseType: string, noun: string, verb: string, adjective: string, adverb: string }>}
@@ -45,7 +45,7 @@ Return JSON:
   "adverb": "..."
 }`;
 
-  const parsed = await callAzureOpenAI(
+  const parsed = await callAI(
     [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
@@ -63,7 +63,7 @@ Return JSON:
 }
 
 /**
- * Call Azure OpenAI to generate POS forms for multiple words.
+ * Call LiteLLM to generate POS forms for multiple words.
  * Requests are split into batches of 6.
  *
  * @param {string[]} wordList   Array of words
@@ -124,7 +124,7 @@ Return a JSON array:
 
   let parsed;
   try {
-    parsed = await callAzureOpenAI(
+    parsed = await callAI(
       [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },

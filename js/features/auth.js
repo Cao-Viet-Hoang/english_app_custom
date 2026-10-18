@@ -18,21 +18,21 @@ import { showToast } from '../ui/index.js';
  *     "messagingSenderId": "...",  // optional
  *     "appId": "..."              // optional
  *   },
- *   "azureOpenAI": {
- *     "endpoint": "https://xxx.openai.azure.com",
+ *   "litellm": {
+ *     "endpoint": "https://your-litellm-proxy.example.com",
  *     "apiKey": "...",
- *     "deploymentName": "gpt-4o"
+ *     "model": "claude-haiku-5-5"   // optional, defaults to claude-haiku-5-5
  *   }
  * }
  */
 
 const REQUIRED_FIREBASE  = ['apiKey', 'projectId'];
-const REQUIRED_AZURE     = ['endpoint', 'apiKey', 'deploymentName'];
+const REQUIRED_LITELLM   = ['endpoint', 'apiKey'];
 const LOCAL_STORAGE_KEY  = 'app_login_credentials';
 
 /**
  * Validate and parse the JSON secret string.
- * Returns { firebase, azureOpenAI } or throws with a descriptive message.
+ * Returns { firebase, litellm } or throws with a descriptive message.
  */
 function parseSecret(jsonStr) {
   let parsed;
@@ -52,19 +52,19 @@ function parseSecret(jsonStr) {
     }
   }
 
-  // Azure OpenAI config
-  if (!parsed.azureOpenAI || typeof parsed.azureOpenAI !== 'object') {
-    throw new Error('Missing "azureOpenAI" object in the secret.');
+  // LiteLLM config
+  if (!parsed.litellm || typeof parsed.litellm !== 'object') {
+    throw new Error('Missing "litellm" object in the secret.');
   }
-  for (const key of REQUIRED_AZURE) {
-    if (!parsed.azureOpenAI[key]) {
-      throw new Error(`Missing required Azure OpenAI field: "${key}".`);
+  for (const key of REQUIRED_LITELLM) {
+    if (!parsed.litellm[key]) {
+      throw new Error(`Missing required LiteLLM field: "${key}".`);
     }
   }
 
   return {
-    firebase:    parsed.firebase,
-    azureOpenAI: parsed.azureOpenAI,
+    firebase: parsed.firebase,
+    litellm:  parsed.litellm,
   };
 }
 
@@ -83,7 +83,7 @@ async function userExistsInDb(username) {
 /**
  * Perform the actual login sequence: init Firebase, verify user, save session.
  * @param {string} username
- * @param {Object} config  { firebase, azureOpenAI }
+ * @param {Object} config  { firebase, litellm }
  * @param {Object} [ui]    Optional UI elements { errorEl, submitBtn } for inline feedback
  * @returns {Promise<boolean>} true if login succeeded
  */
@@ -117,15 +117,15 @@ async function performLogin(username, config, ui = {}) {
 
     // Save session (sessionStorage — used by router guards)
     setSession({
-      username:    username,
-      azureOpenAI: config.azureOpenAI,
-      firebase:    config.firebase,
+      username: username,
+      litellm:  config.litellm,
+      firebase: config.firebase,
     });
 
     // Persist credentials to localStorage for auto-login next time
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({
       username:  username,
-      secret:    { firebase: config.firebase, azureOpenAI: config.azureOpenAI },
+      secret:    { firebase: config.firebase, litellm: config.litellm },
     }));
 
     showToast(`Welcome, ${username}!`, 'success');
@@ -166,7 +166,10 @@ export async function initLoginPage() {
     try {
       const creds = JSON.parse(saved);
       if (creds.username && creds.secret) {
-        if (creds.autoLogin === false) {
+        let secretValid = true;
+        try { parseSecret(JSON.stringify(creds.secret)); } catch { secretValid = false; }
+
+        if (creds.autoLogin === false || !secretValid) {
           // User explicitly logged out: pre-fill the form but don't auto-login
           document.getElementById('login-username').value = creds.username;
           document.getElementById('login-secret').value =

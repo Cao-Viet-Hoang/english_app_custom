@@ -1,16 +1,16 @@
 /* ============================================================
    AI MODULE
-   Azure OpenAI integration — paragraph generation, word info,
+   LiteLLM integration — paragraph generation, word info,
    bulk word info, and comprehensive word insights.
    ============================================================ */
 
-import { callAzureOpenAI, getAzureConfig } from '../core/ai-client.js';
+import { callAI, getAIConfig } from '../core/ai-client.js';
 
 const VALID_WORD_TYPES = ['noun', 'verb', 'adj', 'adv', 'phrase', 'other'];
 const BULK_WORD_BATCH_SIZE = 6;
 
 /**
- * Call Azure OpenAI Chat Completions to generate a paragraph
+ * Call LiteLLM Chat Completions to generate a paragraph
  * using the provided English vocabulary words.
  *
  * Returns both the English paragraph and its Vietnamese translation.
@@ -65,7 +65,7 @@ Return your response as JSON:
 }`;
 
   try {
-    const parsed = await callAzureOpenAI(
+    const parsed = await callAI(
       [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
@@ -78,7 +78,7 @@ Return your response as JSON:
       vietnamese: parsed.vietnamese || '',
     };
   } catch (err) {
-    // Fallback: if JSON parse failed, callAzureOpenAI already threw
+    // Fallback: if JSON parse failed, callAI already threw
     // but for generateParagraph we historically used a raw-text fallback
     console.warn('generateParagraph error:', err.message);
     throw err;
@@ -123,7 +123,7 @@ function extractMeanings(parsed) {
 }
 
 /**
- * Call Azure OpenAI to auto-fill word details for a given English word.
+ * Call LiteLLM to auto-fill word details for a given English word.
  *
  * Returns a ranked list of common meanings (most common first) so the UI
  * can let the user pick the intended sense. The first meaning is also
@@ -180,7 +180,7 @@ Return JSON:
   ]
 }`;
 
-  const parsed = await callAzureOpenAI(
+  const parsed = await callAI(
     [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
@@ -203,7 +203,7 @@ Return JSON:
 }
 
 /**
- * Call Azure OpenAI to auto-fill word details for multiple English words.
+ * Call LiteLLM to auto-fill word details for multiple English words.
  * Requests are split into smaller batches to avoid oversized prompts.
  *
  * @param {string[]} englishWords
@@ -269,7 +269,7 @@ Vietnamese meaning: ${word.vietnamese || ''}
 
 Return JSON with all the required fields.`;
 
-  const parsed = await callAzureOpenAI(
+  const parsed = await callAI(
     [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
@@ -344,7 +344,7 @@ Return a JSON array:
 
   const maxTokens = Math.min(englishWords.length * 600, 8000);
 
-  const parsed = await callAzureOpenAI(
+  const parsed = await callAI(
     [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
@@ -352,7 +352,7 @@ Return a JSON array:
     { temperature: 0.5, maxTokens },
   );
 
-  // callAzureOpenAI returns parsed JSON — could be an array directly
+  // callAI returns parsed JSON — could be an array directly
   const arr = Array.isArray(parsed) ? parsed : [];
   if (!Array.isArray(parsed)) {
     throw new Error('AI response is not an array.');
@@ -382,7 +382,7 @@ Return a JSON array:
 // ----------------------------------------------------------------
 
 /**
- * Call Azure OpenAI to return V2/V3 forms and Vietnamese meaning for a base verb.
+ * Call LiteLLM to return V2/V3 forms and Vietnamese meaning for a base verb.
  *
  * @param {string} baseForm - Base form (V1) of the verb, e.g. "go"
  * @returns {Promise<{ pastSimple: string, pastParticiple: string, vietnamese: string, ipaBase: string }>}
@@ -406,7 +406,7 @@ Return JSON:
   "ipaBase": "..."
 }`;
 
-  const parsed = await callAzureOpenAI(
+  const parsed = await callAI(
     [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
@@ -423,7 +423,7 @@ Return JSON:
 }
 
 /**
- * Call Azure OpenAI to return V2/V3 forms for multiple base verbs.
+ * Call LiteLLM to return V2/V3 forms for multiple base verbs.
  * Requests are split into batches of 10.
  *
  * @param {string[]} baseFormList - Array of base verb forms
@@ -479,7 +479,7 @@ Return a JSON array:
 
   let parsed;
   try {
-    parsed = await callAzureOpenAI(
+    parsed = await callAI(
       [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },

@@ -4,7 +4,7 @@ applyTo: "js/ai.js,js/reading-ai.js,js/writing-ai.js"
 
 # AI Module Rules
 
-- All AI calls use Azure OpenAI Chat Completions REST API
+- All AI calls use LiteLLM Chat Completions REST API
 - Always request `response_format: { type: "json_object" }` for structured responses
 - All feedback/explanation text must be in **Vietnamese**
 - Temperature: 0.5 for deterministic (word info, evaluation), 0.7-0.9 for creative (paragraphs, passages)

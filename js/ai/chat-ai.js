@@ -1,12 +1,12 @@
 /* ============================================================
    CHAT AI MODULE
-   Azure OpenAI chat completions with 2-layer cache.
+   LiteLLM chat completions with 2-layer cache.
    L1: in-memory Map (fast, per session)
    L2: sessionStorage (persists across page navigation)
    ============================================================ */
 
 import { getSession } from '../core/router.js';
-import { streamAzureOpenAI } from '../core/ai-client.js';
+import { streamAI } from '../core/ai-client.js';
 
 // ----------------------------------------------------------------
 // Cache constants
@@ -179,7 +179,7 @@ FORMATTING (simple markdown only):
 // ----------------------------------------------------------------
 
 /**
- * Send a message to Azure OpenAI and stream the response.
+ * Send a message to LiteLLM and stream the response.
  * Calls onChunk(delta) for each text piece as it arrives.
  * Cache hit: calls onChunk once with the full cached text (no network request).
  * Returns the full reply string when complete.
@@ -192,8 +192,8 @@ FORMATTING (simple markdown only):
  */
 export async function sendChatMessageStream(history, userMessage, context = {}, onChunk = () => {}) {
   const session = getSession();
-  if (!session?.azureOpenAI) {
-    throw new Error('Not logged in or missing Azure OpenAI config.');
+  if (!session?.litellm) {
+    throw new Error('Not logged in or missing LiteLLM config.');
   }
 
   const cacheKey = makeCacheKey(userMessage, context);
@@ -220,7 +220,7 @@ export async function sendChatMessageStream(history, userMessage, context = {}, 
     { role: 'user', content: userMessage },
   ];
 
-  const fullReply = await streamAzureOpenAI(messages, {
+  const fullReply = await streamAI(messages, {
     temperature: 0.7,
     maxTokens: 800,
     onChunk,

@@ -30,7 +30,7 @@ description: Guide for adding a new feature to WordCraft (practice mode, writing
 ## New AI Feature
 
 1. Add function to `js/ai/word-ai.js` (vocabulary), `js/ai/reading-ai.js` (reading), or `js/ai/writing-ai.js` (writing)
-2. Use shared client: `import { callAzureOpenAI } from '../../core/ai-client.js'`
+2. Use shared client: `import { callAI } from '../../core/ai-client.js'`
 3. Export the function
 4. Import and call from the appropriate page module
 

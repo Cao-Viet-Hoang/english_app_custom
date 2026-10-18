@@ -1,6 +1,6 @@
 ---
 name: wordcraft-ai-prompt
-description: Guide for writing Azure OpenAI prompts for WordCraft. Use when adding or editing AI functions, prompts, evaluation logic, or response parsing.
+description: Guide for writing LiteLLM prompts for WordCraft. Use when adding or editing AI functions, prompts, evaluation logic, or response parsing.
 ---
 
 # Writing AI Prompts for WordCraft
@@ -10,11 +10,11 @@ description: Guide for writing Azure OpenAI prompts for WordCraft. Use when addi
 Use the shared client from `js/core/ai-client.js`:
 
 ```js
-import { callAzureOpenAI } from '../core/ai-client.js';
+import { callAI } from '../core/ai-client.js';
 
 async function yourFunction(input) {
   try {
-    const result = await callAzureOpenAI(
+    const result = await callAI(
       [
         { role: 'system', content: 'You are ...' },
         { role: 'user', content: `...${input}...` },
@@ -22,7 +22,7 @@ async function yourFunction(input) {
       { temperature: 0.5, maxTokens: 1000 },
     );
     // result is already the parsed JSON object — response_format and
-    // JSON parsing are handled internally by callAzureOpenAI
+    // JSON parsing are handled internally by callAI
     return result;
   } catch (err) {
     console.error(err);
@@ -56,7 +56,7 @@ async function yourFunction(input) {
 
 - System role: define AI expertise
 - User role: provide specific data/task
-- Always request `response_format: { type: "json_object" }` (handled internally by `callAzureOpenAI`)
+- Always request `response_format: { type: "json_object" }` (handled internally by `callAI`)
 - All feedback/explanation text shown on the frontend must be in **English** (per CLAUDE.md). Vietnamese is only appropriate inside an actual Vietnamese-content field (e.g. a `vietnamese` translation field), never in labels, notes, or other chrome text
 - Batch: max ~6 words per call (use smaller batches like 3 for items with richer per-item output)
 - `escapeHtml()` before inserting AI text into DOM

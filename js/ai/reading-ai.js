@@ -1,10 +1,10 @@
 /* ============================================================
    READING AI MODULE
-   Azure OpenAI integration for reading practice —
+   LiteLLM integration for reading practice —
    passage generation with comprehension questions.
    ============================================================ */
 
-import { callAzureOpenAI } from '../core/ai-client.js';
+import { callAI } from '../core/ai-client.js';
 
 // ----------------------------------------------------------------
 // Reading Passage + Questions (single API call)
@@ -79,7 +79,7 @@ Return JSON:
   "questions": [...]
 }`;
 
-  const parsed = await callAzureOpenAI(
+  const parsed = await callAI(
     [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },

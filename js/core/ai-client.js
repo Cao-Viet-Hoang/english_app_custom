@@ -1,58 +1,47 @@
 /* ============================================================
    AI CLIENT
-   Shared Azure OpenAI HTTP client — single source of truth for
-   all API calls (non-streaming JSON and streaming SSE).
+   Shared LiteLLM HTTP client (OpenAI-compatible Chat Completions) —
+   single source of truth for all API calls (non-streaming JSON and
+   streaming SSE).
    ============================================================ */
 
 import { getSession } from './router.js';
+
+export const DEFAULT_AI_MODEL = 'claude-haiku-5-5';
 
 // ----------------------------------------------------------------
 // Config helper
 // ----------------------------------------------------------------
 
 /**
- * Extract and validate Azure OpenAI config from the current session.
- * @returns {{ endpoint: string, apiKey: string, deploymentName: string, apiVersion: string }}
+ * Extract and validate LiteLLM config from the current session.
+ * @returns {{ url: string, apiKey: string, model: string }}
  */
-export function getAzureConfig() {
+export function getAIConfig() {
   const session = getSession();
-  if (!session?.azureOpenAI) {
-    throw new Error('Azure OpenAI config not found. Please log in again.');
+  if (!session?.litellm) {
+    throw new Error('LiteLLM config not found. Please log in again.');
   }
 
-  const { endpoint, apiKey, deploymentName, apiVersion } = session.azureOpenAI;
-  // Extract just the origin (scheme + host) to handle Azure AI Foundry endpoints
-  // that include paths like /openai/v1/response or /api/projects/...
-  let baseUrl;
-  try {
-    baseUrl = new URL(endpoint).origin;
-  } catch {
-    baseUrl = endpoint.replace(/\/+$/, '');
-  }
-  const version = apiVersion || '2024-08-01-preview';
+  const { endpoint, apiKey, model } = session.litellm;
+  const base = String(endpoint).trim().replace(/\/+$/, '');
+  const url = base.endsWith('/chat/completions') ? base : `${base}/chat/completions`;
 
-  return { baseUrl, apiKey, deploymentName, version };
+  return { url, apiKey, model: model || DEFAULT_AI_MODEL };
 }
 
-/**
- * Build the full Azure OpenAI Chat Completions URL.
- * Azure AI Foundry (services.ai.azure.com) uses /openai/v1/chat/completions with model in body.
- * Azure OpenAI (cognitiveservices.azure.com / openai.azure.com) uses /openai/deployments/{name}/chat/completions.
- */
-function buildUrl({ baseUrl, deploymentName, version }) {
-  if (baseUrl.includes('services.ai.azure.com')) {
-    // Azure AI Foundry v1 endpoint — no api-version param, model goes in request body
-    return `${baseUrl}/openai/v1/chat/completions`;
-  }
-  return `${baseUrl}/openai/deployments/${deploymentName}/chat/completions?api-version=${version}`;
+// `temperature` is accepted by callers but intentionally not sent: the default
+// model (claude-haiku-5-5) only supports temperature=1 and LiteLLM rejects
+// any other value with a 400, so we let the server use its default.
+function buildBody({ config, messages, maxTokens, extra = {} }) {
+  return { model: config.model, messages, max_tokens: maxTokens, ...extra };
 }
 
-function buildBody({ config, messages, temperature, maxTokens, extra = {} }) {
-  const body = { messages, temperature, max_completion_tokens: maxTokens, ...extra };
-  if (config.baseUrl.includes('services.ai.azure.com')) {
-    body.model = config.deploymentName;
-  }
-  return body;
+function buildHeaders(config) {
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${config.apiKey}`,
+  };
 }
 
 // ----------------------------------------------------------------
@@ -60,7 +49,7 @@ function buildBody({ config, messages, temperature, maxTokens, extra = {} }) {
 // ----------------------------------------------------------------
 
 /**
- * Call Azure OpenAI Chat Completions and return parsed JSON.
+ * Call LiteLLM Chat Completions and return parsed JSON.
  *
  * Handles: session validation, URL construction, fetch, error handling,
  * markdown code-fence cleanup, and JSON parsing.
@@ -71,28 +60,24 @@ function buildBody({ config, messages, temperature, maxTokens, extra = {} }) {
  * @param {number} [options.maxTokens=800]
  * @returns {Promise<Object>} Parsed JSON response
  */
-export async function callAzureOpenAI(messages, { temperature = 0.7, maxTokens = 800 } = {}) {
-  const config = getAzureConfig();
-  const url = buildUrl(config);
+export async function callAI(messages, { temperature = 0.7, maxTokens = 800 } = {}) {
+  const config = getAIConfig();
 
-  const response = await fetch(url, {
+  const response = await fetch(config.url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'api-key': config.apiKey,
-    },
+    headers: buildHeaders(config),
     body: JSON.stringify(buildBody({ config, messages, temperature, maxTokens })),
   });
 
   if (!response.ok) {
     const errBody = await response.text();
-    console.error('Azure OpenAI error:', response.status, errBody);
-    throw new Error(`Azure OpenAI request failed (${response.status}).`);
+    console.error('LiteLLM error:', response.status, errBody);
+    throw new Error(`LiteLLM request failed (${response.status}).`);
   }
 
   const result = await response.json();
   const content = result.choices?.[0]?.message?.content;
-  if (!content) throw new Error('Empty response from Azure OpenAI.');
+  if (!content) throw new Error('Empty response from LiteLLM.');
 
   // Strip markdown code fences if present
   let cleaned = content.trim();
@@ -112,7 +97,7 @@ export async function callAzureOpenAI(messages, { temperature = 0.7, maxTokens =
 // ----------------------------------------------------------------
 
 /**
- * Call Azure OpenAI Chat Completions with streaming enabled.
+ * Call LiteLLM Chat Completions with streaming enabled.
  * Calls onChunk(delta) for each text piece as it arrives.
  *
  * @param {Array<{role: string, content: string}>} messages
@@ -122,22 +107,18 @@ export async function callAzureOpenAI(messages, { temperature = 0.7, maxTokens =
  * @param {Function} [options.onChunk] Called with each text delta string
  * @returns {Promise<string>} Full accumulated reply
  */
-export async function streamAzureOpenAI(messages, { temperature = 0.7, maxTokens = 800, onChunk = () => {} } = {}) {
-  const config = getAzureConfig();
-  const url = buildUrl(config);
+export async function streamAI(messages, { temperature = 0.7, maxTokens = 800, onChunk = () => {} } = {}) {
+  const config = getAIConfig();
 
-  const response = await fetch(url, {
+  const response = await fetch(config.url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'api-key': config.apiKey,
-    },
+    headers: buildHeaders(config),
     body: JSON.stringify(buildBody({ config, messages, temperature, maxTokens, extra: { stream: true } })),
   });
 
   if (!response.ok) {
     const errBody = await response.text();
-    console.error('Azure OpenAI streaming error:', response.status, errBody);
+    console.error('LiteLLM streaming error:', response.status, errBody);
     throw new Error(`AI request failed (${response.status}). Please try again.`);
   }
 

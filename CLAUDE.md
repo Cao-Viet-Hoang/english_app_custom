@@ -1,13 +1,13 @@
 # WordCraft — English Vocabulary Learning App
 
 WordCraft is a full-featured English vocabulary learning platform for Vietnamese speakers.
-Users provide their own Firebase + Azure OpenAI credentials via JSON — no signup required.
+Users provide their own Firebase + LiteLLM credentials via JSON — no signup required.
 
 ## Tech Stack
 
 - **Frontend**: Vanilla JavaScript (ES Modules), HTML5, CSS3 — NO frameworks, NO build tools, NO npm
 - **Backend**: Firebase Firestore v10.12.0 **Compat SDK** via CDN (`firebase.firestore()` syntax, NOT modular)
-- **AI**: Azure OpenAI REST API (Chat Completions)
+- **AI**: LiteLLM proxy (OpenAI-compatible Chat Completions, default model claude-haiku-5-5)
 - **Other**: Web Speech API (TTS), Google Fonts (Inter)
 - **Hosting**: Static file hosting — no server, no build step
 
@@ -79,7 +79,7 @@ Users provide their own Firebase + Azure OpenAI credentials via JSON — no sign
     │   ├── config.js                   # DEV_MODE flag, test credentials
     │   ├── router.js                   # Query param routing, guardAuth(), navigateTo()
     │   ├── firebase.js                 # Firebase init, Firestore CRUD, collection refs
-    │   └── ai-client.js               # Shared Azure OpenAI HTTP client
+    │   └── ai-client.js               # Shared LiteLLM HTTP client
     │
     ├── ui/                             # UI utilities (split from old ui.js)
     │   ├── toast.js                    # showToast()
@@ -178,7 +178,7 @@ No build tools — tests are plain ES modules runnable directly by Node's runtim
 | `ui/` | UI utilities | Import via `ui/index.js` barrel |
 | `shared/` | Deduplicated helpers | Used across 2+ pages |
 | `features/` | Data/business logic | Firestore CRUD, auth, streak |
-| `ai/` | AI integration | Azure OpenAI calls, prompt builders |
+| `ai/` | AI integration | LiteLLM calls, prompt builders |
 | `chat/` | Chat widget | State, renderer, input, orchestrator |
 | `pages/` | Page controllers | One per HTML page, import from other folders |
 
@@ -273,14 +273,14 @@ returns `freezeEarned`; `loadStreak()` returns `freezesConsumed`/`frozenDates`. 
 
 ## AI Integration
 
-All AI calls use Azure OpenAI Chat Completions REST API via `js/core/ai-client.js`.
+All AI calls use LiteLLM Chat Completions REST API via `js/core/ai-client.js`.
 
 ### API pattern
 
 ```
-POST {endpoint}/openai/deployments/{deployment}/chat/completions?api-version={version}
-Headers: api-key: {key}, Content-Type: application/json
-Body: { messages, temperature, max_tokens, response_format: { type: "json_object" } }
+POST {endpoint}/chat/completions
+Headers: Authorization: Bearer {key}, Content-Type: application/json
+Body: { model, messages, temperature, max_tokens }
 ```
 
 ### AI functions
@@ -314,7 +314,7 @@ Body: { messages, temperature, max_tokens, response_format: { type: "json_object
 
 ## Authentication Flow
 
-1. User enters JSON with `firebase` + `azureOpenAI` config on login page
+1. User enters JSON with `firebase` + `litellm` config (endpoint, apiKey, optional model) on login page
 2. Firebase initializes; username validated against Firestore
 3. Session stored in `sessionStorage` (runtime) + `localStorage` (persist)
 4. Protected pages call `guardAuth()` → redirect to login if no session
@@ -394,7 +394,7 @@ This project has specialized sub-agents and skills configured in `.claude/`. **U
 | Agent                | When to use                                                                  |
 | -------------------- | ---------------------------------------------------------------------------- |
 | `wordcraft-ui`       | Styling, layout, colors, spacing, animations, responsive, modals, toasts     |
-| `wordcraft-ai`       | AI prompts, evaluation logic, scoring, Azure OpenAI calls, response parsing  |
+| `wordcraft-ai`       | AI prompts, evaluation logic, scoring, LiteLLM calls, response parsing  |
 | `wordcraft-feature`  | New practice/writing/reading modes, new pages, cross-cutting features        |
 | `wordcraft-firebase` | Firestore schema, queries, auth flow, streak data, data migration            |
 
@@ -408,7 +408,7 @@ This project has specialized sub-agents and skills configured in `.claude/`. **U
 | Skill                    | When to use                                        |
 | ------------------------ | -------------------------------------------------- |
 | `wordcraft-add-feature`  | Step-by-step guide for adding a new mode or page   |
-| `wordcraft-ai-prompt`    | Template and rules for writing Azure OpenAI prompts |
+| `wordcraft-ai-prompt`    | Template and rules for writing LiteLLM prompts |
 | `wordcraft-firestore`    | CRUD patterns, batch operations, timestamp handling |
 
 ### Rules (auto-loaded)

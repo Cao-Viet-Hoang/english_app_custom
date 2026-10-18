@@ -32,7 +32,7 @@ You work across the entire codebase: HTML pages, JS modules, CSS files, and Fire
 | ------------------------- | ----------------------------------------------- |
 | `js/core/router.js`      | Query param routing, `guardAuth()`, `navigateTo()` |
 | `js/core/firebase.js`    | Firestore CRUD, collection refs                  |
-| `js/core/ai-client.js`   | Azure OpenAI HTTP client                         |
+| `js/core/ai-client.js`   | LiteLLM HTTP client                         |
 | `js/ui/index.js`         | Barrel import for showToast, showModal, escapeHtml, etc. |
 | `js/shared/page-init.js` | `initProtectedPage()` — auth guard, navbar, streak |
 | `js/shared/result-builder.js` | `buildResultHtml()` — shared result screen  |

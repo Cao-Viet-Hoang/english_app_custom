@@ -1,17 +1,17 @@
 /* ============================================================
    SENTENCE PATTERNS AI MODULE
-   Azure OpenAI integration — core sentence-pattern analysis
+   LiteLLM integration — core sentence-pattern analysis
    (single + bulk, auto EN/VI detection, translation, pattern,
    level) plus lazily-generated extra insights (usage, notes,
    register, variations) mirroring the vocabulary AI Insights flow.
    ============================================================ */
 
-import { callAzureOpenAI } from '../core/ai-client.js';
+import { callAI } from '../core/ai-client.js';
 
 const BULK_SENTENCE_BATCH_SIZE = 6;
 
 /**
- * Call Azure OpenAI to analyze a single sentence (English or Vietnamese input).
+ * Call LiteLLM to analyze a single sentence (English or Vietnamese input).
  * Auto-detects the input language, translates to the other language, and
  * identifies the grammatical pattern and CEFR level. This powers the main
  * Add/Edit Sentence form — richer info (usage, notes, register, variations)
@@ -53,7 +53,7 @@ Return JSON:
   "level": "..."
 }`;
 
-  const parsed = await callAzureOpenAI(
+  const parsed = await callAI(
     [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
@@ -70,7 +70,7 @@ Return JSON:
 }
 
 /**
- * Call Azure OpenAI to analyze multiple sentences (English or Vietnamese, mixed).
+ * Call LiteLLM to analyze multiple sentences (English or Vietnamese, mixed).
  * Requests are split into batches of 6, each returning only the core fields
  * used by the main form (english, vietnamese, pattern, level).
  *
@@ -143,7 +143,7 @@ Return JSON:
   "variations": ["...", "...", "..."]
 }`;
 
-  const parsed = await callAzureOpenAI(
+  const parsed = await callAI(
     [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
@@ -201,7 +201,7 @@ Return a JSON array:
 
   let parsed;
   try {
-    parsed = await callAzureOpenAI(
+    parsed = await callAI(
       [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },

@@ -13,7 +13,7 @@ tools:
 
 # WordCraft AI Agent
 
-You work on AI integration in WordCraft: Azure OpenAI prompts, response parsing, and AI-powered learning features.
+You work on AI integration in WordCraft: LiteLLM prompts, response parsing, and AI-powered learning features.
 
 Full project context is in `CLAUDE.md` at the repo root. Read it first if you haven't.
 
@@ -27,11 +27,11 @@ Full project context is in `CLAUDE.md` at the repo root. Read it first if you ha
 
 ## AI Call Pattern
 
-Credentials from session, build system/user messages, POST Azure OpenAI, parse JSON response.
+Credentials from session, build system/user messages, POST LiteLLM, parse JSON response.
 
 ```js
 const session = JSON.parse(sessionStorage.getItem("wordcraft_session"));
-const { endpoint, apiKey, deploymentName, apiVersion } = session.azureOpenAI;
+const { endpoint, apiKey, model } = session.litellm;
 ```
 
 ## Rules
