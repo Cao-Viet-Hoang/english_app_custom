@@ -185,7 +185,7 @@ Return JSON:
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
-    { temperature: 0.5, maxTokens: 900 },
+    { temperature: 0.5, maxTokens: 3000 },
   );
 
   const meanings = extractMeanings(parsed);
@@ -274,7 +274,7 @@ Return JSON with all the required fields.`;
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
-    { temperature: 0.7, maxTokens: 2000 },
+    { temperature: 0.7, maxTokens: 4000 },
   );
 
   return {
@@ -342,7 +342,7 @@ Return a JSON array:
   ...
 ]`;
 
-  const maxTokens = Math.min(englishWords.length * 600, 8000);
+  const maxTokens = Math.min(englishWords.length * 1500, 10000);
 
   const parsed = await callAI(
     [
@@ -411,7 +411,7 @@ Return JSON:
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
-    { temperature: 0.5, maxTokens: 150 },
+    { temperature: 0.5, maxTokens: 500 },
   );
 
   return {
@@ -475,7 +475,7 @@ Return a JSON array:
   ...
 ]`;
 
-  const maxTokens = Math.min(baseFormList.length * 80, 2048);
+  const maxTokens = Math.min(baseFormList.length * 250, 4096);
 
   let parsed;
   try {

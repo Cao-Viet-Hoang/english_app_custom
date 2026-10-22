@@ -84,7 +84,7 @@ Return JSON:
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
-    { temperature: 0.8, maxTokens: 2500 },
+    { temperature: 0.8, maxTokens: 6000 },
   );
 
   return {

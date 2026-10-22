@@ -113,7 +113,7 @@ Return JSON:
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
-    { temperature: 0.7, maxTokens: 1200 },
+    { temperature: 0.7, maxTokens: 3000 },
   );
 
   return {
@@ -243,7 +243,7 @@ Return JSON:
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
-    { temperature: 0.7, maxTokens: 1800 },
+    { temperature: 0.7, maxTokens: 4000 },
   );
 
   return {
@@ -315,7 +315,7 @@ Return JSON:
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
-    { temperature: 0.9, maxTokens: 600 },
+    { temperature: 0.9, maxTokens: 1500 },
   );
 
   return {
@@ -424,7 +424,7 @@ Return JSON:
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
-    { temperature: 0.5, maxTokens: 1500 },
+    { temperature: 0.5, maxTokens: 3500 },
   );
 
   return {
@@ -490,7 +490,7 @@ Return JSON:
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
-    { temperature: 0.9, maxTokens: 200 },
+    { temperature: 0.9, maxTokens: 600 },
   );
 
   return {
@@ -586,7 +586,7 @@ IMPORTANT:
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
-    { temperature: 0.85, maxTokens: 1400 },
+    { temperature: 0.85, maxTokens: 3000 },
   );
 
   const sentences = Array.isArray(parsed.sentences) ? parsed.sentences : [];

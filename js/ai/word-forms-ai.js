@@ -50,7 +50,7 @@ Return JSON:
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
-    { temperature: 0.3, maxTokens: 300 },
+    { temperature: 0.3, maxTokens: 800 },
   );
 
   return {
@@ -120,7 +120,7 @@ Return a JSON array:
   ...
 ]`;
 
-  const maxTokens = Math.min(wordList.length * 100, 2048);
+  const maxTokens = Math.min(wordList.length * 250, 4096);
 
   let parsed;
   try {

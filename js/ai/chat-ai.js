@@ -222,7 +222,7 @@ export async function sendChatMessageStream(history, userMessage, context = {}, 
 
   const fullReply = await streamAI(messages, {
     temperature: 0.7,
-    maxTokens: 800,
+    maxTokens: 2000,
     onChunk,
   });
 

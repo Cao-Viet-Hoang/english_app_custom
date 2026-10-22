@@ -58,7 +58,7 @@ Return JSON:
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
-    { temperature: 0.3, maxTokens: 350 },
+    { temperature: 0.3, maxTokens: 1000 },
   );
 
   return {
@@ -148,7 +148,7 @@ Return JSON:
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
-    { temperature: 0.5, maxTokens: 500 },
+    { temperature: 0.5, maxTokens: 1500 },
   );
 
   return {
@@ -197,7 +197,7 @@ Return a JSON array:
   ...
 ]`;
 
-  const maxTokens = Math.min(sentenceList.length * 150, 1024);
+  const maxTokens = Math.min(sentenceList.length * 400, 4096);
 
   let parsed;
   try {

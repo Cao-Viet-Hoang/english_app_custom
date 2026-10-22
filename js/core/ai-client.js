@@ -44,6 +44,34 @@ function buildHeaders(config) {
   };
 }
 
+/**
+ * Leniently parse JSON from model output. Claude models may wrap the JSON in
+ * code fences or add a sentence before/after it, so try progressively looser
+ * candidates: raw text, fence contents, then the outermost {...} / [...] span.
+ * @param {string} text
+ * @returns {*} Parsed value, or undefined when no candidate parses
+ */
+function extractJson(text) {
+  const raw = text.trim();
+  const candidates = [raw];
+
+  const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  if (fenced) candidates.push(fenced[1]);
+
+  for (const [open, close] of [['{', '}'], ['[', ']']]) {
+    const start = raw.indexOf(open);
+    const end = raw.lastIndexOf(close);
+    if (start !== -1 && end > start) candidates.push(raw.slice(start, end + 1));
+  }
+
+  for (const candidate of candidates) {
+    try {
+      return JSON.parse(candidate);
+    } catch { /* try next candidate */ }
+  }
+  return undefined;
+}
+
 // ----------------------------------------------------------------
 // Non-streaming call (returns parsed JSON)
 // ----------------------------------------------------------------
@@ -57,10 +85,10 @@ function buildHeaders(config) {
  * @param {Array<{role: string, content: string}>} messages
  * @param {Object} [options]
  * @param {number} [options.temperature=0.7]
- * @param {number} [options.maxTokens=800]
+ * @param {number} [options.maxTokens=2000]
  * @returns {Promise<Object>} Parsed JSON response
  */
-export async function callAI(messages, { temperature = 0.7, maxTokens = 800 } = {}) {
+export async function callAI(messages, { temperature = 0.7, maxTokens = 2000 } = {}) {
   const config = getAIConfig();
 
   const response = await fetch(config.url, {
@@ -79,17 +107,15 @@ export async function callAI(messages, { temperature = 0.7, maxTokens = 800 } = 
   const content = result.choices?.[0]?.message?.content;
   if (!content) throw new Error('Empty response from LiteLLM.');
 
-  // Strip markdown code fences if present
-  let cleaned = content.trim();
-  if (cleaned.startsWith('```')) {
-    cleaned = cleaned.replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '');
-  }
+  const finishReason = result.choices?.[0]?.finish_reason;
+  const parsed = extractJson(content);
+  if (parsed !== undefined) return parsed;
 
-  try {
-    return JSON.parse(cleaned);
-  } catch {
-    throw new Error('Could not parse AI response as JSON.');
+  console.error('Could not parse AI response as JSON. finish_reason:', finishReason, 'raw content:', content);
+  if (finishReason === 'length') {
+    throw new Error('AI response was cut off before it finished. Please try again.');
   }
+  throw new Error('Could not parse AI response as JSON.');
 }
 
 // ----------------------------------------------------------------
@@ -103,11 +129,11 @@ export async function callAI(messages, { temperature = 0.7, maxTokens = 800 } = 
  * @param {Array<{role: string, content: string}>} messages
  * @param {Object} [options]
  * @param {number} [options.temperature=0.7]
- * @param {number} [options.maxTokens=800]
+ * @param {number} [options.maxTokens=2000]
  * @param {Function} [options.onChunk] Called with each text delta string
  * @returns {Promise<string>} Full accumulated reply
  */
-export async function streamAI(messages, { temperature = 0.7, maxTokens = 800, onChunk = () => {} } = {}) {
+export async function streamAI(messages, { temperature = 0.7, maxTokens = 2000, onChunk = () => {} } = {}) {
   const config = getAIConfig();
 
   const response = await fetch(config.url, {
